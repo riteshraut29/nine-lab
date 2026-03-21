@@ -21,6 +21,7 @@ app.mount("/ninelab/static", StaticFiles(directory=str(STATIC_DIR)), name="stati
 
 PORT = int(os.getenv("PORT", "22451"))
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
+GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
 TAVILY_API_KEY = os.getenv("TAVILY_API_KEY", "")
 SUPABASE_URL = os.getenv("SUPABASE_URL", "")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY", "")
@@ -105,29 +106,56 @@ def record_usage(ip: str):
     except Exception:
         pass
 
-# ── Gemini helper ────────────────────────────────────────────────────────────
+# ── AI helper (Groq primary, Gemini fallback) ─────────────────────────────────
 
-def gemini_call(prompt: str, retries: int = 5) -> str:
-    import google.generativeai as genai
-    genai.configure(api_key=GEMINI_API_KEY)
-    models_to_try = ["gemini-2.0-flash", "gemini-2.0-flash-lite", "gemini-1.5-flash"]
+def gemini_call(prompt: str, retries: int = 3) -> str:
     last_err = None
-    for model_name in models_to_try:
-        for attempt in range(retries + 1):
-            try:
-                model = genai.GenerativeModel(model_name)
-                response = model.generate_content(prompt)
-                return response.text
-            except Exception as e:
-                last_err = e
-                err_str = str(e).lower()
-                is_rate_limit = "quota" in err_str or "rate" in err_str or "429" in err_str or "exhausted" in err_str
-                if attempt < retries:
-                    wait = (2 ** attempt) * 5 if is_rate_limit else 3
-                    time.sleep(wait)
-                else:
-                    break  # Try next model
-    raise last_err
+
+    # ── Try Groq first (faster, higher limits) ───────────────────────────────
+    if GROQ_API_KEY:
+        from groq import Groq
+        groq_client = Groq(api_key=GROQ_API_KEY)
+        groq_models = ["llama-3.3-70b-versatile", "llama-3.1-8b-instant", "gemma2-9b-it"]
+        for model_name in groq_models:
+            for attempt in range(retries + 1):
+                try:
+                    response = groq_client.chat.completions.create(
+                        model=model_name,
+                        messages=[{"role": "user", "content": prompt}],
+                        temperature=0.7,
+                        max_tokens=4096,
+                    )
+                    return response.choices[0].message.content
+                except Exception as e:
+                    last_err = e
+                    err_str = str(e).lower()
+                    is_rate_limit = "rate" in err_str or "429" in err_str or "limit" in err_str
+                    if attempt < retries:
+                        time.sleep((2 ** attempt) * 3 if is_rate_limit else 2)
+                    else:
+                        break  # Try next model
+
+    # ── Fallback to Gemini if Groq unavailable or all retries exhausted ───────
+    if GEMINI_API_KEY:
+        import google.generativeai as genai
+        genai.configure(api_key=GEMINI_API_KEY)
+        gemini_models = ["gemini-2.0-flash", "gemini-2.0-flash-lite", "gemini-1.5-flash"]
+        for model_name in gemini_models:
+            for attempt in range(retries + 1):
+                try:
+                    model = genai.GenerativeModel(model_name)
+                    response = model.generate_content(prompt)
+                    return response.text
+                except Exception as e:
+                    last_err = e
+                    err_str = str(e).lower()
+                    is_rate_limit = "quota" in err_str or "rate" in err_str or "429" in err_str or "exhausted" in err_str
+                    if attempt < retries:
+                        time.sleep((2 ** attempt) * 5 if is_rate_limit else 3)
+                    else:
+                        break
+
+    raise last_err or RuntimeError("No AI provider configured.")
 
 # ── Tavily helper ────────────────────────────────────────────────────────────
 
@@ -947,8 +975,8 @@ async def generate(req: GenerateRequest, request: Request,
     if len(req.company.strip()) < 2:
         raise HTTPException(400, detail="Please enter the company name.")
 
-    if not GEMINI_API_KEY:
-        raise HTTPException(400, detail="GEMINI_API_KEY not configured. Add it to your environment variables.")
+    if not GEMINI_API_KEY and not GROQ_API_KEY:
+        raise HTTPException(400, detail="No AI API key configured. Add GROQ_API_KEY or GEMINI_API_KEY.")
     if not TAVILY_API_KEY:
         raise HTTPException(400, detail="TAVILY_API_KEY not configured. Add it to your environment variables.")
 
