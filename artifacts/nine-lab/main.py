@@ -568,7 +568,12 @@ async def index():
 
 @app.post("/ninelab/generate")
 async def generate(req: GenerateRequest, request: Request):
-    ip = request.client.host if request.client else "unknown"
+    # Use X-Forwarded-For when behind a proxy (Replit, nginx, etc.)
+    forwarded = request.headers.get("x-forwarded-for", "")
+    if forwarded:
+        ip = forwarded.split(",")[0].strip()
+    else:
+        ip = request.client.host if request.client else "unknown"
 
     resume_words = len(req.resume.strip().split())
     jd_words = len(req.jd.strip().split())

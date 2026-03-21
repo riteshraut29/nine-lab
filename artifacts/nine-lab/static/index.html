@@ -727,7 +727,7 @@ Requirements:
     <div class="error-box" id="errorBox"></div>
 
     <button class="submit-btn" id="submitBtn" onclick="handleSubmit()">
-      <span id="submitBtnText">⚡ Generate My 3 PDFs</span>
+      <span id="submitBtnText">Generate Karo →</span>
     </button>
   </div>
 
@@ -744,19 +744,16 @@ Requirements:
 
     <div class="pipeline-steps">
       <div class="pipe-step" id="step-research">
-        <div class="pipe-dot"></div> Company Research
+        <div class="pipe-dot"></div> 🔍 Research
       </div>
       <div class="pipe-step" id="step-analysis">
-        <div class="pipe-dot"></div> Resume Analysis
+        <div class="pipe-dot"></div> 🧠 Analysis
       </div>
       <div class="pipe-step" id="step-plan">
-        <div class="pipe-dot"></div> Prep Plan
-      </div>
-      <div class="pipe-step" id="step-resume">
-        <div class="pipe-dot"></div> Resume Rewrite
+        <div class="pipe-dot"></div> 📅 Prep Plan
       </div>
       <div class="pipe-step" id="step-pdf">
-        <div class="pipe-dot"></div> PDF Generation
+        <div class="pipe-dot"></div> 📄 PDFs
       </div>
     </div>
   </div>
@@ -897,15 +894,15 @@ Requirements:
   // Pipeline step updater
   const stageMap = {
     'queued': [],
-    'research': ['step-research', 'step-analysis'],
-    'analysis': ['step-research', 'step-analysis', 'step-plan', 'step-resume'],
-    'pdf': ['step-research', 'step-analysis', 'step-plan', 'step-resume', 'step-pdf'],
-    'done': ['step-research', 'step-analysis', 'step-plan', 'step-resume', 'step-pdf'],
+    'research': ['step-research'],
+    'analysis': ['step-research', 'step-analysis', 'step-plan'],
+    'pdf': ['step-research', 'step-analysis', 'step-plan', 'step-pdf'],
+    'done': ['step-research', 'step-analysis', 'step-plan', 'step-pdf'],
     'error': [],
   };
 
   function updatePipelineSteps(stage, progress) {
-    const allSteps = ['step-research', 'step-analysis', 'step-plan', 'step-resume', 'step-pdf'];
+    const allSteps = ['step-research', 'step-analysis', 'step-plan', 'step-pdf'];
     const activeSteps = stageMap[stage] || [];
 
     allSteps.forEach(s => {
@@ -978,7 +975,7 @@ Requirements:
         }
         showError(errMsg);
         btn.disabled = false;
-        document.getElementById('submitBtnText').textContent = '⚡ Generate My 3 PDFs';
+        document.getElementById('submitBtnText').textContent = 'Generate Karo →';
         return;
       }
 
@@ -988,7 +985,7 @@ Requirements:
     } catch(e) {
       showError('Network error. Server se connect nahi ho pa raha. Refresh karo.');
       btn.disabled = false;
-      document.getElementById('submitBtnText').textContent = '⚡ Generate My 3 PDFs';
+      document.getElementById('submitBtnText').textContent = 'Generate Karo →';
     }
   }
 
@@ -1043,7 +1040,7 @@ Requirements:
     });
 
     document.getElementById('submitBtn').disabled = false;
-    document.getElementById('submitBtnText').textContent = '⚡ Generate My 3 PDFs';
+    document.getElementById('submitBtnText').textContent = 'Generate Karo →';
   }
 
   function showProgressError(msg) {
@@ -1051,7 +1048,7 @@ Requirements:
     document.getElementById('formCard').style.display = 'block';
     showError('❌ ' + msg);
     document.getElementById('submitBtn').disabled = false;
-    document.getElementById('submitBtnText').textContent = '⚡ Generate My 3 PDFs';
+    document.getElementById('submitBtnText').textContent = 'Generate Karo →';
   }
 
   function showError(msg) {
@@ -1072,7 +1069,7 @@ Requirements:
     document.getElementById('progressPct').textContent = '0%';
     document.getElementById('progressMsg').textContent = 'Initializing...';
     document.getElementById('submitBtn').disabled = false;
-    document.getElementById('submitBtnText').textContent = '⚡ Generate My 3 PDFs';
+    document.getElementById('submitBtnText').textContent = 'Generate Karo →';
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
