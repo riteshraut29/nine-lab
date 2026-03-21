@@ -609,16 +609,12 @@ async def generate(req: GenerateRequest, request: Request):
     else:
         ip = request.client.host if request.client else "unknown"
 
-    resume_words = len(req.resume.strip().split())
-    jd_words = len(req.jd.strip().split())
-    company_len = len(req.company.strip())
-
-    if resume_words < 50:
-        raise HTTPException(400, detail="Resume bahut chhota hai! Kam se kam 50 words chahiye. Apna full resume paste karo.")
-    if jd_words < 30:
-        raise HTTPException(400, detail="Job description bahut chhoti hai! Kam se kam 30 words chahiye. Full JD copy karo.")
-    if company_len < 2:
-        raise HTTPException(400, detail="Company ka naam toh daal bhai!")
+    if not req.resume.strip():
+        raise HTTPException(400, detail="Please provide your resume.")
+    if not req.jd.strip():
+        raise HTTPException(400, detail="Please provide the job description.")
+    if len(req.company.strip()) < 2:
+        raise HTTPException(400, detail="Please enter the company name.")
 
     if not GEMINI_API_KEY:
         raise HTTPException(400, detail="GEMINI_API_KEY not configured. Add it to your environment variables.")

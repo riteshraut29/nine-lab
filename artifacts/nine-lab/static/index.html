@@ -409,7 +409,7 @@
   <div class="form-card" id="formCard">
 
     <div class="form-group">
-      <label class="form-label">Resume <span class="req">— min 50 words</span></label>
+      <label class="form-label">Resume</label>
       <input type="file" id="resumePdfInput" accept=".pdf" style="display:none" onchange="handlePdfFile(this.files[0])">
       <div class="upload-zone" id="uploadZone"
            onclick="document.getElementById('resumePdfInput').click()"
@@ -443,7 +443,7 @@
     </div>
 
     <div class="form-group">
-      <label class="form-label">Job Description <span class="req">— min 30 words</span></label>
+      <label class="form-label">Job Description</label>
       <textarea id="jdInput" rows="6" placeholder="Paste the job description here..."></textarea>
       <div class="word-count" id="jdCount">0 words</div>
     </div>
@@ -539,8 +539,8 @@
     counter.className = 'word-count ' + (count >= min ? 'ok' : count > 0 ? 'warn' : '');
   }
 
-  document.getElementById('resumeInput').addEventListener('input', () => updateWordCount('resumeInput', 'resumeCount', 50));
-  document.getElementById('jdInput').addEventListener('input', () => updateWordCount('jdInput', 'jdCount', 30));
+  document.getElementById('resumeInput').addEventListener('input', () => updateWordCount('resumeInput', 'resumeCount', 0));
+  document.getElementById('jdInput').addEventListener('input', () => updateWordCount('jdInput', 'jdCount', 0));
 
   async function checkHealth() {
     try {
@@ -587,8 +587,8 @@
     document.getElementById('errorBox').classList.remove('visible');
     const btn = document.getElementById('submitBtn');
 
-    if (wordCount(resume) < 50) { showError('Resume is too short — paste at least 50 words.'); return; }
-    if (wordCount(jd) < 30) { showError('Job description is too short — paste the full JD.'); return; }
+    if (!resume) { showError('Please enter your resume.'); return; }
+    if (!jd) { showError('Please paste the job description.'); return; }
     if (company.length < 2) { showError('Please enter the company name.'); return; }
 
     btn.disabled = true;
@@ -734,7 +734,7 @@
       const data = await resp.json();
       if (!resp.ok) { setUploadState('error', data.detail || 'Could not read PDF.'); return; }
       document.getElementById('resumeInput').value = data.text;
-      updateWordCount('resumeInput', 'resumeCount', 50);
+      updateWordCount('resumeInput', 'resumeCount', 0);
       setUploadState('success', `${data.pages} page${data.pages !== 1 ? 's' : ''} · ${data.words} words`);
     } catch(e) {
       setUploadState('error', 'Network error. Please try again.');
