@@ -916,6 +916,71 @@ async def auth_refresh(request: Request):
     raise HTTPException(401, detail="Session expired. Please log in again.")
 
 
+class LinkedInImportRequest(BaseModel):
+    url: str
+
+@app.post("/ninelab/import-linkedin")
+async def import_linkedin(req: LinkedInImportRequest):
+    url = req.url.strip()
+    if "linkedin.com" not in url.lower():
+        raise HTTPException(400, detail="Please provide a valid LinkedIn profile URL.")
+    if not TAVILY_API_KEY:
+        raise HTTPException(400, detail="TAVILY_API_KEY not configured.")
+
+    try:
+        from tavily import TavilyClient
+        client = TavilyClient(api_key=TAVILY_API_KEY)
+
+        raw_content = ""
+
+        # Try direct extraction first
+        try:
+            extract_result = client.extract(urls=[url])
+            results = extract_result.get("results", [])
+            if results and results[0].get("raw_content"):
+                raw_content = results[0]["raw_content"][:8000]
+        except Exception:
+            pass
+
+        # Fallback: search for the profile
+        if not raw_content or len(raw_content) < 100:
+            search_results = client.search(
+                f"site:linkedin.com {url}",
+                max_results=3,
+                include_raw_content=True
+            )
+            for r in search_results.get("results", []):
+                content = r.get("raw_content") or r.get("content", "")
+                if content and len(content) > len(raw_content):
+                    raw_content = content[:8000]
+
+        if not raw_content or len(raw_content) < 50:
+            raise HTTPException(422, detail="Could not fetch LinkedIn profile. Make sure the profile is public and the URL is correct.")
+
+        prompt = f"""You are a resume writer. Extract and format the following LinkedIn profile content into a clean, professional resume text.
+
+LinkedIn Profile Content:
+{raw_content}
+
+Format the output as a proper resume with these sections (include only sections that have data):
+- Name and Contact Info (if available)
+- Professional Summary (2-3 lines)
+- Work Experience (company, role, duration, key achievements)
+- Education
+- Skills
+- Certifications / Projects (if available)
+
+Be concise, professional, and use action verbs. Do NOT add any information that is not in the source content. Output only the resume text, no commentary."""
+
+        resume_text = gemini_call(prompt)
+        return JSONResponse({"text": resume_text.strip()})
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(500, detail=f"Failed to import LinkedIn profile: {str(e)}")
+
+
 @app.post("/ninelab/extract-resume")
 async def extract_resume(file: UploadFile = File(...)):
     if not file.filename or not file.filename.lower().endswith(".pdf"):
