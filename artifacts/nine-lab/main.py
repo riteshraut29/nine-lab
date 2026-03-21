@@ -70,16 +70,27 @@ def record_usage(ip: str):
 def gemini_call(prompt: str, retries: int = 1) -> str:
     import google.generativeai as genai
     genai.configure(api_key=GEMINI_API_KEY)
-    model = genai.GenerativeModel("gemini-1.5-flash")
-    for attempt in range(retries + 1):
-        try:
-            response = model.generate_content(prompt)
-            return response.text
-        except Exception as e:
-            if attempt < retries:
-                time.sleep(2)
-            else:
-                raise e
+    models_to_try = ["gemini-2.0-flash", "gemini-2.0-flash-lite", "gemini-flash-latest"]
+    last_err = None
+    for model_name in models_to_try:
+        for attempt in range(retries + 1):
+            try:
+                model = genai.GenerativeModel(model_name)
+                response = model.generate_content(prompt)
+                return response.text
+            except Exception as e:
+                last_err = e
+                err_str = str(e).lower()
+                if "quota" in err_str or "rate" in err_str or "429" in err_str or "exhausted" in err_str:
+                    if attempt < retries:
+                        time.sleep(3)
+                    else:
+                        break  # Try next model
+                elif attempt < retries:
+                    time.sleep(2)
+                else:
+                    break  # Try next model
+    raise last_err
 
 # ── Tavily helper ────────────────────────────────────────────────────────────
 

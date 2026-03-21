@@ -59,7 +59,7 @@ Every package extends `tsconfig.base.json` which sets `composite: true`. The roo
 - Routes: `GET /ninelab`, `POST /ninelab/generate`, `GET /ninelab/status/{job_id}`, `GET /ninelab/pdf/{filename}`
 - Required env vars: `GEMINI_API_KEY`, `TAVILY_API_KEY`
 - Optional env vars: `SUPABASE_URL`, `SUPABASE_KEY` (usage tracking)
-- AI model: `gemini-1.5-flash` via `google-generativeai`
+- AI model: `gemini-2.0-flash` via `google-generativeai`
 - PDF generation: ReportLab
 - Portability: copy `artifacts/nine-lab/`, set 4 env vars, run `pip install -r requirements.txt && uvicorn main:app --host 0.0.0.0 --port 8000`
 
