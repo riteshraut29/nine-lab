@@ -276,7 +276,8 @@ def make_pdf_reality(job_id: str, company: str, analysis: dict, research: dict) 
     from reportlab.lib.pagesizes import A4
     from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
     from reportlab.lib.units import mm
-    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, HRFlowable, Table, TableStyle, PageBreak, Rect, Drawing
+    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, HRFlowable, Table, TableStyle, PageBreak
+    from reportlab.graphics.shapes import Drawing, Rect
     from reportlab.lib.colors import HexColor
     from reportlab.pdfgen import canvas as pdfcanvas
 
@@ -340,14 +341,16 @@ def make_pdf_reality(job_id: str, company: str, analysis: dict, research: dict) 
             score_val = int(match_nums[0])
             match_score = min(score_val, 100)
 
-    # Match score progress bar using Table
-    bar_filled_width = (match_score / 100) * 150
-    bar_empty_width = 150 - bar_filled_width
-    bar_table = Table([[
-        Rect(bar_filled_width, 10, fillColor=PURPLE),
-        Rect(bar_empty_width, 10, fillColor=GREY)
-    ]], colWidths=[bar_filled_width, bar_empty_width])
-    story.append(bar_table)
+    # Match score progress bar using Drawing
+    bar_total = 150
+    bar_height = 12
+    bar_filled = (match_score / 100) * bar_total
+    d = Drawing(bar_total, bar_height)
+    bg = Rect(0, 0, bar_total, bar_height, fillColor=GREY, strokeColor=None)
+    fg = Rect(0, 0, bar_filled, bar_height, fillColor=PURPLE, strokeColor=None)
+    d.add(bg)
+    d.add(fg)
+    story.append(d)
     story.append(Spacer(1, 4))
     story.append(Paragraph(f"<b>Match Score: {match_score}%</b>", 
         ParagraphStyle("Score", parent=styles["Normal"], fontSize=11, textColor=DARK, fontName="Helvetica-Bold")))
