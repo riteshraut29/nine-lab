@@ -3,7 +3,7 @@ from datetime import datetime, date
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
 from fastapi import FastAPI, Request, HTTPException
-from fastapi.responses import HTMLResponse, FileResponse, JSONResponse
+from fastapi.responses import HTMLResponse, FileResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from dotenv import load_dotenv
@@ -556,6 +556,10 @@ class GenerateRequest(BaseModel):
     company: str
 
 # ── Routes ───────────────────────────────────────────────────────────────────
+
+@app.get("/", response_class=RedirectResponse)
+async def root_redirect():
+    return RedirectResponse(url="/ninelab/", status_code=302)
 
 @app.get("/ninelab", response_class=HTMLResponse)
 @app.get("/ninelab/", response_class=HTMLResponse)
