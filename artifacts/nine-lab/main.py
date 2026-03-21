@@ -107,10 +107,10 @@ def record_usage(ip: str):
 
 # ── Gemini helper ────────────────────────────────────────────────────────────
 
-def gemini_call(prompt: str, retries: int = 1) -> str:
+def gemini_call(prompt: str, retries: int = 5) -> str:
     import google.generativeai as genai
     genai.configure(api_key=GEMINI_API_KEY)
-    models_to_try = ["gemini-2.0-flash", "gemini-2.0-flash-lite", "gemini-flash-latest"]
+    models_to_try = ["gemini-2.0-flash", "gemini-2.0-flash-lite", "gemini-1.5-flash"]
     last_err = None
     for model_name in models_to_try:
         for attempt in range(retries + 1):
@@ -121,13 +121,10 @@ def gemini_call(prompt: str, retries: int = 1) -> str:
             except Exception as e:
                 last_err = e
                 err_str = str(e).lower()
-                if "quota" in err_str or "rate" in err_str or "429" in err_str or "exhausted" in err_str:
-                    if attempt < retries:
-                        time.sleep(3)
-                    else:
-                        break  # Try next model
-                elif attempt < retries:
-                    time.sleep(2)
+                is_rate_limit = "quota" in err_str or "rate" in err_str or "429" in err_str or "exhausted" in err_str
+                if attempt < retries:
+                    wait = (2 ** attempt) * 5 if is_rate_limit else 3
+                    time.sleep(wait)
                 else:
                     break  # Try next model
     raise last_err
@@ -683,6 +680,7 @@ def run_pipeline(job_id: str, resume: str, jd: str, company: str):
 
         async def parallel_stage1():
             r_task = loop.run_in_executor(executor, agent_research, company, jd)
+            await asyncio.sleep(2)  # stagger to avoid simultaneous quota hits
             a_task = loop.run_in_executor(executor, agent_analysis, resume, jd, company)
             return await asyncio.gather(r_task, a_task)
 
@@ -696,6 +694,7 @@ def run_pipeline(job_id: str, resume: str, jd: str, company: str):
         async def parallel_stage2():
             p_task = loop.run_in_executor(executor, agent_plan, resume, jd, company,
                                           analysis_result["data"], research_result["data"])
+            await asyncio.sleep(2)  # stagger to avoid simultaneous quota hits
             r_task = loop.run_in_executor(executor, agent_resume, resume, jd, company)
             return await asyncio.gather(p_task, r_task)
 
