@@ -18,6 +18,7 @@ PDF_DIR.mkdir(exist_ok=True)
 app = FastAPI(title="Nine Lab")
 app.mount("/ninelab/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
+PORT = int(os.getenv("PORT", "22451"))
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 TAVILY_API_KEY = os.getenv("TAVILY_API_KEY", "")
 SUPABASE_URL = os.getenv("SUPABASE_URL", "")

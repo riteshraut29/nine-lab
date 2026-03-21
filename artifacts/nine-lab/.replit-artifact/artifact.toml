@@ -1,0 +1,22 @@
+kind = "web"
+previewPath = "/ninelab/"
+title = "Nine Lab"
+version = "1.0.0"
+id = "artifacts/nine-lab"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/ninelab/" ]
+localPort = 22451
+
+[services.development]
+run = "cd /home/runner/workspace/artifacts/nine-lab && pip install -r requirements.txt -q && uvicorn main:app --host 0.0.0.0 --port $PORT --reload"
+
+[services.env]
+PORT = "22451"
+BASE_PATH = "/ninelab/"

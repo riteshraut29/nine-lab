@@ -55,13 +55,14 @@ Every package extends `tsconfig.base.json` which sets `composite: true`. The roo
 - Entry: `main.py` — FastAPI app with all routes, AI agents, and PDF generation
 - Static: `static/index.html` — full single-page frontend
 - PDFs: `pdfs/` — generated PDF output directory
-- Workflow: "Nine Lab" — `cd artifacts/nine-lab && pip install -r requirements.txt -q && uvicorn main:app --host 0.0.0.0 --port 8000 --reload`
-- Routes: `GET /ninelab`, `POST /ninelab/generate`, `GET /ninelab/status/{job_id}`, `GET /ninelab/pdf/{filename}`
+- Artifact workflow: "artifacts/nine-lab: web" — `cd /home/runner/workspace/artifacts/nine-lab && pip install -r requirements.txt -q && uvicorn main:app --host 0.0.0.0 --port $PORT --reload`
+- Registered at: `/ninelab/` (port 22451, `artifacts/nine-lab/.replit-artifact/artifact.toml`)
+- Routes: `GET /ninelab/`, `POST /ninelab/generate`, `GET /ninelab/status/{job_id}`, `GET /ninelab/pdf/{filename}`, `GET /ninelab/health`
 - Required env vars: `GEMINI_API_KEY`, `TAVILY_API_KEY`
 - Optional env vars: `SUPABASE_URL`, `SUPABASE_KEY` (usage tracking)
-- AI model: `gemini-2.0-flash` via `google-generativeai`
+- AI model: `gemini-2.0-flash` via `google-generativeai` (fallback: `gemini-2.0-flash-lite`, `gemini-flash-latest`)
 - PDF generation: ReportLab
-- Portability: copy `artifacts/nine-lab/`, set 4 env vars, run `pip install -r requirements.txt && uvicorn main:app --host 0.0.0.0 --port 8000`
+- Portability: copy `artifacts/nine-lab/`, set env vars, run `pip install -r requirements.txt && uvicorn main:app --host 0.0.0.0 --port 8000`
 
 ## Packages
 
