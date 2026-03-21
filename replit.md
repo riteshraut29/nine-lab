@@ -52,16 +52,18 @@ Every package extends `tsconfig.base.json` which sets `composite: true`. The roo
 
 `artifacts/nine-lab/` is a **portable Python FastAPI app** — NOT part of the pnpm monorepo. It has its own `requirements.txt` and runs independently.
 
-- Entry: `main.py` — FastAPI app with all routes, AI agents, and PDF generation
-- Static: `static/index.html` — full single-page frontend
+- Entry: `main.py` — FastAPI app with all routes, 4 AI agents, and 4 PDF generators (~1350+ lines)
+- Static: `static/index.html` — full single-page frontend with auth, LinkedIn import, progress tracking, 4 download cards
 - PDFs: `pdfs/` — generated PDF output directory
 - Artifact workflow: "artifacts/nine-lab: web" — `cd /home/runner/workspace/artifacts/nine-lab && pip install -r requirements.txt -q && uvicorn main:app --host 0.0.0.0 --port $PORT --reload`
 - Registered at: `/ninelab/` (port 22451, `artifacts/nine-lab/.replit-artifact/artifact.toml`)
-- Routes: `GET /ninelab/`, `POST /ninelab/generate`, `GET /ninelab/status/{job_id}`, `GET /ninelab/pdf/{filename}`, `GET /ninelab/health`
-- Required env vars: `GEMINI_API_KEY`, `TAVILY_API_KEY`
-- Optional env vars: `SUPABASE_URL`, `SUPABASE_KEY` (usage tracking)
-- AI model: `gemini-2.0-flash` via `google-generativeai` (fallback: `gemini-2.0-flash-lite`, `gemini-flash-latest`)
-- PDF generation: ReportLab
+- Routes: `GET /ninelab/`, `POST /ninelab/generate`, `GET /ninelab/status/{job_id}`, `GET /ninelab/pdf/{filename}`, `GET /ninelab/health`, `POST /ninelab/auth/register`, `POST /ninelab/auth/login`, `GET /ninelab/auth/me`, `POST /ninelab/auth/refresh`, `POST /ninelab/extract-resume`, `POST /ninelab/import-linkedin`
+- Required env vars: `GROQ_API_KEY`, `GEMINI_API_KEY`, `TAVILY_API_KEY`, `SUPABASE_URL`, `SUPABASE_KEY`, `SUPABASE_SERVICE_KEY`
+- AI: Groq (primary, models: llama-3.3-70b-versatile → llama-3.1-8b-instant → gemma2-9b-it) with Gemini fallback
+- 4 AI agents: agent_analysis, agent_plan, agent_resume, agent_company_report (+ agent_research for background data)
+- 4 PDF outputs: Reality Report, Prep Plan, Revised Resume, Company Report — all using shared ReportLab utilities
+- Auth: Supabase auth with JWT tokens, in-memory rate limiting (3/day logged-in, 1/day anonymous)
+- PDF generation: ReportLab with shared utility functions (_pdf_styles, _footer_handler, _make_progress_bar, _colored_box)
 - Portability: copy `artifacts/nine-lab/`, set env vars, run `pip install -r requirements.txt && uvicorn main:app --host 0.0.0.0 --port 8000`
 
 ## Packages

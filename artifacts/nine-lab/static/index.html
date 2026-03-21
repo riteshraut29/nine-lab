@@ -1121,7 +1121,7 @@
       <div class="results-panel" id="resultsPanel">
         <div class="results-header">
           <h2>Your kit is ready</h2>
-          <p>Download your 3 personalized PDFs below</p>
+          <p>Download your 4 personalized PDFs below</p>
         </div>
         <div class="pdf-cards">
           <div class="pdf-card">
@@ -1159,6 +1159,18 @@
               </div>
             </div>
             <a href="#" class="download-btn" id="downloadResume">↓ Download</a>
+          </div>
+          <div class="pdf-card">
+            <div class="pdf-card-left">
+              <span class="pdf-icon-sm">🏢</span>
+              <div>
+                <div class="pdf-title">Company Report</div>
+                <div class="pdf-desc">
+                  Interview process, culture, salary, and insider tips
+                </div>
+              </div>
+            </div>
+            <a href="#" class="download-btn" id="downloadCompany">↓ Download</a>
           </div>
         </div>
         <button class="try-again-btn" onclick="resetApp()">Start over</button>
@@ -1608,7 +1620,9 @@
           `${BASE}/pdf/${files.plan}`;
         document.getElementById("downloadResume").href =
           `${BASE}/pdf/${files.resume}`;
-        ["downloadReality", "downloadPlan", "downloadResume"].forEach((id) =>
+        document.getElementById("downloadCompany").href =
+          `${BASE}/pdf/${files.company}`;
+        ["downloadReality", "downloadPlan", "downloadResume", "downloadCompany"].forEach((id) =>
           document.getElementById(id).setAttribute("download", ""),
         );
         document.getElementById("submitBtn").disabled = false;
@@ -1630,6 +1644,47 @@
         box.textContent = msg;
         box.classList.add("visible");
         box.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }
+
+      async function importLinkedIn() {
+        const url = document.getElementById("linkedinUrl").value.trim();
+        const statusEl = document.getElementById("linkedinStatus");
+        const btn = document.getElementById("linkedinImportBtn");
+        if (!url || !url.includes("linkedin.com/in/")) {
+          statusEl.textContent = "Please enter a valid LinkedIn profile URL.";
+          statusEl.style.display = "block";
+          statusEl.style.color = "#EF4444";
+          return;
+        }
+        btn.disabled = true;
+        btn.textContent = "Importing...";
+        statusEl.textContent = "Extracting profile data...";
+        statusEl.style.display = "block";
+        statusEl.style.color = "#6C63FF";
+        try {
+          const headers = { "Content-Type": "application/json" };
+          if (authToken) headers["Authorization"] = `Bearer ${authToken}`;
+          const resp = await fetch(`${BASE}/import-linkedin`, {
+            method: "POST",
+            headers,
+            body: JSON.stringify({ url }),
+          });
+          const data = await resp.json();
+          if (resp.ok && data.text) {
+            document.getElementById("resumeInput").value = data.text;
+            statusEl.textContent = "Profile imported successfully!";
+            statusEl.style.color = "#22C55E";
+          } else {
+            statusEl.textContent = data.detail || "Could not extract profile data.";
+            statusEl.style.color = "#EF4444";
+          }
+        } catch (e) {
+          statusEl.textContent = "Network error. Please try again.";
+          statusEl.style.color = "#EF4444";
+        } finally {
+          btn.disabled = false;
+          btn.textContent = "Import";
+        }
       }
 
       function resetApp() {
@@ -1695,48 +1750,7 @@
         if (file) handlePdfFile(file);
       }
 
-      async function importLinkedIn() {
-    const url = document.getElementById('linkedinUrl').value.trim();
-    const btn = document.getElementById('linkedinImportBtn');
-    const status = document.getElementById('linkedinStatus');
-
-    if (!url) { showLinkedInStatus('Please enter your LinkedIn profile URL.', 'error'); return; }
-    if (!url.includes('linkedin.com')) { showLinkedInStatus('Please enter a valid LinkedIn URL.', 'error'); return; }
-
-    btn.disabled = true;
-    btn.textContent = 'Importing...';
-    showLinkedInStatus('Fetching your LinkedIn profile — this takes ~10 seconds...', 'loading');
-
-    try {
-      const resp = await fetch(`${BASE}/import-linkedin`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url })
-      });
-      const data = await resp.json();
-      if (!resp.ok) {
-        showLinkedInStatus(data.detail || 'Could not import profile. Make sure it is public.', 'error');
-      } else {
-        document.getElementById('resumeInput').value = data.text;
-        updateWordCount('resumeInput', 'resumeCount', 0);
-        showLinkedInStatus('Profile imported! Review the text below and make any edits.', 'success');
-      }
-    } catch (e) {
-      showLinkedInStatus('Network error. Please try again.', 'error');
-    } finally {
-      btn.disabled = false;
-      btn.textContent = 'Import';
-    }
-  }
-
-  function showLinkedInStatus(msg, type) {
-    const el = document.getElementById('linkedinStatus');
-    el.textContent = msg;
-    el.className = 'linkedin-status ' + type;
-    el.style.display = 'block';
-  }
-
-  function clearUpload() {
+      function clearUpload() {
         document.getElementById("resumePdfInput").value = "";
         document.getElementById("resumeInput").value = "";
         document.getElementById("resumeCount").textContent = "0 words";

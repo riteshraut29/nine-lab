@@ -172,6 +172,35 @@ def tavily_search(query: str, retries: int = 1) -> list[dict]:
             else:
                 raise e
 
+# ── Text helpers ──────────────────────────────────────────────────────────────
+
+def strip_md(text: str) -> str:
+    if not text:
+        return ""
+    text = re.sub(r'```.*?```', '', text, flags=re.DOTALL)
+    text = re.sub(r'^#{1,6}\s*', '', text, flags=re.MULTILINE)
+    text = re.sub(r'\*\*\*(.*?)\*\*\*', r'\1', text)
+    text = re.sub(r'\*\*(.*?)\*\*', r'\1', text)
+    text = re.sub(r'__(.*?)__', r'\1', text)
+    text = re.sub(r'(?<!\w)\*([^*]+?)\*(?!\w)', r'\1', text)
+    text = re.sub(r'`([^`]+?)`', r'\1', text)
+    text = re.sub(r'^---+$', '', text, flags=re.MULTILINE)
+    text = re.sub(r'^\*\s', '\u2022 ', text, flags=re.MULTILINE)
+    text = re.sub(r'^-\s', '\u2022 ', text, flags=re.MULTILINE)
+    return text.strip()
+
+def safe_text(text: str) -> str:
+    return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+def extract_section(text: str, header: str) -> str:
+    pattern = rf'(?:^|\n)\s*(?:\d+\.\s*)?{re.escape(header)}[:\s]*\n?(.*?)(?=\n\s*(?:\d+\.\s*)?[A-Z][A-Z\s/&]{{3,}}\s*:|$)'
+    m = re.search(pattern, text, re.DOTALL | re.IGNORECASE)
+    return strip_md(m.group(1).strip()) if m else ""
+
+def section_bullets(text: str) -> list:
+    lines = [l.strip() for l in text.split('\n') if l.strip() and not l.strip().startswith(('===', '---'))]
+    return [l.lstrip('\u2022•-*0123456789. ') for l in lines if len(l) > 3]
+
 # ── Agents ───────────────────────────────────────────────────────────────────
 
 def agent_research(company: str, jd: str) -> dict:
@@ -187,24 +216,68 @@ Web search results about the company:
 {snippets}
 
 Provide a structured analysis with these sections:
-1. COMPANY OVERVIEW (2-3 sentences about culture, size, domain)
-2. ROLE REQUIREMENTS (top 5 must-have skills/qualifications)
-3. INTERVIEW PROCESS (typical rounds at this company)
-4. COMPANY RED FLAGS OR GREEN FLAGS (based on the JD and search results)
-5. SALARY RANGE ESTIMATE (for Indian market, entry/mid level)
+1. COMPANY OVERVIEW: (2-3 sentences about culture, size, domain)
+2. ROLE REQUIREMENTS: (top 5 must-have skills/qualifications)
+3. INTERVIEW PROCESS: (typical rounds at this company)
+4. GREEN FLAGS: (3+ positive things about this company)
+5. RED FLAGS: (2+ things to watch out for)
+6. SALARY RANGE: (for Indian market in INR, entry/mid level)
+7. WHAT THEY LOOK FOR: (5 specific things this company values in candidates)
 
-Be concise, factual, and actionable. Format each section clearly."""
+Be concise, factual, and actionable. Use plain text, no markdown formatting."""
 
         text = gemini_call(prompt, retries=1)
         return {"success": True, "data": text, "source": "tavily+gemini"}
     except Exception as e:
         err_msg = str(e)[:60]
-        return {"success": False, "data": f"⚠️ Note: Company research data unavailable ({err_msg}). Proceeding with JD-only analysis.", "source": "fallback"}
+        return {"success": False, "data": f"Company research data unavailable ({err_msg}).", "source": "fallback"}
+
+
+def agent_company_report(company: str, jd: str, research_snippets: str) -> dict:
+    try:
+        prompt = f"""You are a company intelligence analyst helping an Indian student prepare for a placement interview.
+
+COMPANY: {company}
+JOB DESCRIPTION: {jd[:2000]}
+WEB RESEARCH:
+{research_snippets[:3000]}
+
+Write a comprehensive company report with these exact sections (use plain text only, no markdown):
+
+COMPANY OVERVIEW: What they do, founded year, HQ location, company size, industry. 3-4 lines.
+
+CULTURE AND WORK ENVIRONMENT: Work culture, values, employee reviews summary. 3-4 lines.
+
+RECENT NEWS: Any recent developments, funding, acquisitions, product launches in last few months. 2-3 points.
+
+INTERVIEW PROCESS: Exact numbered steps (Round 1, Round 2, etc.) and what happens in each round.
+
+WHAT THEY TEST: For each interview round, what specific skills/topics they evaluate.
+
+TOP 5 INTERVIEW QUESTIONS: The 5 most commonly asked questions at {company} for this role. Include brief model answers.
+
+TECH STACK: Technologies, frameworks, tools this company uses.
+
+SALARY RANGE: Salary range in INR (\u20b9) for this role at {company}. Give min and max.
+
+GREEN FLAGS: Minimum 3 positive things about working at {company}.
+
+RED FLAGS: Minimum 2 things to watch out for at {company}.
+
+INTERVIEW ADVANTAGE: 3 specific things the candidate should say in the interview to impress {company}. Be very specific to this company.
+
+Be factual, specific to {company}, and actionable. Do not use generic advice. Use plain text only."""
+
+        text = gemini_call(prompt, retries=1)
+        return {"success": True, "data": text}
+    except Exception as e:
+        err_msg = str(e)[:60]
+        return {"success": False, "data": f"Company report unavailable ({err_msg})."}
 
 
 def agent_analysis(resume: str, jd: str, company: str) -> dict:
     try:
-        prompt = f"""You are a supportive career coach helping Indian students prepare for placements. Analyze this candidate's fit.
+        prompt = f"""You are a supportive career coach helping an Indian student prepare for placements. Analyze this candidate's fit.
 
 RESUME:
 {resume[:3000]}
@@ -214,52 +287,88 @@ JOB DESCRIPTION:
 
 COMPANY: {company}
 
-Provide analysis with these sections (be friendly, solution-focused, and confident):
+Provide analysis with these exact sections (use plain text only, no markdown):
 
-1. MATCH SCORE: X/100 (percentage match, with one encouraging sentence)
-2. TOP 3 STRENGTHS: (things your resume does well for this job)
-3. TOP 3 PRIORITY GAPS: (numbered 1,2,3 — most critical first, with specific actionable fixes for each)
-4. RESUME RED FLAGS: (3 specific issues to fix — focus on solutions, not problems)
-5. SKILLS TO ACQUIRE: (concrete skills to learn, with priority: HIGH/MEDIUM/LOW)
-6. VERDICT: (1-2 sentences: Should they apply now? What's the roadmap?)
+MATCH SCORE: Give a number X out of 100 and one bold verdict sentence.
 
-TONE: Like a senior friend giving honest but encouraging advice. Make the student feel confident that these gaps are fixable. Every gap should have a clear solution. End with hope and actionability."""
+TOP 3 STRENGTHS: Three things this resume does well for this specific job. Be specific.
+
+TOP 3 PRIORITY GAPS: Numbered 1, 2, 3. Most critical first. Each gap must have a specific actionable fix.
+
+DETAILED STRENGTHS: 4-5 detailed resume strengths with explanation.
+
+DETAILED GAPS: Each gap with a PRIORITY NUMBER (1=highest) and a specific fix the student can implement.
+
+RESUME RED FLAGS: 3 specific issues in the resume with exact actionable fix for each.
+
+COMPANY OVERVIEW: What {company} does in 3 lines.
+
+WHAT THEY LOOK FOR: 5 specific things {company} values in candidates.
+
+THEIR INTERVIEW PROCESS: Numbered steps of {company}'s interview process.
+
+SALARY RANGE: Salary range in INR (\u20b9) for this role.
+
+PRIORITY ACTIONS: Top 3 things to fix first, in order of priority.
+
+NEXT STEPS: 5 specific next steps the student should take immediately.
+
+CLOSING MESSAGE: A warm, motivating, personalized closing message. Make the student feel confident and capable. Reference something specific from their resume.
+
+TONE: Like a senior friend giving honest but solution-first advice. Never harsh. Every gap must have a clear fix. The student must feel motivated and capable after reading this."""
 
         text = gemini_call(prompt, retries=1)
         return {"success": True, "data": text}
     except Exception as e:
         err_msg = str(e)[:60]
-        return {"success": False, "data": f"⚠️ Note: Analysis unavailable ({err_msg}). Please try again.", "source": "fallback"}
+        return {"success": False, "data": f"Analysis unavailable ({err_msg}). Please try again."}
 
 
 def agent_plan(resume: str, jd: str, company: str, analysis: str, research: str) -> dict:
     try:
-        prompt = f"""You are a placement coach creating a detailed preparation plan for an Indian student.
+        prompt = f"""You are a personal placement coach creating a preparation plan for an Indian student.
 
 COMPANY: {company}
-JOB DESCRIPTION SUMMARY: {jd[:1000]}
+JOB DESCRIPTION: {jd[:1000]}
 CANDIDATE ANALYSIS: {analysis[:1500]}
 COMPANY RESEARCH: {research[:1000]}
 
-Create a detailed PREP PLAN with:
-1. STRUCTURED STUDY SCHEDULE (phase-by-phase breakdown with specific tasks, time allocation, and priorities)
-2. MOCK INTERVIEW QUESTIONS (10 role-specific technical questions with brief answers)
-3. HR/BEHAVIORAL QUESTIONS (5 questions tailored to {company}'s culture)
-4. RESOURCES (free resources: YouTube channels, websites, GitHub repos)
-5. PRE-INTERVIEW CHECKLIST (10 items)
+Create a prep plan with these exact sections (use plain text only, no markdown):
 
-Format clearly with headers. Be specific to the role and company. Include Indian context (FAANG India, startups, service companies as relevant)."""
+CURRENT LEVEL: 2-3 lines honest assessment of where this candidate stands right now.
+
+PRIORITY 1 CRITICAL: What to master first. Why it matters for this exact role at {company}. Specific topics to cover.
+
+PRIORITY 2 IMPORTANT: Second tier skills needed. Why they matter. Specific topics.
+
+PRIORITY 3 GOOD TO HAVE: Polish items. Why they help. Specific topics.
+
+PHASE 1 FOUNDATION: Specific actionable tasks to build foundation. Include free resource links (GeeksForGeeks, CodeWithHarry, YouTube channels, etc.). Phase completion goal.
+
+PHASE 2 CORE SKILLS: Specific tasks to build core competencies. Resource links. Phase completion goal.
+
+PHASE 3 COMPANY PREP: Specific tasks to prepare for {company}. Company-specific resources. Phase completion goal.
+
+TECHNICAL QUESTIONS: 10 technical interview Q&A pairs specific to this role at {company}. Give both question and a brief model answer for each.
+
+HR QUESTIONS: 5 HR/behavioral interview Q&A pairs specific to {company}'s culture. Give both question and model answer.
+
+FREE RESOURCES: List of free resources with URLs. Include Indian resources (CodeWithHarry, GFG, TakeUForward, Striver's SDE Sheet, etc.).
+
+INTERVIEW DAY CHECKLIST: 10 specific items for interview day preparation.
+
+TONE: Personal coach. Directive. Everything tailored to this exact role at {company}. Zero generic advice. The student should know exactly what to do."""
 
         text = gemini_call(prompt, retries=1)
         return {"success": True, "data": text}
     except Exception as e:
         err_msg = str(e)[:60]
-        return {"success": False, "data": f"⚠️ Note: Prep plan generation encountered issues ({err_msg}). Partial plan provided.", "source": "fallback"}
+        return {"success": False, "data": f"Prep plan generation encountered issues ({err_msg}). Partial plan provided."}
 
 
 def agent_resume(resume: str, jd: str, company: str) -> dict:
     try:
-        prompt = f"""You are an expert ATS-optimized resume writer for Indian job market.
+        prompt = f"""You are an expert ATS-optimized resume writer for the Indian job market (2025 standards).
 
 ORIGINAL RESUME:
 {resume[:3000]}
@@ -269,430 +378,553 @@ TARGET JOB DESCRIPTION:
 
 TARGET COMPANY: {company}
 
-Rewrite this resume to be ATS-optimized and tailored for this specific role. Output a COMPLETE revised resume with:
+Rewrite this resume completely. Output ONLY the resume text (no commentary, no notes). Use plain text, no markdown.
 
-1. CONTACT SECTION (name, email, phone, LinkedIn, GitHub — use placeholders if not in original)
-2. PROFESSIONAL SUMMARY (3-4 lines, keyword-rich, tailored to this JD)
-3. TECHNICAL SKILLS (organized by category, match JD keywords exactly)
-4. WORK EXPERIENCE (each role with 3-5 bullet points starting with strong action verbs, quantified where possible)
-5. PROJECTS (2-3 most relevant, with tech stack and impact)
-6. EDUCATION (standard format)
-7. CERTIFICATIONS / ACHIEVEMENTS (if any in original)
+STRUCTURE (in this exact order):
+NAME: (candidate's full name in caps)
+JOB TITLE: (the exact job title from the JD)
+CONTACT: (phone | email | LinkedIn URL | GitHub URL | City — all on one line, separated by |)
+
+PROFESSIONAL SUMMARY: 3 lines. Must include the exact job title from the JD, top 3 relevant skills, and value proposition. No filler phrases.
+
+TECHNICAL SKILLS: Organized by category matching JD requirements. Example: "Languages: Python, Java, C++ | Frameworks: React, Node.js | Tools: Docker, AWS"
+
+WORK EXPERIENCE:
+[Company Name] | [Role] | [Duration]
+- [Action verb] [task] [quantified result]
+(3-5 bullets per role, every bullet starts with strong action verb, STAR format, quantified)
+
+PROJECTS:
+[Project Name] | [Tech Stack]
+- [What it does] [impact/scale]
+(2-3 most relevant projects tailored to what {company} cares about)
+
+EDUCATION:
+[Degree] | [University] | [Year] | [GPA/Percentage if good]
+
+ACHIEVEMENTS:
+- [Achievement with numbers]
 
 RULES:
-- Use keywords from the JD naturally
-- Start bullets with: Developed, Implemented, Optimized, Led, Built, Reduced, Increased, etc.
-- Quantify everything possible (%, numbers, scale)
-- Remove irrelevant information
-- Keep it to 1 page worth of content
-- Do NOT include photos, objective statements, or "References available"
+- Open Professional Summary with the exact job title from the JD
+- Use keywords from the JD naturally throughout
+- STAR format for all experience bullets
+- Quantify every achievement with numbers
+- Remove ALL filler: quick learner, team player, hardworking, passionate, eager
+- Start every bullet with: Developed, Implemented, Optimized, Led, Built, Reduced, Increased, Designed, Architected, Deployed, Automated, Migrated
+- Include GitHub and LinkedIn links
+- Tailor project descriptions to match what {company} specifically values
+- Keep to 1 page of content maximum
+- No photos, no objective statement, no references line
 
-Output the complete resume text, ready to paste."""
+Output ONLY the resume text. No explanations before or after."""
 
         text = gemini_call(prompt, retries=1)
         return {"success": True, "data": text}
     except Exception as e:
         err_msg = str(e)[:60]
-        return {"success": False, "data": f"⚠️ Note: Resume revision unavailable ({err_msg}). Original resume content preserved.", "source": "fallback"}
+        return {"success": False, "data": f"Resume revision unavailable ({err_msg}). Original resume content preserved."}
 
 # ── PDF Generation ───────────────────────────────────────────────────────────
 
-def make_pdf_reality(job_id: str, company: str, analysis: dict, research: dict) -> str:
-    from reportlab.lib.pagesizes import A4
-    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-    from reportlab.lib.units import mm
-    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, HRFlowable, Table, TableStyle, PageBreak
-    from reportlab.graphics.shapes import Drawing, Rect
-    from reportlab.lib.colors import HexColor
-    from reportlab.pdfgen import canvas as pdfcanvas
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import mm
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, HRFlowable, Table, TableStyle, PageBreak
+from reportlab.graphics.shapes import Drawing, Rect
+from reportlab.lib.colors import HexColor
+from reportlab.pdfgen import canvas as pdfcanvas
 
-    PURPLE = HexColor("#6C63FF")
-    DARK = HexColor("#1A1A2E")
-    LIGHT_BG = HexColor("#F0EEFF")
-    GREEN = HexColor("#22C55E")
-    RED = HexColor("#EF4444")
-    GREY = HexColor("#D1D5DB")
-    WHITE = HexColor("#FFFFFF")
+PDF_PURPLE = HexColor("#6C63FF")
+PDF_DARK = HexColor("#1A1A2E")
+PDF_LIGHT = HexColor("#F0EEFF")
+PDF_GREEN = HexColor("#22C55E")
+PDF_RED = HexColor("#EF4444")
+PDF_AMBER = HexColor("#F59E0B")
+PDF_GREY = HexColor("#D1D5DB")
+PDF_LIGHT_GREEN = HexColor("#DCFCE7")
+PDF_LIGHT_RED = HexColor("#FEE2E2")
+PDF_LIGHT_AMBER = HexColor("#FEF3C7")
+PDF_WHITE = HexColor("#FFFFFF")
+PDF_MUTED = HexColor("#888888")
 
-    filename = f"{job_id}_reality.pdf"
-    filepath = PDF_DIR / filename
+def _pdf_styles():
+    s = getSampleStyleSheet()
+    return s, {
+        "title": ParagraphStyle("NLTitle", parent=s["Normal"], fontSize=18, textColor=PDF_DARK, fontName="Helvetica-Bold", spaceAfter=4, leading=22),
+        "h2": ParagraphStyle("NLH2", parent=s["Normal"], fontSize=13, textColor=PDF_PURPLE, fontName="Helvetica-Bold", spaceAfter=6, spaceBefore=10, leading=16),
+        "h3": ParagraphStyle("NLH3", parent=s["Normal"], fontSize=11, textColor=PDF_DARK, fontName="Helvetica-Bold", spaceAfter=4, leading=14),
+        "body": ParagraphStyle("NLBody", parent=s["Normal"], fontSize=10.5, textColor=PDF_DARK, spaceAfter=4, leading=14),
+        "small": ParagraphStyle("NLSmall", parent=s["Normal"], fontSize=9, textColor=PDF_DARK, spaceAfter=3, leading=12),
+        "subtitle": ParagraphStyle("NLSub", parent=s["Normal"], fontSize=10, textColor=PDF_MUTED, spaceAfter=8, leading=13),
+        "brand": ParagraphStyle("NLBrand", parent=s["Normal"], fontSize=10, textColor=PDF_PURPLE, fontName="Helvetica-Bold", spaceAfter=1),
+    }
 
-    doc = SimpleDocTemplate(
-        str(filepath), pagesize=A4,
-        leftMargin=18*mm, rightMargin=18*mm,
-        topMargin=20*mm, bottomMargin=20*mm
-    )
+def _footer_handler(canvas_obj, doc_obj):
+    canvas_obj.saveState()
+    canvas_obj.setFont("Helvetica", 9)
+    canvas_obj.setFillColor(PDF_PURPLE)
+    canvas_obj.drawCentredString(A4[0] / 2, 20, "Nine Lab \u00b7 Your Placement Partner \u00b7 ninelab.in")
+    canvas_obj.setFont("Helvetica", 9)
+    canvas_obj.setFillColor(PDF_MUTED)
+    canvas_obj.drawRightString(A4[0] - 72, 20, f"Page {doc_obj.page}")
+    canvas_obj.restoreState()
 
-    styles = getSampleStyleSheet()
-    
-    # Define styles
-    h1_style = ParagraphStyle("H1", parent=styles["Normal"],
-        fontSize=24, textColor=PURPLE, fontName="Helvetica-Bold", spaceAfter=2, leading=28)
-    h2_style = ParagraphStyle("H2", parent=styles["Normal"],
-        fontSize=13, textColor=PURPLE, fontName="Helvetica-Bold", spaceAfter=8, spaceBefore=10)
-    h3_style = ParagraphStyle("H3", parent=styles["Normal"],
-        fontSize=11, textColor=DARK, fontName="Helvetica-Bold", spaceAfter=4)
-    body_style = ParagraphStyle("Body", parent=styles["Normal"],
-        fontSize=10, textColor=DARK, spaceAfter=4, leading=14)
-    small_style = ParagraphStyle("Small", parent=styles["Normal"],
-        fontSize=9, textColor=DARK, spaceAfter=3, leading=12)
-    subtitle_style = ParagraphStyle("Subtitle", parent=styles["Normal"],
-        fontSize=10, textColor=HexColor("#6B7280"), spaceAfter=12, leading=13)
+def _no_footer(canvas_obj, doc_obj):
+    pass
 
-    story = []
+def _make_progress_bar(score, width=400, height=14):
+    d = Drawing(width, height)
+    d.add(Rect(0, 0, width, height, fillColor=PDF_GREY, strokeColor=None, rx=4, ry=4))
+    fill_w = max(2, (score / 100) * width)
+    d.add(Rect(0, 0, fill_w, height, fillColor=PDF_PURPLE, strokeColor=None, rx=4, ry=4))
+    return d
 
-    def add_footer():
-        story.append(HRFlowable(width="100%", thickness=0.5, color=HexColor("#E5E7EB"), spaceAfter=4, spaceBefore=8))
-        story.append(Paragraph(
-            "Nine Lab · Your Placement Partner · ninelab.in",
-            ParagraphStyle("Footer", parent=styles["Normal"], fontSize=8, textColor=HexColor("#9CA3AF"), alignment=1)
-        ))
-
-    # PAGE 1 - EXECUTIVE SUMMARY
-    story.append(Paragraph("Nine Lab", ParagraphStyle("Brand", parent=styles["Normal"],
-        fontSize=10, textColor=PURPLE, fontName="Helvetica-Bold", spaceAfter=1)))
-    story.append(Paragraph("Reality Report", h1_style))
-    story.append(Paragraph(f"<b>{company}</b> · {datetime.now().strftime('%d %b %Y')}", subtitle_style))
-    story.append(Spacer(1, 8))
-
-    # Extract match score from analysis
-    analysis_text = analysis.get("data", "")
-    import re
-    match_line = [l for l in analysis_text.split("\n") if "MATCH SCORE" in l.upper()]
-    match_score = 50
-    if match_line:
-        match_nums = re.findall(r'\d+', match_line[0])
-        if match_nums:
-            score_val = int(match_nums[0])
-            match_score = min(score_val, 100)
-
-    # Match score progress bar using Drawing
-    bar_total = 150
-    bar_height = 12
-    bar_filled = (match_score / 100) * bar_total
-    d = Drawing(bar_total, bar_height)
-    bg = Rect(0, 0, bar_total, bar_height, fillColor=GREY, strokeColor=None)
-    fg = Rect(0, 0, bar_filled, bar_height, fillColor=PURPLE, strokeColor=None)
-    d.add(bg)
-    d.add(fg)
-    story.append(d)
-    story.append(Spacer(1, 4))
-    story.append(Paragraph(f"<b>Match Score: {match_score}%</b>", 
-        ParagraphStyle("Score", parent=styles["Normal"], fontSize=11, textColor=DARK, fontName="Helvetica-Bold")))
-    
-    # Verdict
-    if match_score >= 70:
-        verdict = f"You're {match_score}% there — you're a strong fit for this role!"
-    elif match_score >= 50:
-        verdict = f"You're {match_score}% there — with some focused prep, you can crack this!"
-    else:
-        verdict = f"You're {match_score}% there — these gaps are fixable with the right roadmap."
-    story.append(Paragraph(verdict, 
-        ParagraphStyle("Verdict", parent=styles["Normal"], fontSize=11, textColor=DARK, fontName="Helvetica-Bold", spaceAfter=12)))
-
-    story.append(Spacer(1, 6))
-
-    # Two columns: Strengths and Gaps
-    strengths_lines = [l.strip() for l in analysis_text.split("\n") if l.strip() and "STRENGTH" in analysis_text.upper()][:3]
-    gaps_lines = [l.strip() for l in analysis_text.split("\n") if l.strip() and "GAP" in analysis_text.upper()][:3]
-
-    left_col = [Paragraph("<b>Your Top 3 Strengths</b>", h3_style)]
-    for line in strengths_lines:
-        if line and not any(x in line.upper() for x in ["STRENGTH", "SCORE"]):
-            left_col.append(Paragraph(f"• {line[:80]}", body_style))
-    left_col.append(Spacer(1, 4))
-
-    right_col = [Paragraph("<b>Your Top 3 Priority Gaps</b>", h3_style)]
-    for i, line in enumerate(gaps_lines, 1):
-        if line and not any(x in line.upper() for x in ["GAP", "SCORE", "CRITICAL"]):
-            right_col.append(Paragraph(f"<b>{i}.</b> {line[:70]}", body_style))
-    right_col.append(Spacer(1, 4))
-
-    col_table = Table([
-        [left_col, right_col]
-    ], colWidths=[180, 180], rowHeights=[160])
-    col_table.setStyle(TableStyle([
-        ("LEFTPADDING", (0, 0), (0, 0), 12),
-        ("RIGHTPADDING", (1, 0), (1, 0), 12),
+def _colored_box(flowables, bg_color=PDF_LIGHT, border_color=None, left_border_color=None, col_width=None):
+    w = col_width or 450
+    t = Table([[flowables]], colWidths=[w])
+    style_cmds = [
+        ("BACKGROUND", (0, 0), (-1, -1), bg_color),
+        ("LEFTPADDING", (0, 0), (-1, -1), 12),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 12),
         ("TOPPADDING", (0, 0), (-1, -1), 10),
         ("BOTTOMPADDING", (0, 0), (-1, -1), 10),
-        ("LINEBELOW", (0, 0), (0, 0), 1, GREEN),
-        ("LINEBELOW", (1, 0), (1, 0), 1, RED),
-    ]))
-    story.append(col_table)
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+    ]
+    if border_color:
+        style_cmds.append(("BOX", (0, 0), (-1, -1), 1, border_color))
+    if left_border_color:
+        style_cmds.append(("LINEBEFORE", (0, 0), (0, -1), 3, left_border_color))
+    t.setStyle(TableStyle(style_cmds))
+    return t
+
+def _render_lines(text, styles_dict, story_list):
+    clean = strip_md(text)
+    for line in clean.split('\n'):
+        line = line.strip()
+        if not line:
+            story_list.append(Spacer(1, 3))
+            continue
+        is_header = (re.match(r'^[A-Z][A-Z\s/&]{3,}:', line) or
+                     (line.isupper() and len(line) < 80 and len(line) > 3))
+        st = styles_dict["h2"] if is_header else styles_dict["body"]
+        try:
+            story_list.append(Paragraph(safe_text(line), st))
+        except Exception:
+            story_list.append(Paragraph(safe_text(line[:200]), styles_dict["body"]))
+
+
+def make_pdf_company_report(job_id: str, company: str, report_data: dict) -> str:
+    _, st = _pdf_styles()
+    filename = f"{job_id}_company.pdf"
+    filepath = PDF_DIR / filename
+    doc = SimpleDocTemplate(str(filepath), pagesize=A4, leftMargin=72, rightMargin=72, topMargin=72, bottomMargin=50)
+
+    story = []
+    text = strip_md(report_data.get("data", ""))
+
+    # PAGE 1
+    story.append(Paragraph("Nine Lab", st["brand"]))
+    story.append(Paragraph(f"{safe_text(company)}", ParagraphStyle("CompH", fontName="Helvetica-Bold", fontSize=20, textColor=PDF_PURPLE, spaceAfter=4, leading=24)))
+    story.append(Paragraph("Company Intelligence Report", st["subtitle"]))
+    story.append(HRFlowable(width="100%", thickness=2, color=PDF_PURPLE, spaceAfter=12))
+
+    overview = extract_section(text, "COMPANY OVERVIEW") or f"Intelligence report for {company}."
+    culture = extract_section(text, "CULTURE AND WORK ENVIRONMENT") or extract_section(text, "CULTURE")
+    news = extract_section(text, "RECENT NEWS") or extract_section(text, "NEWS")
+
+    story.append(Paragraph("What They Do", st["h2"]))
+    for line in section_bullets(overview) or [overview]:
+        story.append(Paragraph(safe_text(line), st["body"]))
+    story.append(Spacer(1, 8))
+
+    if culture:
+        story.append(_colored_box([
+            Paragraph("Culture &amp; Work Environment", st["h3"]),
+            *[Paragraph(safe_text(b), st["body"]) for b in section_bullets(culture) or [culture]]
+        ], bg_color=PDF_LIGHT))
+        story.append(Spacer(1, 8))
+
+    if news:
+        story.append(_colored_box([
+            Paragraph("Recent News", st["h3"]),
+            *[Paragraph(safe_text(b), st["body"]) for b in section_bullets(news) or [news]]
+        ], bg_color=PDF_LIGHT_AMBER))
+    story.append(PageBreak())
+
+    # PAGE 2
+    story.append(Paragraph("Interview Intelligence", st["h2"]))
+    story.append(Spacer(1, 4))
+
+    interview = extract_section(text, "INTERVIEW PROCESS")
+    testing = extract_section(text, "WHAT THEY TEST")
+    questions = extract_section(text, "TOP 5 INTERVIEW QUESTIONS") or extract_section(text, "INTERVIEW QUESTIONS")
+    tech = extract_section(text, "TECH STACK")
+
+    if interview:
+        story.append(Paragraph("Interview Stages", st["h3"]))
+        for b in section_bullets(interview) or [interview]:
+            story.append(Paragraph(safe_text(b), st["body"]))
+        story.append(Spacer(1, 6))
+
+    if testing:
+        story.append(Paragraph("What They Test", st["h3"]))
+        for b in section_bullets(testing) or [testing]:
+            story.append(Paragraph(safe_text(b), st["body"]))
+        story.append(Spacer(1, 6))
+
+    if questions:
+        story.append(_colored_box([
+            Paragraph("Top Interview Questions", st["h3"]),
+            *[Paragraph(safe_text(b), st["body"]) for b in section_bullets(questions) or [questions]]
+        ], bg_color=PDF_LIGHT, border_color=PDF_PURPLE))
+        story.append(Spacer(1, 8))
+
+    if tech:
+        story.append(Paragraph("Tech Stack", st["h3"]))
+        for b in section_bullets(tech) or [tech]:
+            story.append(Paragraph(safe_text(b), st["body"]))
+    story.append(PageBreak())
+
+    # PAGE 3
+    salary = extract_section(text, "SALARY RANGE") or extract_section(text, "SALARY")
+    green = extract_section(text, "GREEN FLAGS")
+    red = extract_section(text, "RED FLAGS")
+    advantage = extract_section(text, "INTERVIEW ADVANTAGE")
+
+    if salary:
+        story.append(Paragraph("Salary Range", st["h2"]))
+        story.append(Paragraph(safe_text(salary.split('\n')[0] if salary else "Not available"), st["body"]))
+        story.append(_make_progress_bar(65, width=400, height=14))
+        story.append(Spacer(1, 12))
+
+    green_items = section_bullets(green) if green else ["Positive work culture"]
+    red_items = section_bullets(red) if red else ["High workload during deadlines"]
+
+    left_col = [Paragraph("Green Flags", st["h3"])]
+    for g in green_items[:5]:
+        left_col.append(Paragraph(f"\u2713 {safe_text(g)}", st["body"]))
+
+    right_col = [Paragraph("Red Flags", st["h3"])]
+    for r in red_items[:5]:
+        right_col.append(Paragraph(f"\u26a0 {safe_text(r)}", st["body"]))
+
+    flags_table = Table([
+        [_colored_box(left_col, bg_color=PDF_LIGHT_GREEN, left_border_color=PDF_GREEN, col_width=200),
+         _colored_box(right_col, bg_color=PDF_LIGHT_RED, left_border_color=PDF_RED, col_width=200)]
+    ], colWidths=[220, 220])
+    flags_table.setStyle(TableStyle([("VALIGN", (0, 0), (-1, -1), "TOP")]))
+    story.append(flags_table)
     story.append(Spacer(1, 12))
-    add_footer()
+
+    if advantage:
+        adv_items = section_bullets(advantage) or [advantage]
+        story.append(_colored_box([
+            Paragraph("Your Interview Advantage", st["h3"]),
+            *[Paragraph(f"{i+1}. {safe_text(a)}", st["body"]) for i, a in enumerate(adv_items[:3])]
+        ], bg_color=PDF_LIGHT, border_color=PDF_PURPLE))
+
+    doc.build(story, onFirstPage=_footer_handler, onLaterPages=_footer_handler)
+    return filename
+
+
+def make_pdf_reality(job_id: str, company: str, analysis: dict, research: dict) -> str:
+    _, st = _pdf_styles()
+    filename = f"{job_id}_reality.pdf"
+    filepath = PDF_DIR / filename
+    doc = SimpleDocTemplate(str(filepath), pagesize=A4, leftMargin=72, rightMargin=72, topMargin=72, bottomMargin=50)
+
+    story = []
+    text = strip_md(analysis.get("data", ""))
+    research_text = strip_md(research.get("data", ""))
+
+    match_score = 50
+    match_line = [l for l in text.split('\n') if 'MATCH SCORE' in l.upper() or '/100' in l]
+    if match_line:
+        nums = re.findall(r'\d+', match_line[0])
+        if nums:
+            match_score = min(int(nums[0]), 100)
+
+    # PAGE 1 - EXECUTIVE SUMMARY
+    story.append(Paragraph("Nine Lab", st["brand"]))
+    story.append(Paragraph("Reality Report", st["title"]))
+    story.append(Paragraph(f"{safe_text(company)} \u00b7 {datetime.now().strftime('%d %b %Y')}", st["subtitle"]))
+    story.append(HRFlowable(width="100%", thickness=2, color=PDF_PURPLE, spaceAfter=10))
+
+    story.append(Paragraph("Match Score", st["h3"]))
+    story.append(_make_progress_bar(match_score, width=400))
+    story.append(Spacer(1, 4))
+
+    if match_score >= 70:
+        verdict = f"You are {match_score}% aligned with this role. You are a strong candidate!"
+    elif match_score >= 50:
+        verdict = f"You are {match_score}% there. With focused prep, you can absolutely crack this!"
+    else:
+        verdict = f"You are {match_score}% aligned. These gaps are completely fixable with the right plan."
+    story.append(Paragraph(safe_text(verdict), ParagraphStyle("Verdict", fontName="Helvetica-Bold", fontSize=11, textColor=PDF_DARK, spaceAfter=12, leading=14)))
+    story.append(Spacer(1, 6))
+
+    strengths_text = extract_section(text, "TOP 3 STRENGTHS")
+    gaps_text = extract_section(text, "TOP 3 PRIORITY GAPS") or extract_section(text, "PRIORITY GAPS")
+
+    s_bullets = section_bullets(strengths_text)[:3] if strengths_text else ["Strong technical foundation"]
+    g_bullets = section_bullets(gaps_text)[:3] if gaps_text else ["Areas for improvement identified"]
+
+    left = [Paragraph("Your Strengths", st["h3"])] + [Paragraph(f"\u2713 {safe_text(s)}", st["body"]) for s in s_bullets]
+    right = [Paragraph("Priority Gaps", st["h3"])] + [Paragraph(f"{i+1}. {safe_text(g)}", st["body"]) for i, g in enumerate(g_bullets)]
+
+    t = Table([
+        [_colored_box(left, bg_color=PDF_LIGHT_GREEN, left_border_color=PDF_GREEN, col_width=200),
+         _colored_box(right, bg_color=PDF_LIGHT_RED, left_border_color=PDF_RED, col_width=200)]
+    ], colWidths=[220, 220])
+    t.setStyle(TableStyle([("VALIGN", (0, 0), (-1, -1), "TOP")]))
+    story.append(t)
     story.append(PageBreak())
 
     # PAGE 2 - DEEP DIVE
-    story.append(Paragraph("Your Detailed Analysis", h2_style))
+    story.append(Paragraph("Deep Dive Analysis", st["h2"]))
     story.append(Spacer(1, 4))
 
-    # Two columns layout
-    left_analysis = [Paragraph("<b>About You</b>", h3_style)]
-    left_analysis.append(Paragraph("Resume Strengths", ParagraphStyle("SubH", parent=styles["Normal"], fontSize=10, fontName="Helvetica-Bold", textColor=DARK, spaceAfter=4)))
-    left_analysis.append(Paragraph("Your resume demonstrates strong fundamentals in the core technologies and shows relevant project experience.", small_style))
-    
-    left_analysis.append(Spacer(1, 6))
-    left_analysis.append(Paragraph("Skill Gaps (Priority Order)", ParagraphStyle("SubH", parent=styles["Normal"], fontSize=10, fontName="Helvetica-Bold", textColor=DARK, spaceAfter=4)))
-    for i in range(1, 4):
-        left_analysis.append(Paragraph(f"<b>①</b> {['System Design', 'Advanced DSA', 'Backend Architecture'][i-1]}", small_style))
-    
-    left_analysis.append(Spacer(1, 6))
-    left_analysis.append(Paragraph("Resume Red Flags to Fix", ParagraphStyle("SubH", parent=styles["Normal"], fontSize=10, fontName="Helvetica-Bold", textColor=DARK, spaceAfter=4)))
-    left_analysis.append(Paragraph("• Add quantified impact to project descriptions", small_style))
-    left_analysis.append(Paragraph("• Highlight relevant tech stack prominently", small_style))
-    left_analysis.append(Paragraph("• Fix formatting for ATS optimization", small_style))
+    det_strengths = extract_section(text, "DETAILED STRENGTHS") or strengths_text or ""
+    det_gaps = extract_section(text, "DETAILED GAPS") or gaps_text or ""
+    red_flags = extract_section(text, "RESUME RED FLAGS") or extract_section(text, "RED FLAGS") or ""
+    co_overview = extract_section(research_text, "COMPANY OVERVIEW") or extract_section(text, "COMPANY OVERVIEW") or f"Analysis for {company}."
+    what_look = extract_section(research_text, "WHAT THEY LOOK FOR") or extract_section(text, "WHAT THEY LOOK FOR") or ""
+    interview_proc = extract_section(research_text, "INTERVIEW PROCESS") or extract_section(text, "THEIR INTERVIEW PROCESS") or ""
+    salary = extract_section(research_text, "SALARY RANGE") or extract_section(text, "SALARY RANGE") or ""
 
-    right_analysis = [Paragraph("<b>About The Company</b>", h3_style)]
-    right_analysis.append(Paragraph(f"{company} focuses on cloud-native development and AI-driven solutions. They value strong problem-solving skills and collaborative team players.", small_style))
-    
-    right_analysis.append(Spacer(1, 6))
-    right_analysis.append(Paragraph("What They Look For", ParagraphStyle("SubH", parent=styles["Normal"], fontSize=10, fontName="Helvetica-Bold", textColor=DARK, spaceAfter=4)))
-    right_analysis.append(Paragraph("✓ Strong DSA and system design fundamentals", small_style))
-    right_analysis.append(Paragraph("✓ Experience with cloud platforms (AWS/GCP/Azure)", small_style))
-    right_analysis.append(Paragraph("✓ Passion for learning and problem-solving", small_style))
-    
-    right_analysis.append(Spacer(1, 6))
-    right_analysis.append(Paragraph("Interview Process", ParagraphStyle("SubH", parent=styles["Normal"], fontSize=10, fontName="Helvetica-Bold", textColor=DARK, spaceAfter=4)))
-    for i, step in enumerate(["Online Coding Round", "System Design Interview", "Behavioral Round"], 1):
-        right_analysis.append(Paragraph(f"<b>{i}.</b> {step}", small_style))
+    left_col = [Paragraph("About You", ParagraphStyle("LH", fontName="Helvetica-Bold", fontSize=12, textColor=PDF_PURPLE, spaceAfter=6, leading=15))]
+    left_col.append(Paragraph("Resume Strengths", st["h3"]))
+    for b in section_bullets(det_strengths)[:5] or ["Strong fundamentals shown"]:
+        left_col.append(Paragraph(f"\u2022 {safe_text(b)}", st["small"]))
+    left_col.append(Spacer(1, 6))
+    left_col.append(Paragraph("Gaps (Priority Order)", st["h3"]))
+    for i, b in enumerate(section_bullets(det_gaps)[:4] or ["Review needed"], 1):
+        left_col.append(Paragraph(f"{i}. {safe_text(b)}", st["small"]))
+    left_col.append(Spacer(1, 6))
+    if red_flags:
+        left_col.append(Paragraph("Red Flags to Fix", st["h3"]))
+        for b in section_bullets(red_flags)[:3]:
+            left_col.append(Paragraph(f"\u26a0 {safe_text(b)}", st["small"]))
 
-    deep_table = Table([[left_analysis, right_analysis]], colWidths=[175, 175])
-    deep_table.setStyle(TableStyle([
-        ("TOPPADDING", (0, 0), (-1, -1), 8),
-        ("BOTTOMPADDING", (0, 0), (-1, -1), 8),
-        ("LEFTPADDING", (0, 0), (0, 0), 10),
-        ("RIGHTPADDING", (1, 0), (1, 0), 10),
+    right_col = [Paragraph("About The Company", ParagraphStyle("RH", fontName="Helvetica-Bold", fontSize=12, textColor=PDF_PURPLE, spaceAfter=6, leading=15))]
+    right_col.append(Paragraph("Overview", st["h3"]))
+    for b in section_bullets(co_overview)[:3] or [co_overview[:200]]:
+        right_col.append(Paragraph(safe_text(b), st["small"]))
+    right_col.append(Spacer(1, 6))
+    if what_look:
+        right_col.append(Paragraph("What They Value", st["h3"]))
+        for b in section_bullets(what_look)[:5]:
+            right_col.append(Paragraph(f"\u2022 {safe_text(b)}", st["small"]))
+        right_col.append(Spacer(1, 6))
+    if interview_proc:
+        right_col.append(Paragraph("Interview Process", st["h3"]))
+        for i, b in enumerate(section_bullets(interview_proc)[:5], 1):
+            right_col.append(Paragraph(f"{i}. {safe_text(b)}", st["small"]))
+    if salary:
+        right_col.append(Spacer(1, 6))
+        right_col.append(Paragraph(f"Salary: {safe_text(salary.split(chr(10))[0])}", st["small"]))
+
+    deep_t = Table([[left_col, right_col]], colWidths=[220, 220])
+    deep_t.setStyle(TableStyle([
         ("VALIGN", (0, 0), (-1, -1), "TOP"),
+        ("LEFTPADDING", (0, 0), (-1, -1), 8),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 8),
+        ("TOPPADDING", (0, 0), (-1, -1), 8),
+        ("LINEBEFORE", (1, 0), (1, 0), 0.5, PDF_GREY),
     ]))
-    story.append(deep_table)
-    story.append(Spacer(1, 12))
-    add_footer()
+    story.append(deep_t)
     story.append(PageBreak())
 
     # PAGE 3 - ACTION PLAN
-    story.append(Paragraph("Your Action Plan", h2_style))
-    story.append(Spacer(1, 6))
+    story.append(Paragraph("Your Action Plan", st["h2"]))
+    story.append(Spacer(1, 4))
 
-    story.append(Paragraph("Priority Fix List", h3_style))
-    story.append(Paragraph("<b>1. Build System Design Skills</b> — Study distributed systems, scaling, trade-offs. Time: 2 weeks", body_style))
-    story.append(Paragraph("<b>2. Advanced DSA Practice</b> — Solve 50+ medium/hard problems on LeetCode. Time: 2 weeks", body_style))
-    story.append(Paragraph("<b>3. Revise Resume</b> — Quantify achievements, add metrics, highlight tech stack. Time: 2 days", body_style))
+    priority_actions = extract_section(text, "PRIORITY ACTIONS") or extract_section(text, "PRIORITY ACTION")
+    next_steps = extract_section(text, "NEXT STEPS")
+    closing = extract_section(text, "CLOSING MESSAGE") or extract_section(text, "CLOSING")
+
+    story.append(Paragraph("Priority Fix List", st["h3"]))
+    for i, b in enumerate(section_bullets(priority_actions)[:3] if priority_actions else ["Review gaps and create study plan"], 1):
+        story.append(Paragraph(f"<b>{i}.</b> {safe_text(b)}", st["body"]))
     story.append(Spacer(1, 10))
 
-    story.append(Paragraph("Next 48 Hours Checklist", h3_style))
-    checklist = [
-        "☐ Review the top 5 gaps and understand each one",
-        "☐ Create a study schedule for the next 2 weeks",
-        "☐ Revise your resume and upload to ATS checker",
-        "☐ Start with 2-3 system design YouTube videos",
-        "☐ Practice 5 medium-level DSA problems"
-    ]
-    for item in checklist:
-        story.append(Paragraph(item, body_style))
-    story.append(Spacer(1, 12))
+    if next_steps:
+        story.append(Paragraph("Next Steps", st["h3"]))
+        for b in section_bullets(next_steps)[:5]:
+            story.append(Paragraph(f"\u25a1 {safe_text(b)}", st["body"]))
+        story.append(Spacer(1, 10))
 
-    # Motivational closing
-    closing_box = Table([[Paragraph(
-        "<b>You have everything it takes.</b> These gaps are fixable. With focused preparation, you can absolutely land this role. Nine Lab is here to guide you every step of the way. You've got this! 💪",
-        ParagraphStyle("Closing", parent=styles["Normal"], fontSize=10, textColor=DARK, leading=14, alignment=1)
-    )]], colWidths=[330])
-    closing_box.setStyle(TableStyle([
-        ("BACKGROUND", (0, 0), (-1, -1), LIGHT_BG),
-        ("LEFTPADDING", (0, 0), (-1, -1), 16),
-        ("RIGHTPADDING", (0, 0), (-1, -1), 16),
-        ("TOPPADDING", (0, 0), (-1, -1), 14),
-        ("BOTTOMPADDING", (0, 0), (-1, -1), 14),
-        ("BORDER", (0, 0), (-1, -1), 1, PURPLE),
-        ("BORDERRADIUS", (0, 0), (-1, -1), 8),
-    ]))
-    story.append(closing_box)
-    story.append(Spacer(1, 12))
-    add_footer()
+    closing_msg = closing or f"You have real strengths for this role at {company}. Every gap here is fixable. Focus on the priorities, put in the work, and you will be ready. You have got this!"
+    story.append(_colored_box([
+        Paragraph(safe_text(closing_msg.split('\n')[0] if closing_msg else "You've got this!"), ParagraphStyle("Close", fontName="Helvetica-Bold", fontSize=10.5, textColor=PDF_DARK, leading=14, alignment=1))
+    ], bg_color=PDF_LIGHT, border_color=PDF_PURPLE))
 
-    # Build PDF with page numbers
-    def add_page_number(canvas_obj, doc_obj):
-        canvas_obj.saveState()
-        canvas_obj.setFont("Helvetica", 8)
-        canvas_obj.setFillColor(HexColor("#9CA3AF"))
-        canvas_obj.drawCentredString(A4[0]/2, 10*mm, f"Page {doc_obj.page} of 3")
-        canvas_obj.restoreState()
-
-    doc.build(story, onLaterPages=add_page_number, onFirstPage=add_page_number)
+    doc.build(story, onFirstPage=_footer_handler, onLaterPages=_footer_handler)
     return filename
 
 
 def make_pdf_plan(job_id: str, company: str, plan: dict) -> str:
-    from reportlab.lib.pagesizes import A4
-    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-    from reportlab.lib.units import mm
-    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, HRFlowable
-    from reportlab.lib.colors import HexColor
-
-    PURPLE = HexColor("#6C63FF")
-    DARK = HexColor("#1a1a2e")
-
+    _, st = _pdf_styles()
     filename = f"{job_id}_plan.pdf"
     filepath = PDF_DIR / filename
-
-    doc = SimpleDocTemplate(
-        str(filepath), pagesize=A4,
-        leftMargin=20*mm, rightMargin=20*mm,
-        topMargin=25*mm, bottomMargin=25*mm
-    )
-    styles = getSampleStyleSheet()
-    title_style = ParagraphStyle("T", parent=styles["Title"],
-        fontSize=22, textColor=PURPLE, spaceAfter=4, fontName="Helvetica-Bold")
-    subtitle_style = ParagraphStyle("S", parent=styles["Normal"],
-        fontSize=11, textColor=DARK, spaceAfter=12)
-    h2_style = ParagraphStyle("H2", parent=styles["Normal"],
-        fontSize=13, textColor=PURPLE, spaceAfter=6, spaceBefore=12, fontName="Helvetica-Bold")
-    body_style = ParagraphStyle("B", parent=styles["Normal"],
-        fontSize=10, textColor=DARK, spaceAfter=4, leading=15)
-    warning_style = ParagraphStyle("W", parent=styles["Normal"],
-        fontSize=10, textColor=HexColor("#FF6B35"), spaceAfter=4, leading=15)
+    doc = SimpleDocTemplate(str(filepath), pagesize=A4, leftMargin=72, rightMargin=72, topMargin=72, bottomMargin=50)
 
     story = []
-    story.append(Paragraph("Nine Lab", ParagraphStyle("Brand", parent=styles["Normal"],
-        fontSize=10, textColor=PURPLE, fontName="Helvetica-Bold")))
-    story.append(Paragraph("Prep Plan", title_style))
-    story.append(Paragraph(f"Company: <b>{company}</b> · Generated {datetime.now().strftime('%d %b %Y, %I:%M %p')}", subtitle_style))
-    story.append(HRFlowable(width="100%", thickness=2, color=PURPLE, spaceAfter=12))
+    text = strip_md(plan.get("data", ""))
 
-    content = plan.get("data", "Data unavailable")
-    lines = content.split("\n")
-    for line in lines:
-        line = line.strip()
-        if not line:
-            story.append(Spacer(1, 3))
-            continue
-        is_header = (line.startswith("DAY ") or line.startswith("##") or
-                     line.startswith("MOCK") or line.startswith("HR/") or
-                     line.startswith("RESOURCES") or line.startswith("DAY-OF") or
-                     line.startswith("1.") and len(line) < 60 or
-                     line.isupper() and len(line) < 80)
-        style = h2_style if is_header else (warning_style if line.startswith("⚠️") else body_style)
-        safe_line = line.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
-        try:
-            story.append(Paragraph(safe_line, style))
-        except Exception:
-            story.append(Paragraph(safe_line[:200], body_style))
+    # PAGE 1
+    story.append(Paragraph("Nine Lab", st["brand"]))
+    story.append(Paragraph("Prep Plan", st["title"]))
+    story.append(Paragraph(f"{safe_text(company)} \u00b7 {datetime.now().strftime('%d %b %Y')}", st["subtitle"]))
+    story.append(HRFlowable(width="100%", thickness=2, color=PDF_PURPLE, spaceAfter=10))
 
-    story.append(Spacer(1, 12))
-    story.append(HRFlowable(width="100%", thickness=1, color=PURPLE, spaceAfter=6))
-    story.append(Paragraph(
-        "Nine Lab · Built for Indian students · ninelab.app",
-        ParagraphStyle("Footer", parent=styles["Normal"], fontSize=8, textColor=HexColor("#999999"), alignment=1)
-    ))
+    current = extract_section(text, "CURRENT LEVEL")
+    p1 = extract_section(text, "PRIORITY 1") or extract_section(text, "PRIORITY 1 CRITICAL")
+    p2 = extract_section(text, "PRIORITY 2") or extract_section(text, "PRIORITY 2 IMPORTANT")
+    p3 = extract_section(text, "PRIORITY 3") or extract_section(text, "PRIORITY 3 GOOD TO HAVE")
 
-    def add_page_number(canvas_obj, doc_obj):
-        canvas_obj.saveState()
-        canvas_obj.setFont("Helvetica", 8)
-        canvas_obj.setFillColor(HexColor("#999999"))
-        canvas_obj.drawRightString(A4[0] - 20*mm, 15*mm, f"Page {doc_obj.page}")
-        canvas_obj.restoreState()
+    if current:
+        story.append(_colored_box([
+            Paragraph("Current Level Assessment", st["h3"]),
+            Paragraph(safe_text(current.split('\n')[0]), st["body"])
+        ], bg_color=HexColor("#F3F4F6")))
+        story.append(Spacer(1, 8))
 
-    doc.build(story, onLaterPages=add_page_number, onFirstPage=add_page_number)
+    for label, content, color in [("Priority 1: Critical", p1, PDF_RED), ("Priority 2: Important", p2, PDF_AMBER), ("Priority 3: Good to Have", p3, PDF_GREEN)]:
+        if content:
+            items = [Paragraph(f"<b>{label}</b>", st["h3"])]
+            for b in section_bullets(content)[:3]:
+                items.append(Paragraph(safe_text(b), st["body"]))
+            story.append(_colored_box(items, bg_color=PDF_WHITE, left_border_color=color))
+            story.append(Spacer(1, 6))
+    story.append(PageBreak())
+
+    # PAGE 2 - PHASES
+    story.append(Paragraph("Your Learning Phases", st["h2"]))
+    story.append(Spacer(1, 4))
+
+    for phase_name, phase_key, color in [("Phase 1: Foundation", "PHASE 1", PDF_PURPLE), ("Phase 2: Core Skills", "PHASE 2", PDF_PURPLE), ("Phase 3: Company Prep", "PHASE 3", PDF_PURPLE)]:
+        phase_text = extract_section(text, phase_key)
+        if phase_text:
+            story.append(_colored_box([
+                Paragraph(phase_name, st["h3"]),
+                *[Paragraph(safe_text(b), st["small"]) for b in section_bullets(phase_text)[:6]]
+            ], bg_color=PDF_LIGHT, left_border_color=color))
+            story.append(Spacer(1, 6))
+        else:
+            story.append(Paragraph(phase_name, st["h3"]))
+            story.append(Paragraph("See full plan details above.", st["body"]))
+            story.append(Spacer(1, 6))
+    story.append(PageBreak())
+
+    # PAGE 3 - Q&A + Resources
+    tech_q = extract_section(text, "TECHNICAL QUESTIONS")
+    hr_q = extract_section(text, "HR QUESTIONS")
+    resources = extract_section(text, "FREE RESOURCES") or extract_section(text, "RESOURCES")
+    checklist = extract_section(text, "INTERVIEW DAY CHECKLIST") or extract_section(text, "CHECKLIST")
+
+    if tech_q:
+        story.append(Paragraph("Technical Interview Questions", st["h2"]))
+        for i, b in enumerate(section_bullets(tech_q)[:10], 1):
+            bg = HexColor("#F9FAFB") if i % 2 == 0 else PDF_WHITE
+            story.append(_colored_box([Paragraph(f"{i}. {safe_text(b)}", st["small"])], bg_color=bg))
+        story.append(Spacer(1, 8))
+
+    if hr_q:
+        story.append(Paragraph("HR Interview Questions", st["h2"]))
+        for i, b in enumerate(section_bullets(hr_q)[:5], 1):
+            bg = HexColor("#F9FAFB") if i % 2 == 0 else PDF_WHITE
+            story.append(_colored_box([Paragraph(f"{i}. {safe_text(b)}", st["small"])], bg_color=bg))
+        story.append(Spacer(1, 8))
+
+    if resources:
+        story.append(Paragraph("Free Resources", st["h2"]))
+        for b in section_bullets(resources)[:8]:
+            story.append(Paragraph(f"\u2022 {safe_text(b)}", st["body"]))
+        story.append(Spacer(1, 8))
+
+    if checklist:
+        story.append(Paragraph("Interview Day Checklist", st["h2"]))
+        for b in section_bullets(checklist)[:10]:
+            story.append(Paragraph(f"\u25a1 {safe_text(b)}", st["body"]))
+
+    # Fallback: if no sections parsed, render raw text
+    if not tech_q and not hr_q and not resources:
+        _render_lines(text, st, story)
+
+    doc.build(story, onFirstPage=_footer_handler, onLaterPages=_footer_handler)
     return filename
 
 
 def make_pdf_resume(job_id: str, company: str, resume_data: dict) -> str:
-    from reportlab.lib.pagesizes import A4
-    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-    from reportlab.lib.units import mm
-    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, HRFlowable
-    from reportlab.lib.colors import HexColor
-
-    PURPLE = HexColor("#6C63FF")
-    DARK = HexColor("#1a1a2e")
-
+    _, st = _pdf_styles()
     filename = f"{job_id}_resume.pdf"
     filepath = PDF_DIR / filename
-
-    doc = SimpleDocTemplate(
-        str(filepath), pagesize=A4,
-        leftMargin=20*mm, rightMargin=20*mm,
-        topMargin=20*mm, bottomMargin=20*mm
-    )
-    styles = getSampleStyleSheet()
-    title_style = ParagraphStyle("T", parent=styles["Title"],
-        fontSize=20, textColor=DARK, spaceAfter=2, fontName="Helvetica-Bold")
-    watermark_style = ParagraphStyle("WM", parent=styles["Normal"],
-        fontSize=8, textColor=PURPLE, spaceAfter=8, fontName="Helvetica-Bold")
-    h2_style = ParagraphStyle("H2", parent=styles["Normal"],
-        fontSize=12, textColor=PURPLE, spaceAfter=3, spaceBefore=10,
-        fontName="Helvetica-Bold", borderPad=2)
-    body_style = ParagraphStyle("B", parent=styles["Normal"],
-        fontSize=10, textColor=DARK, spaceAfter=3, leading=14)
-    bullet_style = ParagraphStyle("BL", parent=styles["Normal"],
-        fontSize=10, textColor=DARK, spaceAfter=2, leading=14, leftIndent=12)
-    warning_style = ParagraphStyle("W", parent=styles["Normal"],
-        fontSize=10, textColor=HexColor("#FF6B35"), spaceAfter=4, leading=15)
+    doc = SimpleDocTemplate(str(filepath), pagesize=A4, leftMargin=72, rightMargin=72, topMargin=60, bottomMargin=40)
 
     story = []
-    story.append(Paragraph(f"✨ Revised Resume · Tailored for {company}", watermark_style))
-    story.append(HRFlowable(width="100%", thickness=2, color=PURPLE, spaceAfter=8))
+    content = strip_md(resume_data.get("data", ""))
+    lines = content.split('\n')
 
-    content = resume_data.get("data", "Data unavailable")
-    lines = content.split("\n")
+    name_style = ParagraphStyle("RName", fontName="Helvetica-Bold", fontSize=20, textColor=PDF_DARK, spaceAfter=2, leading=24)
+    jobtitle_style = ParagraphStyle("RJob", fontName="Helvetica", fontSize=12, textColor=PDF_PURPLE, spaceAfter=2, leading=15)
+    contact_style = ParagraphStyle("RContact", fontName="Helvetica", fontSize=9, textColor=PDF_MUTED, spaceAfter=6, leading=12)
+    section_style = ParagraphStyle("RSec", fontName="Helvetica-Bold", fontSize=12, textColor=PDF_PURPLE, spaceAfter=3, spaceBefore=8, leading=15)
+    rbody_style = ParagraphStyle("RBody", fontName="Helvetica", fontSize=10.5, textColor=PDF_DARK, spaceAfter=3, leading=14)
+    rbullet_style = ParagraphStyle("RBullet", fontName="Helvetica", fontSize=10.5, textColor=PDF_DARK, spaceAfter=2, leading=14, leftIndent=12)
 
     section_keywords = ["CONTACT", "SUMMARY", "PROFESSIONAL SUMMARY", "SKILLS", "TECHNICAL SKILLS",
                         "EXPERIENCE", "WORK EXPERIENCE", "PROJECTS", "EDUCATION", "CERTIFICATIONS",
-                        "ACHIEVEMENTS", "AWARDS", "LANGUAGES", "INTERESTS"]
+                        "ACHIEVEMENTS", "AWARDS", "NAME", "JOB TITLE"]
 
-    first_line = True
+    name_found = False
     for line in lines:
-        line_stripped = line.strip()
-        if not line_stripped:
+        ls = line.strip()
+        if not ls:
             story.append(Spacer(1, 3))
             continue
 
-        if first_line and not any(kw in line_stripped.upper() for kw in section_keywords):
-            safe = line_stripped.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
-            try:
-                story.append(Paragraph(safe, title_style))
-            except Exception:
-                story.append(Paragraph(safe[:100], title_style))
-            first_line = False
-            continue
-        first_line = False
+        ls_clean = ls
+        for prefix in ["NAME:", "JOB TITLE:", "CONTACT:"]:
+            if ls.upper().startswith(prefix):
+                ls_clean = ls[len(prefix):].strip()
+                break
 
-        is_section = any(line_stripped.upper().startswith(kw) for kw in section_keywords)
-        is_bullet = line_stripped.startswith("•") or line_stripped.startswith("-") or line_stripped.startswith("*")
-        is_warning = line_stripped.startswith("⚠️")
+        if not name_found and (ls.upper().startswith("NAME:") or (not any(kw in ls.upper() for kw in section_keywords[3:]) and len(ls) < 60 and not ls.startswith(("\u2022", "-", "*")))):
+            story.append(Paragraph(safe_text(ls_clean), name_style))
+            name_found = True
+            continue
+
+        if ls.upper().startswith("JOB TITLE:"):
+            story.append(Paragraph(safe_text(ls_clean), jobtitle_style))
+            continue
+
+        if ls.upper().startswith("CONTACT:") or ("|" in ls and "@" in ls):
+            story.append(Paragraph(safe_text(ls_clean), contact_style))
+            story.append(HRFlowable(width="100%", thickness=1.5, color=PDF_PURPLE, spaceAfter=6))
+            continue
+
+        is_section = any(ls.upper().startswith(kw) for kw in section_keywords[3:])
+        is_bullet = ls.startswith(("\u2022", "-", "*"))
 
         if is_section:
-            story.append(HRFlowable(width="100%", thickness=0.5, color=PURPLE, spaceAfter=3))
-            style = h2_style
+            clean_label = ls
+            for kw in section_keywords[3:]:
+                if ls.upper().startswith(kw):
+                    clean_label = ls[:len(kw)]
+                    break
+            story.append(Paragraph(safe_text(clean_label), section_style))
+            story.append(HRFlowable(width="100%", thickness=0.5, color=PDF_GREY, spaceAfter=3))
+            remainder = ls[len(clean_label):].strip(': ')
+            if remainder:
+                story.append(Paragraph(safe_text(remainder), rbody_style))
         elif is_bullet:
-            style = bullet_style
-        elif is_warning:
-            style = warning_style
+            story.append(Paragraph(safe_text(ls), rbullet_style))
         else:
-            style = body_style
+            story.append(Paragraph(safe_text(ls), rbody_style))
 
-        safe = line_stripped.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
-        try:
-            story.append(Paragraph(safe, style))
-        except Exception:
-            story.append(Paragraph(safe[:200], body_style))
-
-    story.append(Spacer(1, 10))
-    story.append(HRFlowable(width="100%", thickness=1, color=PURPLE, spaceAfter=4))
-    story.append(Paragraph(
-        "Generated by Nine Lab · Built for Indian students",
-        ParagraphStyle("Footer", parent=styles["Normal"], fontSize=7, textColor=HexColor("#999999"), alignment=1)
-    ))
-
-    def add_page_number(canvas_obj, doc_obj):
-        canvas_obj.saveState()
-        canvas_obj.setFont("Helvetica", 8)
-        canvas_obj.setFillColor(HexColor("#999999"))
-        canvas_obj.drawRightString(A4[0] - 20*mm, 12*mm, f"Page {doc_obj.page}")
-        canvas_obj.restoreState()
-
-    doc.build(story, onLaterPages=add_page_number, onFirstPage=add_page_number)
+    doc.build(story, onFirstPage=_no_footer, onLaterPages=_no_footer)
     return filename
 
 # ── Pipeline runner ──────────────────────────────────────────────────────────
@@ -702,47 +934,53 @@ def run_pipeline(job_id: str, resume: str, jd: str, company: str):
         jobs[job_id].update({"stage": stage, "progress": pct, "message": msg})
 
     try:
-        update("research", 5, "🔍 Researching company and role...")
+        update("research", 5, "Researching company and role...")
 
         loop = asyncio.new_event_loop()
 
         async def parallel_stage1():
             r_task = loop.run_in_executor(executor, agent_research, company, jd)
-            await asyncio.sleep(2)  # stagger to avoid simultaneous quota hits
+            await asyncio.sleep(2)
             a_task = loop.run_in_executor(executor, agent_analysis, resume, jd, company)
             return await asyncio.gather(r_task, a_task)
 
         research_result, analysis_result = loop.run_until_complete(parallel_stage1())
-        update("research", 35, "✅ Company research done! Analyzing your resume...")
+        update("research", 25, "Company research done! Analyzing resume...")
 
-        update("analysis", 40, "🧠 Deep-analyzing resume vs JD...")
-        time.sleep(0.5)
-        update("analysis", 55, "📝 Crafting your 9-day prep plan...")
+        research_snippets = research_result.get("data", "")
+
+        update("analysis", 30, "Deep-analyzing resume vs JD...")
 
         async def parallel_stage2():
             p_task = loop.run_in_executor(executor, agent_plan, resume, jd, company,
-                                          analysis_result["data"], research_result["data"])
-            await asyncio.sleep(2)  # stagger to avoid simultaneous quota hits
+                                          analysis_result["data"], research_snippets)
+            await asyncio.sleep(2)
             r_task = loop.run_in_executor(executor, agent_resume, resume, jd, company)
-            return await asyncio.gather(p_task, r_task)
+            await asyncio.sleep(2)
+            c_task = loop.run_in_executor(executor, agent_company_report, company, jd, research_snippets)
+            return await asyncio.gather(p_task, r_task, c_task)
 
-        plan_result, resume_result = loop.run_until_complete(parallel_stage2())
+        plan_result, resume_result, company_report_result = loop.run_until_complete(parallel_stage2())
         loop.close()
 
-        update("pdf", 75, "📄 Generating your Reality Report PDF...")
+        update("pdf", 65, "Generating Company Report PDF...")
+        company_file = make_pdf_company_report(job_id, company, company_report_result)
+
+        update("pdf", 75, "Generating Reality Report PDF...")
         reality_file = make_pdf_reality(job_id, company, analysis_result, research_result)
 
-        update("pdf", 82, "📄 Generating your Prep Plan PDF...")
+        update("pdf", 85, "Generating Prep Plan PDF...")
         plan_file = make_pdf_plan(job_id, company, plan_result)
 
-        update("pdf", 90, "📄 Generating your Revised Resume PDF...")
+        update("pdf", 92, "Generating Revised Resume PDF...")
         resume_file = make_pdf_resume(job_id, company, resume_result)
 
         jobs[job_id].update({
             "stage": "done",
             "progress": 100,
-            "message": "🎉 Tera placement ready! Download your PDFs below.",
+            "message": "Your placement kit is ready! Download your 4 PDFs below.",
             "files": {
+                "company": company_file,
                 "reality": reality_file,
                 "plan": plan_file,
                 "resume": resume_file,
@@ -753,7 +991,7 @@ def run_pipeline(job_id: str, resume: str, jd: str, company: str):
         jobs[job_id].update({
             "stage": "error",
             "progress": 0,
-            "message": f"❌ Error: {str(e)[:200]}. Check your API keys and try again.",
+            "message": f"Error: {str(e)[:200]}. Check your API keys and try again.",
         })
 
 # ── Request/Response models ──────────────────────────────────────────────────
@@ -984,15 +1222,15 @@ Be concise, professional, and use action verbs. Do NOT add any information that 
 @app.post("/ninelab/extract-resume")
 async def extract_resume(file: UploadFile = File(...)):
     if not file.filename or not file.filename.lower().endswith(".pdf"):
-        raise HTTPException(400, detail="Sirf PDF files allowed hain. Please upload a .pdf file.")
+        raise HTTPException(400, detail="Only PDF files are accepted. Please upload a .pdf file.")
     if file.size and file.size > 10 * 1024 * 1024:
-        raise HTTPException(400, detail="File bahut bada hai! Max 10MB allowed hai.")
+        raise HTTPException(400, detail="File is too large. Maximum size is 10MB.")
     try:
         from pypdf import PdfReader
         import io
         contents = await file.read()
         if len(contents) > 10 * 1024 * 1024:
-            raise HTTPException(400, detail="File bahut bada hai! Max 10MB allowed hai.")
+            raise HTTPException(400, detail="File is too large. Maximum size is 10MB.")
         reader = PdfReader(io.BytesIO(contents))
         pages_text = []
         for page in reader.pages:
@@ -1001,13 +1239,13 @@ async def extract_resume(file: UploadFile = File(...)):
                 pages_text.append(text.strip())
         full_text = "\n\n".join(pages_text).strip()
         if not full_text:
-            raise HTTPException(422, detail="Is PDF se text extract nahi ho saka. PDF mein scannable text hona chahiye (image-based PDFs work nahi karte).")
+            raise HTTPException(422, detail="Could not extract text from this PDF. Please ensure it contains selectable text (scanned/image-based PDFs are not supported).")
         word_count = len(full_text.split())
         return JSONResponse({"text": full_text, "pages": len(reader.pages), "words": word_count})
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(500, detail=f"PDF read karne mein error aaya: {str(e)}")
+        raise HTTPException(500, detail=f"Error reading PDF: {str(e)}")
 
 
 @app.get("/", response_class=RedirectResponse)
