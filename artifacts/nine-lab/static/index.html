@@ -1009,15 +1009,17 @@
     document.getElementById('submitBtnText').textContent = 'Generating...';
 
     try {
+      const headers = { 'Content-Type': 'application/json' };
+      if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
       const resp = await fetch(`${BASE}/generate`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ resume, jd, company })
       });
       const data = await resp.json();
       if (!resp.ok) {
         let errMsg = data.detail || 'Something went wrong. Please try again.';
-        if (resp.status === 429) errMsg = 'Daily limit reached. Please try again tomorrow.';
+        if (resp.status === 429) errMsg = data.detail || 'Daily limit reached. Please log in for unlimited access.';
         showError(errMsg);
         btn.disabled = false;
         document.getElementById('submitBtnText').textContent = 'Generate My Kit →';

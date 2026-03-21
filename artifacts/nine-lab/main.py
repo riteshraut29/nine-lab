@@ -928,7 +928,8 @@ async def index():
 
 
 @app.post("/ninelab/generate")
-async def generate(req: GenerateRequest, request: Request):
+async def generate(req: GenerateRequest, request: Request,
+                   authorization: Optional[str] = Header(None)):
     # Use X-Forwarded-For when behind a proxy (Replit, nginx, etc.)
     forwarded = request.headers.get("x-forwarded-for", "")
     if forwarded:
@@ -948,12 +949,13 @@ async def generate(req: GenerateRequest, request: Request):
     if not TAVILY_API_KEY:
         raise HTTPException(400, detail="TAVILY_API_KEY not configured. Add it to your environment variables.")
 
-    if not check_usage_limit(ip):
+    # Logged-in users bypass the daily rate limit
+    token = authorization[7:] if authorization and authorization.startswith("Bearer ") else None
+    is_authenticated = bool(token and get_user_from_token(token))
+
+    if not is_authenticated and not check_usage_limit(ip):
         raise HTTPException(429, detail=(
-            "Aaj ka free use ho gaya! Kal wapas aao. (1 free use per day per IP)\n\n"
-            "Want unlimited access? Self-host Nine Lab with your own API keys — it's free and open source. "
-            "Copy the artifacts/nine-lab/ folder, add GEMINI_API_KEY and TAVILY_API_KEY, and run: "
-            "pip install -r requirements.txt && uvicorn main:app --host 0.0.0.0 --port 8000"
+            "Daily limit reached. Please log in or create a free account for unlimited access."
         ))
 
     job_id = str(uuid.uuid4())[:8]
