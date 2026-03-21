@@ -1,0 +1,1083 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nine Lab — Placement Ready in 9 Minutes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --purple: #6C63FF;
+    --purple-dark: #5a52d5;
+    --purple-light: #f0efff;
+    --purple-glow: rgba(108,99,255,0.15);
+    --dark: #1a1a2e;
+    --dark2: #16213e;
+    --text: #2d2d44;
+    --text-muted: #6b7280;
+    --border: #e5e7eb;
+    --success: #10b981;
+    --warning: #f59e0b;
+    --error: #ef4444;
+    --white: #ffffff;
+    --bg: #fafafa;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* ── Header ── */
+  .header {
+    background: var(--dark);
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 64px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 20px rgba(0,0,0,0.3);
+  }
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+  }
+  .logo-icon {
+    width: 36px;
+    height: 36px;
+    background: var(--purple);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    font-weight: 900;
+    color: white;
+    letter-spacing: -1px;
+  }
+  .logo-text { color: white; font-size: 20px; font-weight: 800; }
+  .logo-tag { color: var(--purple); font-size: 11px; font-weight: 500; }
+  .header-right { color: rgba(255,255,255,0.5); font-size: 13px; }
+
+  /* ── Hero ── */
+  .hero {
+    background: linear-gradient(135deg, var(--dark) 0%, var(--dark2) 50%, #0f3460 100%);
+    padding: 64px 24px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(ellipse at center, rgba(108,99,255,0.12) 0%, transparent 60%);
+    pointer-events: none;
+  }
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--purple-glow);
+    border: 1px solid rgba(108,99,255,0.3);
+    color: var(--purple);
+    padding: 6px 16px;
+    border-radius: 100px;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 20px;
+  }
+  .hero h1 {
+    font-size: clamp(32px, 5vw, 56px);
+    font-weight: 900;
+    color: white;
+    line-height: 1.1;
+    margin-bottom: 16px;
+  }
+  .hero h1 span { color: var(--purple); }
+  .hero p {
+    font-size: clamp(15px, 2vw, 18px);
+    color: rgba(255,255,255,0.65);
+    max-width: 580px;
+    margin: 0 auto 32px;
+    line-height: 1.6;
+  }
+  .hero-stats {
+    display: flex;
+    gap: 32px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .stat {
+    text-align: center;
+  }
+  .stat-num { font-size: 28px; font-weight: 800; color: white; }
+  .stat-label { font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 2px; }
+
+  /* ── Setup Warning ── */
+  .setup-banner {
+    background: #fff3cd;
+    border-left: 4px solid var(--warning);
+    padding: 14px 20px;
+    margin: 0;
+    display: none;
+  }
+  .setup-banner.visible { display: block; }
+  .setup-banner strong { color: #92400e; }
+  .setup-banner p { color: #78350f; font-size: 13px; margin-top: 4px; }
+
+  /* ── Main form area ── */
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 40px 24px 80px;
+  }
+
+  .section-title {
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--purple);
+    margin-bottom: 6px;
+  }
+  .section-desc {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin-bottom: 24px;
+  }
+
+  /* ── Steps ── */
+  .steps {
+    display: flex;
+    gap: 0;
+    margin-bottom: 32px;
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+  .step {
+    flex: 1;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-right: 1px solid var(--border);
+    transition: background 0.2s;
+  }
+  .step:last-child { border-right: none; }
+  .step-num {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--purple-light);
+    color: var(--purple);
+    font-size: 14px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .step-text { font-size: 13px; font-weight: 500; color: var(--text); }
+  .step-sub { font-size: 11px; color: var(--text-muted); }
+
+  /* ── Form card ── */
+  .form-card {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 32px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.04);
+  }
+
+  .form-group { margin-bottom: 24px; }
+  .form-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+  .form-label .emoji { font-size: 16px; }
+  .badge {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 100px;
+    background: var(--purple-light);
+    color: var(--purple);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .form-hint { font-size: 12px; color: var(--text-muted); margin-bottom: 8px; }
+
+  textarea, input[type="text"] {
+    width: 100%;
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 16px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    color: var(--text);
+    background: var(--bg);
+    transition: border-color 0.2s, box-shadow 0.2s;
+    resize: vertical;
+    outline: none;
+  }
+  textarea:focus, input[type="text"]:focus {
+    border-color: var(--purple);
+    box-shadow: 0 0 0 3px var(--purple-glow);
+    background: white;
+  }
+  .word-count {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-align: right;
+    margin-top: 4px;
+  }
+  .word-count.ok { color: var(--success); }
+  .word-count.warn { color: var(--warning); }
+
+  /* ── Submit button ── */
+  .submit-btn {
+    width: 100%;
+    padding: 18px;
+    background: var(--purple);
+    color: white;
+    border: none;
+    border-radius: 14px;
+    font-size: 18px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+    letter-spacing: -0.3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    box-shadow: 0 8px 24px rgba(108,99,255,0.3);
+  }
+  .submit-btn:hover {
+    background: var(--purple-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 12px 32px rgba(108,99,255,0.4);
+  }
+  .submit-btn:active { transform: translateY(0); }
+  .submit-btn:disabled {
+    background: #9ca3af;
+    box-shadow: none;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  /* ── Error ── */
+  .error-box {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 12px;
+    padding: 14px 18px;
+    color: var(--error);
+    font-size: 14px;
+    margin-top: 16px;
+    display: none;
+  }
+  .error-box.visible { display: block; }
+
+  /* ── Progress panel ── */
+  .progress-panel {
+    display: none;
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 32px;
+    margin-top: 32px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.04);
+    text-align: center;
+  }
+  .progress-panel.visible { display: block; }
+
+  .progress-emoji {
+    font-size: 48px;
+    margin-bottom: 12px;
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.08); }
+  }
+  .progress-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+  .progress-msg {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin-bottom: 24px;
+    min-height: 20px;
+  }
+
+  .progress-bar-wrap {
+    background: var(--purple-light);
+    border-radius: 100px;
+    height: 10px;
+    overflow: hidden;
+    margin-bottom: 8px;
+  }
+  .progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--purple), #a78bfa);
+    border-radius: 100px;
+    width: 0%;
+    transition: width 0.6s ease;
+  }
+  .progress-pct {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--purple);
+    margin-bottom: 24px;
+  }
+
+  .pipeline-steps {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+  }
+  .pipe-step {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: 100px;
+    font-size: 12px;
+    font-weight: 500;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    transition: all 0.3s;
+  }
+  .pipe-step.active {
+    background: var(--purple-light);
+    border-color: var(--purple);
+    color: var(--purple);
+  }
+  .pipe-step.done {
+    background: #d1fae5;
+    border-color: var(--success);
+    color: var(--success);
+  }
+  .pipe-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+  .pipe-dot.spinning {
+    animation: spin 1s linear infinite;
+  }
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  /* ── Results panel ── */
+  .results-panel {
+    display: none;
+    margin-top: 32px;
+  }
+  .results-panel.visible { display: block; }
+
+  .results-header {
+    text-align: center;
+    margin-bottom: 28px;
+  }
+  .results-header h2 {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+  .results-header p {
+    font-size: 15px;
+    color: var(--text-muted);
+  }
+  .confetti-emoji { font-size: 40px; display: block; margin-bottom: 12px; }
+
+  .pdf-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+  .pdf-card {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 28px 24px;
+    text-align: center;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .pdf-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 32px rgba(0,0,0,0.08);
+  }
+  .pdf-icon { font-size: 40px; margin-bottom: 12px; display: block; }
+  .pdf-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+  .pdf-desc {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 20px;
+    line-height: 1.5;
+  }
+  .download-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--purple);
+    color: white;
+    padding: 11px 22px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background 0.2s, transform 0.1s;
+  }
+  .download-btn:hover {
+    background: var(--purple-dark);
+    transform: translateY(-1px);
+  }
+
+  .try-again-btn {
+    display: block;
+    width: 100%;
+    max-width: 320px;
+    margin: 0 auto;
+    padding: 14px;
+    background: white;
+    color: var(--purple);
+    border: 2px solid var(--purple);
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+  }
+  .try-again-btn:hover {
+    background: var(--purple);
+    color: white;
+  }
+
+  /* ── API key setup section ── */
+  .api-section {
+    margin-top: 48px;
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 28px 32px;
+  }
+  .api-section h3 {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .api-section p {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 16px;
+    line-height: 1.6;
+  }
+  .api-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+  }
+  .api-item {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 16px;
+  }
+  .api-item-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 4px;
+    font-family: 'Courier New', monospace;
+  }
+  .api-item-desc { font-size: 12px; color: var(--text-muted); margin-bottom: 8px; }
+  .api-item a {
+    font-size: 12px;
+    color: var(--purple);
+    text-decoration: none;
+    font-weight: 600;
+  }
+  .api-item a:hover { text-decoration: underline; }
+
+  /* ── How it works ── */
+  .how-section {
+    margin-top: 48px;
+    padding: 32px;
+    background: linear-gradient(135deg, var(--dark) 0%, var(--dark2) 100%);
+    border-radius: 20px;
+    color: white;
+  }
+  .how-section h3 {
+    font-size: 20px;
+    font-weight: 800;
+    margin-bottom: 24px;
+    text-align: center;
+  }
+  .how-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+  }
+  .how-item {
+    text-align: center;
+    padding: 16px;
+  }
+  .how-icon { font-size: 32px; margin-bottom: 10px; display: block; }
+  .how-title { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+  .how-desc { font-size: 12px; color: rgba(255,255,255,0.6); line-height: 1.5; }
+
+  /* ── Footer ── */
+  .footer {
+    text-align: center;
+    padding: 32px 24px;
+    color: var(--text-muted);
+    font-size: 13px;
+    border-top: 1px solid var(--border);
+  }
+  .footer strong { color: var(--purple); }
+
+  /* ── Responsive ── */
+  @media (max-width: 600px) {
+    .steps { flex-direction: column; }
+    .step { border-right: none; border-bottom: 1px solid var(--border); }
+    .step:last-child { border-bottom: none; }
+    .hero { padding: 40px 20px; }
+    .hero-stats { gap: 20px; }
+    .form-card, .api-section { padding: 20px; }
+    .pdf-cards { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <a class="logo" href="/ninelab">
+    <div class="logo-icon">9L</div>
+    <div>
+      <div class="logo-text">Nine Lab</div>
+      <div class="logo-tag">9 minutes mein placement ready</div>
+    </div>
+  </a>
+  <div class="header-right">🇮🇳 Made for India</div>
+</header>
+
+<div class="setup-banner" id="setupBanner">
+  <strong>⚠️ Setup Required:</strong>
+  <p>GEMINI_API_KEY and/or TAVILY_API_KEY are not configured. Set them as environment variables to use the app. See the setup guide below.</p>
+</div>
+
+<section class="hero">
+  <div class="hero-badge">⚡ Free · AI-Powered · 3 PDFs</div>
+  <h1>Placement ready in<br><span>9 minutes</span></h1>
+  <p>Paste your resume, JD, and company name. Our AI agents run in parallel and generate 3 personalized PDFs — Reality Report, Prep Plan, and Revised Resume.</p>
+  <div class="hero-stats">
+    <div class="stat">
+      <div class="stat-num">3</div>
+      <div class="stat-label">PDFs Generated</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">9</div>
+      <div class="stat-label">Day Prep Plan</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">4</div>
+      <div class="stat-label">AI Agents</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">∞</div>
+      <div class="stat-label">Placements 🎯</div>
+    </div>
+  </div>
+</section>
+
+<div class="container">
+
+  <!-- Steps -->
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div>
+        <div class="step-text">Paste Resume</div>
+        <div class="step-sub">Your full resume text</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div>
+        <div class="step-text">Add JD + Company</div>
+        <div class="step-sub">Job description & name</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div>
+        <div class="step-text">AI Analyzes</div>
+        <div class="step-sub">4 agents in parallel</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div>
+        <div class="step-text">Download 3 PDFs</div>
+        <div class="step-sub">Ready to use</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Form -->
+  <div class="form-card" id="formCard">
+    <div class="section-title">Your Inputs</div>
+    <div class="section-desc">Fill all 3 fields — more detail = better output</div>
+
+    <div class="form-group">
+      <label class="form-label">
+        <span class="emoji">📄</span>
+        Your Resume
+        <span class="badge">Required · Min 50 words</span>
+      </label>
+      <div class="form-hint">Paste your complete resume text (plain text is fine). The more detail, the better the AI analysis.</div>
+      <textarea id="resumeInput" rows="10" placeholder="Paste your entire resume here...
+
+Example:
+John Doe | john@email.com | LinkedIn: linkedin.com/in/johndoe
+
+EDUCATION
+B.Tech Computer Science, IIT Delhi (2021-2025) | CGPA: 8.4
+
+SKILLS
+Languages: Python, JavaScript, Java
+Frameworks: React, Node.js, FastAPI
+..."></textarea>
+      <div class="word-count" id="resumeCount">0 words</div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">
+        <span class="emoji">💼</span>
+        Job Description
+        <span class="badge">Required · Min 30 words</span>
+      </label>
+      <div class="form-hint">Copy the full JD from LinkedIn/company website. Include requirements, responsibilities, qualifications.</div>
+      <textarea id="jdInput" rows="8" placeholder="Paste the complete job description here...
+
+Example:
+Software Engineer — Google India
+
+We are looking for a passionate Software Engineer to join our team...
+Requirements:
+• 0-2 years experience
+• Strong CS fundamentals
+• Proficiency in Python or Java
+..."></textarea>
+      <div class="word-count" id="jdCount">0 words</div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">
+        <span class="emoji">🏢</span>
+        Company Name
+        <span class="badge">Required</span>
+      </label>
+      <div class="form-hint">Just the company name — our AI will research it for you.</div>
+      <input type="text" id="companyInput" placeholder="e.g. Google, Infosys, Zomato, Goldman Sachs..." maxlength="100">
+    </div>
+
+    <div class="error-box" id="errorBox"></div>
+
+    <button class="submit-btn" id="submitBtn" onclick="handleSubmit()">
+      <span id="submitBtnText">⚡ Generate My 3 PDFs</span>
+    </button>
+  </div>
+
+  <!-- Progress Panel -->
+  <div class="progress-panel" id="progressPanel">
+    <div class="progress-emoji" id="progressEmoji">🤖</div>
+    <div class="progress-title">AI Agents at Work</div>
+    <div class="progress-msg" id="progressMsg">Initializing your placement pipeline...</div>
+
+    <div class="progress-bar-wrap">
+      <div class="progress-bar" id="progressBar"></div>
+    </div>
+    <div class="progress-pct" id="progressPct">0%</div>
+
+    <div class="pipeline-steps">
+      <div class="pipe-step" id="step-research">
+        <div class="pipe-dot"></div> Company Research
+      </div>
+      <div class="pipe-step" id="step-analysis">
+        <div class="pipe-dot"></div> Resume Analysis
+      </div>
+      <div class="pipe-step" id="step-plan">
+        <div class="pipe-dot"></div> Prep Plan
+      </div>
+      <div class="pipe-step" id="step-resume">
+        <div class="pipe-dot"></div> Resume Rewrite
+      </div>
+      <div class="pipe-step" id="step-pdf">
+        <div class="pipe-dot"></div> PDF Generation
+      </div>
+    </div>
+  </div>
+
+  <!-- Results Panel -->
+  <div class="results-panel" id="resultsPanel">
+    <div class="results-header">
+      <span class="confetti-emoji">🎉</span>
+      <h2>Your Placement Kit is Ready!</h2>
+      <p>Download all 3 PDFs and start your 9-day preparation journey</p>
+    </div>
+
+    <div class="pdf-cards">
+      <div class="pdf-card">
+        <span class="pdf-icon">📊</span>
+        <div class="pdf-title">Reality Report</div>
+        <div class="pdf-desc">Honest match score, gap analysis, skill assessment, and what you actually need to get this job.</div>
+        <a href="#" class="download-btn" id="downloadReality">
+          ⬇️ Download PDF
+        </a>
+      </div>
+      <div class="pdf-card">
+        <span class="pdf-icon">📅</span>
+        <div class="pdf-title">9-Day Prep Plan</div>
+        <div class="pdf-desc">Day-by-day schedule, mock interview questions, HR questions, and free resources tailored to the role.</div>
+        <a href="#" class="download-btn" id="downloadPlan">
+          ⬇️ Download PDF
+        </a>
+      </div>
+      <div class="pdf-card">
+        <span class="pdf-icon">✨</span>
+        <div class="pdf-title">Revised Resume</div>
+        <div class="pdf-desc">ATS-optimized, keyword-rich resume tailored for this exact job description and company.</div>
+        <a href="#" class="download-btn" id="downloadResume">
+          ⬇️ Download PDF
+        </a>
+      </div>
+    </div>
+
+    <button class="try-again-btn" onclick="resetApp()">🔄 Try Another Job</button>
+  </div>
+
+  <!-- API Setup Guide -->
+  <div class="api-section" id="apiSection">
+    <h3>🔑 API Keys Setup</h3>
+    <p>Nine Lab uses your own API keys — your data never goes through our servers. Set these as environment variables (or in a <code>.env</code> file) in the project root. Two are required, two are optional.</p>
+    <div class="api-grid">
+      <div class="api-item">
+        <div class="api-item-name">GEMINI_API_KEY</div>
+        <div class="api-item-desc">Required · Powers all AI analysis, prep plan, and resume rewrite</div>
+        <a href="https://aistudio.google.com/app/apikey" target="_blank">Get free key →</a>
+      </div>
+      <div class="api-item">
+        <div class="api-item-name">TAVILY_API_KEY</div>
+        <div class="api-item-desc">Required · Web search for company intelligence</div>
+        <a href="https://tavily.com" target="_blank">Get free key →</a>
+      </div>
+      <div class="api-item">
+        <div class="api-item-name">SUPABASE_URL</div>
+        <div class="api-item-desc">Optional · Usage tracking (1 free use/day/IP)</div>
+        <a href="https://supabase.com" target="_blank">Learn more →</a>
+      </div>
+      <div class="api-item">
+        <div class="api-item-name">SUPABASE_KEY</div>
+        <div class="api-item-desc">Optional · Supabase anon key</div>
+        <a href="https://supabase.com" target="_blank">Learn more →</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- How It Works -->
+  <div class="how-section">
+    <h3>🤖 How Nine Lab Works</h3>
+    <div class="how-grid">
+      <div class="how-item">
+        <span class="how-icon">🔍</span>
+        <div class="how-title">Company Research Agent</div>
+        <div class="how-desc">Searches the web for company culture, interview process, salary data, and red/green flags</div>
+      </div>
+      <div class="how-item">
+        <span class="how-icon">🧠</span>
+        <div class="how-title">Resume Analysis Agent</div>
+        <div class="how-desc">Compares your resume against the JD line by line, scores your match, identifies critical gaps</div>
+      </div>
+      <div class="how-item">
+        <span class="how-icon">📅</span>
+        <div class="how-title">Prep Plan Agent</div>
+        <div class="how-desc">Creates a personalized 9-day study plan with mock questions tailored to this role and company</div>
+      </div>
+      <div class="how-item">
+        <span class="how-icon">✍️</span>
+        <div class="how-title">Resume Rewrite Agent</div>
+        <div class="how-desc">Rewrites your resume with ATS-optimized keywords, strong action verbs, and quantified achievements</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<footer class="footer">
+  Built with ❤️ by <strong>Nine Lab</strong> · For Indian students chasing their placement dreams<br>
+  <span style="font-size:12px;margin-top:4px;display:block;">Open source · Self-hostable · Your data stays with you</span>
+</footer>
+
+<script>
+  const BASE = '/ninelab';
+  let currentJobId = null;
+  let pollInterval = null;
+
+  // Word count helpers
+  function wordCount(text) {
+    return text.trim().split(/\s+/).filter(w => w.length > 0).length;
+  }
+
+  function updateCount(inputId, countId, minWords) {
+    const input = document.getElementById(inputId);
+    const counter = document.getElementById(countId);
+    const count = wordCount(input.value);
+    counter.textContent = `${count} words`;
+    counter.className = 'word-count ' + (count >= minWords ? 'ok' : count > 0 ? 'warn' : '');
+  }
+
+  document.getElementById('resumeInput').addEventListener('input', () => updateCount('resumeInput', 'resumeCount', 50));
+  document.getElementById('jdInput').addEventListener('input', () => updateCount('jdInput', 'jdCount', 30));
+
+  // Check health on load
+  async function checkHealth() {
+    try {
+      const r = await fetch(`${BASE}/health`);
+      const data = await r.json();
+      if (!data.keys.gemini || !data.keys.tavily) {
+        document.getElementById('setupBanner').classList.add('visible');
+      }
+    } catch(e) {}
+  }
+  checkHealth();
+
+  // Pipeline step updater
+  const stageMap = {
+    'queued': [],
+    'research': ['step-research', 'step-analysis'],
+    'analysis': ['step-research', 'step-analysis', 'step-plan', 'step-resume'],
+    'pdf': ['step-research', 'step-analysis', 'step-plan', 'step-resume', 'step-pdf'],
+    'done': ['step-research', 'step-analysis', 'step-plan', 'step-resume', 'step-pdf'],
+    'error': [],
+  };
+
+  function updatePipelineSteps(stage, progress) {
+    const allSteps = ['step-research', 'step-analysis', 'step-plan', 'step-resume', 'step-pdf'];
+    const activeSteps = stageMap[stage] || [];
+
+    allSteps.forEach(s => {
+      const el = document.getElementById(s);
+      el.className = 'pipe-step';
+      const dot = el.querySelector('.pipe-dot');
+      dot.className = 'pipe-dot';
+    });
+
+    if (stage === 'done') {
+      activeSteps.forEach(s => {
+        document.getElementById(s).classList.add('done');
+      });
+      return;
+    }
+
+    for (let i = 0; i < activeSteps.length; i++) {
+      const el = document.getElementById(activeSteps[i]);
+      if (i < activeSteps.length - 1) {
+        el.classList.add('done');
+      } else {
+        el.classList.add('active');
+        el.querySelector('.pipe-dot').classList.add('spinning');
+      }
+    }
+  }
+
+  const stageEmojis = {
+    queued: '⏳', research: '🔍', analysis: '🧠', pdf: '📄', done: '🎉', error: '❌'
+  };
+
+  async function handleSubmit() {
+    const resume = document.getElementById('resumeInput').value.trim();
+    const jd = document.getElementById('jdInput').value.trim();
+    const company = document.getElementById('companyInput').value.trim();
+    const errorBox = document.getElementById('errorBox');
+    const btn = document.getElementById('submitBtn');
+
+    errorBox.classList.remove('visible');
+
+    // Basic validation
+    if (wordCount(resume) < 50) {
+      showError('Resume bahut chhota hai! Kam se kam 50 words paste karo yaar 😅');
+      return;
+    }
+    if (wordCount(jd) < 30) {
+      showError('Job description bahut chhoti hai! Full JD copy karke paste karo 📋');
+      return;
+    }
+    if (company.length < 2) {
+      showError('Company ka naam toh daal bhai! 🏢');
+      return;
+    }
+
+    btn.disabled = true;
+    document.getElementById('submitBtnText').textContent = '⏳ Generating...';
+
+    try {
+      const resp = await fetch(`${BASE}/generate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ resume, jd, company })
+      });
+      const data = await resp.json();
+
+      if (!resp.ok) {
+        showError(data.detail || 'Kuch gadbad ho gayi. Dobara try karo.');
+        btn.disabled = false;
+        document.getElementById('submitBtnText').textContent = '⚡ Generate My 3 PDFs';
+        return;
+      }
+
+      currentJobId = data.job_id;
+      startPolling(company);
+
+    } catch(e) {
+      showError('Network error. Server se connect nahi ho pa raha. Refresh karo.');
+      btn.disabled = false;
+      document.getElementById('submitBtnText').textContent = '⚡ Generate My 3 PDFs';
+    }
+  }
+
+  function startPolling(company) {
+    document.getElementById('formCard').style.display = 'none';
+    document.getElementById('progressPanel').classList.add('visible');
+
+    pollInterval = setInterval(async () => {
+      try {
+        const resp = await fetch(`${BASE}/status/${currentJobId}`);
+        const data = await resp.json();
+
+        if (!resp.ok) {
+          clearInterval(pollInterval);
+          showProgressError('Job not found. Please try again.');
+          return;
+        }
+
+        // Update UI
+        const pct = data.progress || 0;
+        document.getElementById('progressBar').style.width = pct + '%';
+        document.getElementById('progressPct').textContent = pct + '%';
+        document.getElementById('progressMsg').textContent = data.message || '';
+        document.getElementById('progressEmoji').textContent = stageEmojis[data.stage] || '🤖';
+        updatePipelineSteps(data.stage, pct);
+
+        if (data.stage === 'done') {
+          clearInterval(pollInterval);
+          showResults(data.files, company);
+        } else if (data.stage === 'error') {
+          clearInterval(pollInterval);
+          showProgressError(data.message || 'Something went wrong');
+        }
+
+      } catch(e) {
+        // keep polling
+      }
+    }, 1500);
+  }
+
+  function showResults(files, company) {
+    document.getElementById('progressPanel').classList.remove('visible');
+    document.getElementById('resultsPanel').classList.add('visible');
+
+    document.getElementById('downloadReality').href = `${BASE}/pdf/${files.reality}`;
+    document.getElementById('downloadPlan').href = `${BASE}/pdf/${files.plan}`;
+    document.getElementById('downloadResume').href = `${BASE}/pdf/${files.resume}`;
+
+    // Force download
+    ['downloadReality', 'downloadPlan', 'downloadResume'].forEach(id => {
+      document.getElementById(id).setAttribute('download', '');
+    });
+
+    document.getElementById('submitBtn').disabled = false;
+    document.getElementById('submitBtnText').textContent = '⚡ Generate My 3 PDFs';
+  }
+
+  function showProgressError(msg) {
+    document.getElementById('progressPanel').classList.remove('visible');
+    document.getElementById('formCard').style.display = 'block';
+    showError('❌ ' + msg);
+    document.getElementById('submitBtn').disabled = false;
+    document.getElementById('submitBtnText').textContent = '⚡ Generate My 3 PDFs';
+  }
+
+  function showError(msg) {
+    const box = document.getElementById('errorBox');
+    box.textContent = msg;
+    box.classList.add('visible');
+    box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  function resetApp() {
+    clearInterval(pollInterval);
+    currentJobId = null;
+    document.getElementById('formCard').style.display = 'block';
+    document.getElementById('progressPanel').classList.remove('visible');
+    document.getElementById('resultsPanel').classList.remove('visible');
+    document.getElementById('errorBox').classList.remove('visible');
+    document.getElementById('progressBar').style.width = '0%';
+    document.getElementById('progressPct').textContent = '0%';
+    document.getElementById('progressMsg').textContent = 'Initializing...';
+    document.getElementById('submitBtn').disabled = false;
+    document.getElementById('submitBtnText').textContent = '⚡ Generate My 3 PDFs';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // Allow Ctrl+Enter to submit
+  document.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+      handleSubmit();
+    }
+  });
+</script>
+</body>
+</html>

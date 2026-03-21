@@ -48,6 +48,21 @@ Every package extends `tsconfig.base.json` which sets `composite: true`. The roo
 - `pnpm run build` — runs `typecheck` first, then recursively runs `build` in all packages that define it
 - `pnpm run typecheck` — runs `tsc --build --emitDeclarationOnly` using project references
 
+## Nine Lab (Standalone Python App)
+
+`artifacts/nine-lab/` is a **portable Python FastAPI app** — NOT part of the pnpm monorepo. It has its own `requirements.txt` and runs independently.
+
+- Entry: `main.py` — FastAPI app with all routes, AI agents, and PDF generation
+- Static: `static/index.html` — full single-page frontend
+- PDFs: `pdfs/` — generated PDF output directory
+- Workflow: "Nine Lab" — `cd artifacts/nine-lab && pip install -r requirements.txt -q && uvicorn main:app --host 0.0.0.0 --port 8000 --reload`
+- Routes: `GET /ninelab`, `POST /ninelab/generate`, `GET /ninelab/status/{job_id}`, `GET /ninelab/pdf/{filename}`
+- Required env vars: `GEMINI_API_KEY`, `TAVILY_API_KEY`
+- Optional env vars: `SUPABASE_URL`, `SUPABASE_KEY` (usage tracking)
+- AI model: `gemini-1.5-flash` via `google-generativeai`
+- PDF generation: ReportLab
+- Portability: copy `artifacts/nine-lab/`, set 4 env vars, run `pip install -r requirements.txt && uvicorn main:app --host 0.0.0.0 --port 8000`
+
 ## Packages
 
 ### `artifacts/api-server` (`@workspace/api-server`)
