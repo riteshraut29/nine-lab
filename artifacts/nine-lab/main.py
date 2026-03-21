@@ -29,7 +29,9 @@ executor = ThreadPoolExecutor(max_workers=8)
 # ── Supabase usage tracking ─────────────────────────────────────────────────
 
 def check_usage_limit(ip: str) -> bool:
+    """Return True if the IP is allowed to generate (under limit), False if blocked."""
     if not SUPABASE_URL or not SUPABASE_KEY:
+        # No Supabase configured → no rate limiting (open for self-hosted deployments)
         return True
     try:
         import httpx
@@ -42,11 +44,13 @@ def check_usage_limit(ip: str) -> bool:
         }
         params = {"ip_address": f"eq.{ip}", "created_at": f"gte.{today}T00:00:00"}
         r = httpx.get(url, headers=headers, params=params, timeout=5)
-        if r.status_code == 200 and len(r.json()) >= 1:
+        if r.status_code != 200:
+            # Supabase error — fail-closed to protect against quota abuse when configured
             return False
-        return True
+        return len(r.json()) < 1
     except Exception:
-        return True
+        # Network/connection error — fail-closed when Supabase is explicitly configured
+        return False
 
 
 def record_usage(ip: str):
@@ -583,7 +587,12 @@ async def generate(req: GenerateRequest, request: Request):
         raise HTTPException(400, detail="TAVILY_API_KEY not configured. Add it to your environment variables.")
 
     if not check_usage_limit(ip):
-        raise HTTPException(429, detail="Aaj ka free use ho gaya! Kal wapas aao. (1 free use per day per IP)")
+        raise HTTPException(429, detail=(
+            "Aaj ka free use ho gaya! Kal wapas aao. (1 free use per day per IP)\n\n"
+            "Want unlimited access? Self-host Nine Lab with your own API keys — it's free and open source. "
+            "Copy the artifacts/nine-lab/ folder, add GEMINI_API_KEY and TAVILY_API_KEY, and run: "
+            "pip install -r requirements.txt && uvicorn main:app --host 0.0.0.0 --port 8000"
+        ))
 
     job_id = str(uuid.uuid4())[:8]
     jobs[job_id] = {

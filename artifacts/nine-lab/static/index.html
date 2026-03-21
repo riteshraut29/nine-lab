@@ -972,7 +972,11 @@ Requirements:
       const data = await resp.json();
 
       if (!resp.ok) {
-        showError(data.detail || 'Kuch gadbad ho gayi. Dobara try karo.');
+        let errMsg = data.detail || 'Kuch gadbad ho gayi. Dobara try karo.';
+        if (resp.status === 429) {
+          errMsg = '🚦 Aaj ka free use ho gaya! Kal wapas aao.\n\nUnlimited use chahiye? Self-host Nine Lab — it\'s free & open source. Just copy the artifacts/nine-lab/ folder, add your API keys, and run uvicorn.';
+        }
+        showError(errMsg);
         btn.disabled = false;
         document.getElementById('submitBtnText').textContent = '⚡ Generate My 3 PDFs';
         return;
