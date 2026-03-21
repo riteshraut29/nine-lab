@@ -108,21 +108,26 @@ def record_usage(ip: str):
 
 # ── AI helper (Groq primary, Gemini fallback) ─────────────────────────────────
 
-def gemini_call(prompt: str, retries: int = 3) -> str:
+def gemini_call(prompt: str, retries: int = 3, temperature: float = 0.7,
+                system_prompt: str = None) -> str:
     last_err = None
 
     # ── Try Groq first (faster, higher limits) ───────────────────────────────
     if GROQ_API_KEY:
         from groq import Groq
         groq_client = Groq(api_key=GROQ_API_KEY)
-        groq_models = ["llama-3.3-70b-versatile", "llama-3.1-8b-instant", "gemma2-9b-it"]
+        groq_models = ["llama-3.3-70b-versatile", "llama-3.1-8b-instant"]
         for model_name in groq_models:
             for attempt in range(retries + 1):
                 try:
+                    messages = []
+                    if system_prompt:
+                        messages.append({"role": "system", "content": system_prompt})
+                    messages.append({"role": "user", "content": prompt})
                     response = groq_client.chat.completions.create(
                         model=model_name,
-                        messages=[{"role": "user", "content": prompt}],
-                        temperature=0.7,
+                        messages=messages,
+                        temperature=temperature,
                         max_tokens=4096,
                     )
                     return response.choices[0].message.content
@@ -140,11 +145,15 @@ def gemini_call(prompt: str, retries: int = 3) -> str:
         import google.generativeai as genai
         genai.configure(api_key=GEMINI_API_KEY)
         gemini_models = ["gemini-2.0-flash", "gemini-2.0-flash-lite", "gemini-1.5-flash"]
+        full_prompt = f"{system_prompt}\n\n{prompt}" if system_prompt else prompt
         for model_name in gemini_models:
             for attempt in range(retries + 1):
                 try:
                     model = genai.GenerativeModel(model_name)
-                    response = model.generate_content(prompt)
+                    response = model.generate_content(
+                        full_prompt,
+                        generation_config={"temperature": temperature}
+                    )
                     return response.text
                 except Exception as e:
                     last_err = e
@@ -204,80 +213,126 @@ def section_bullets(text: str) -> list:
 # ── Agents ───────────────────────────────────────────────────────────────────
 
 def agent_research(company: str, jd: str) -> dict:
+    """Tavily-only web search pass — returns raw snippets for other agents."""
     try:
-        results = tavily_search(f"{company} company culture hiring process interview 2024 2025", retries=1)
-        snippets = "\n".join([f"- {r.get('title','')}: {r.get('content','')[:300]}" for r in results[:4]])
-        prompt = f"""You are a placement expert. Analyze this company and job description.
-
-Company: {company}
-Job Description: {jd}
-
-Web search results about the company:
-{snippets}
-
-Provide a structured analysis with these sections:
-1. COMPANY OVERVIEW: (2-3 sentences about culture, size, domain)
-2. ROLE REQUIREMENTS: (top 5 must-have skills/qualifications)
-3. INTERVIEW PROCESS: (typical rounds at this company)
-4. GREEN FLAGS: (3+ positive things about this company)
-5. RED FLAGS: (2+ things to watch out for)
-6. SALARY RANGE: (for Indian market in INR, entry/mid level)
-7. WHAT THEY LOOK FOR: (5 specific things this company values in candidates)
-
-Be concise, factual, and actionable. Use plain text, no markdown formatting."""
-
-        text = gemini_call(prompt, retries=1)
-        return {"success": True, "data": text, "source": "tavily+gemini"}
+        results = tavily_search(
+            f"{company} company culture interview process hiring 2024 2025 India", retries=1
+        )
+        snippets = "\n".join([
+            f"[{r.get('title', '')}] {r.get('content', '')[:400]}"
+            for r in results[:5]
+        ])
+        return {"success": True, "data": snippets, "source": "tavily"}
     except Exception as e:
-        err_msg = str(e)[:60]
-        return {"success": False, "data": f"Company research data unavailable ({err_msg}).", "source": "fallback"}
+        return {"success": False, "data": f"Web research unavailable: {str(e)[:60]}", "source": "fallback"}
 
 
 def agent_company_report(company: str, jd: str, research_snippets: str) -> dict:
+    """NEXUS — elite company intelligence analyst."""
+    # Extract job title from first non-empty line of JD
+    job_title = next((l.strip() for l in jd.split('\n') if l.strip()), "the role")[:80]
+
+    NEXUS_SYSTEM = """You are NEXUS — an elite corporate intelligence analyst with 15 years of experience researching companies for candidates at McKinsey, BCG, and top Indian placement cells. You have deep knowledge of Indian IT, startup, and corporate ecosystems.
+
+Your ONE job: give this candidate an unfair advantage before their interview.
+
+THINKING PROCESS (follow this exactly):
+Step 1: Understand the company's core business model
+Step 2: Identify what type of people they hire and why
+Step 3: Map their interview process based on known patterns
+Step 4: Find the real red flags most candidates miss
+Step 5: Craft the 3 most impressive things the candidate can say
+
+OUTPUT RULES:
+- Every fact must be specific to THIS company. Zero generic filler.
+- Salary in Indian Rupees only. Use realistic Indian market data.
+- Interview process: name each round specifically
+- If data unavailable, say exactly: "Data not publicly available" — never guess or hallucinate
+- Tone: insider friend who works there, not a Wikipedia article
+- Zero markdown symbols (###, **, --) in output
+
+WHAT GOOD LOOKS LIKE:
+"Senwell's technical round focuses heavily on JavaScript fundamentals — they specifically ask about closures and async/await."
+
+WHAT BAD LOOKS LIKE (never do this):
+"The company has a good interview process with multiple rounds."
+
+OUTPUT FORMAT — use these exact section headers:
+COMPANY OVERVIEW
+CULTURE AND ENVIRONMENT
+RECENT DEVELOPMENTS
+INTERVIEW PROCESS
+WHAT THEY TEST IN EACH ROUND
+TOP 5 INTERVIEW QUESTIONS AT THIS COMPANY
+TECH STACK THEY USE
+SALARY RANGE
+GREEN FLAGS
+RED FLAGS
+YOUR INTERVIEW ADVANTAGE"""
+
+    user_prompt = f"""Research this company thoroughly for a job candidate:
+
+Company: {company}
+Role Applied For: {job_title}
+Web Research Data: {research_snippets[:3000]}
+
+The candidate has an upcoming interview. Give them everything they need to walk in with confidence and insider knowledge. Think step by step before writing each section."""
+
     try:
-        prompt = f"""You are a company intelligence analyst helping an Indian student prepare for a placement interview.
-
-COMPANY: {company}
-JOB DESCRIPTION: {jd[:2000]}
-WEB RESEARCH:
-{research_snippets[:3000]}
-
-Write a comprehensive company report with these exact sections (use plain text only, no markdown):
-
-COMPANY OVERVIEW: What they do, founded year, HQ location, company size, industry. 3-4 lines.
-
-CULTURE AND WORK ENVIRONMENT: Work culture, values, employee reviews summary. 3-4 lines.
-
-RECENT NEWS: Any recent developments, funding, acquisitions, product launches in last few months. 2-3 points.
-
-INTERVIEW PROCESS: Exact numbered steps (Round 1, Round 2, etc.) and what happens in each round.
-
-WHAT THEY TEST: For each interview round, what specific skills/topics they evaluate.
-
-TOP 5 INTERVIEW QUESTIONS: The 5 most commonly asked questions at {company} for this role. Include brief model answers.
-
-TECH STACK: Technologies, frameworks, tools this company uses.
-
-SALARY RANGE: Salary range in INR (\u20b9) for this role at {company}. Give min and max.
-
-GREEN FLAGS: Minimum 3 positive things about working at {company}.
-
-RED FLAGS: Minimum 2 things to watch out for at {company}.
-
-INTERVIEW ADVANTAGE: 3 specific things the candidate should say in the interview to impress {company}. Be very specific to this company.
-
-Be factual, specific to {company}, and actionable. Do not use generic advice. Use plain text only."""
-
-        text = gemini_call(prompt, retries=1)
+        text = gemini_call(user_prompt, retries=2, temperature=0.2, system_prompt=NEXUS_SYSTEM)
         return {"success": True, "data": text}
     except Exception as e:
-        err_msg = str(e)[:60]
-        return {"success": False, "data": f"Company report unavailable ({err_msg})."}
+        return {"success": False, "data": f"Company report unavailable ({str(e)[:60]})."}
 
 
-def agent_analysis(resume: str, jd: str, company: str) -> dict:
-    try:
-        prompt = f"""You are a supportive career coach helping an Indian student prepare for placements. Analyze this candidate's fit.
+def agent_analysis(resume: str, jd: str, company: str, research: str = "") -> dict:
+    """ARIA — senior placement mentor with brutal honesty and deep care."""
+    ARIA_SYSTEM = """You are ARIA — a senior placement mentor who combines the analytical precision of a Fortune 500 HR director with the warmth of a trusted elder sibling. You have personally reviewed 50,000 resumes and placed 10,000+ Indian students.
+
+Your philosophy: Brutal honesty delivered with deep care. Every problem you identify, you solve.
+
+THINKING PROCESS (follow this exactly):
+Step 1: Read the JD carefully — what are the TOP 3 non-negotiable requirements?
+Step 2: Read the resume — does it prove these 3 requirements? Score each 0-10.
+Step 3: Calculate match score honestly (average x 10 = %)
+Step 4: Identify gaps in PRIORITY ORDER — what is costing them the job most?
+Step 5: For each gap, think: what is the fastest specific fix?
+Step 6: Separate company analysis completely from candidate analysis
+Step 7: Write closing message as if this is your younger sibling
+
+MATCH SCORE CALIBRATION:
+90-100: Almost perfect, minor polish needed
+70-89: Strong candidate, 2-3 gaps to fix
+50-69: Potential candidate, significant work needed
+30-49: Major gaps, needs focused preparation
+0-29: Fundamental mismatch, needs honest redirect
+
+TONE RULES (non-negotiable):
+GOOD: "Your Python skills are strong, but the JD needs Node.js — here is how to bridge this in 2 weeks"
+BAD: "You do not know Node.js which is a critical requirement"
+GOOD: "Fix your LinkedIn URL first — it takes 30 seconds and shows attention to detail"
+BAD: "You left a placeholder URL which looks unprofessional"
+
+The candidate should finish reading feeling: capable + clear on next steps + motivated
+Never make them feel: defeated, embarrassed, overwhelmed
+
+OUTPUT FORMAT — use these exact section headers:
+MATCH SCORE: [0-100]
+VERDICT: [one honest sentence]
+YOUR TOP 3 STRENGTHS
+YOUR TOP 3 PRIORITY GAPS
+DETAILED STRENGTHS ANALYSIS
+GAPS WITH PRIORITY AND SPECIFIC FIX
+RESUME RED FLAGS WITH EXACT FIXES
+ABOUT THE COMPANY
+WHAT THIS COMPANY LOOKS FOR
+THEIR INTERVIEW PROCESS
+SALARY RANGE
+YOUR PRIORITY ACTION LIST
+NEXT STEPS CHECKLIST
+CLOSING MESSAGE"""
+
+    user_prompt = f"""Analyze this candidate's fit for the role. Think through each step carefully before writing.
 
 RESUME:
 {resume[:3000]}
@@ -286,144 +341,181 @@ JOB DESCRIPTION:
 {jd[:2000]}
 
 COMPANY: {company}
+COMPANY RESEARCH: {research[:1500]}
 
-Provide analysis with these exact sections (use plain text only, no markdown):
+Evaluate honestly. Remember: this person's career depends on accurate feedback. Give them the truth, but give them hope too."""
 
-MATCH SCORE: Give a number X out of 100 and one bold verdict sentence.
-
-TOP 3 STRENGTHS: Three things this resume does well for this specific job. Be specific.
-
-TOP 3 PRIORITY GAPS: Numbered 1, 2, 3. Most critical first. Each gap must have a specific actionable fix.
-
-DETAILED STRENGTHS: 4-5 detailed resume strengths with explanation.
-
-DETAILED GAPS: Each gap with a PRIORITY NUMBER (1=highest) and a specific fix the student can implement.
-
-RESUME RED FLAGS: 3 specific issues in the resume with exact actionable fix for each.
-
-COMPANY OVERVIEW: What {company} does in 3 lines.
-
-WHAT THEY LOOK FOR: 5 specific things {company} values in candidates.
-
-THEIR INTERVIEW PROCESS: Numbered steps of {company}'s interview process.
-
-SALARY RANGE: Salary range in INR (\u20b9) for this role.
-
-PRIORITY ACTIONS: Top 3 things to fix first, in order of priority.
-
-NEXT STEPS: 5 specific next steps the student should take immediately.
-
-CLOSING MESSAGE: A warm, motivating, personalized closing message. Make the student feel confident and capable. Reference something specific from their resume.
-
-TONE: Like a senior friend giving honest but solution-first advice. Never harsh. Every gap must have a clear fix. The student must feel motivated and capable after reading this."""
-
-        text = gemini_call(prompt, retries=1)
+    try:
+        text = gemini_call(user_prompt, retries=2, temperature=0.3, system_prompt=ARIA_SYSTEM)
         return {"success": True, "data": text}
     except Exception as e:
-        err_msg = str(e)[:60]
-        return {"success": False, "data": f"Analysis unavailable ({err_msg}). Please try again."}
+        return {"success": False, "data": f"Analysis unavailable ({str(e)[:60]}). Please try again."}
 
 
-def agent_plan(resume: str, jd: str, company: str, analysis: str, research: str) -> dict:
-    try:
-        prompt = f"""You are a personal placement coach creating a preparation plan for an Indian student.
+def _extract_match_score(analysis_text: str) -> int:
+    """Pull numeric match score from ARIA's output."""
+    for line in analysis_text.split('\n'):
+        if 'MATCH SCORE' in line.upper():
+            nums = re.findall(r'\d+', line)
+            if nums:
+                return min(int(nums[0]), 100)
+    return 50
 
+
+def _extract_gap_summary(analysis_text: str) -> str:
+    """Pull the top gaps section from ARIA's output for FORGE."""
+    gaps = extract_section(analysis_text, "YOUR TOP 3 PRIORITY GAPS")
+    if not gaps:
+        gaps = extract_section(analysis_text, "GAPS WITH PRIORITY AND SPECIFIC FIX")
+    return gaps[:800] if gaps else "Improve skill alignment with job description requirements."
+
+
+def agent_plan(resume: str, jd: str, company: str, analysis: str, research: str,
+               match_score: int = 50) -> dict:
+    """ATLAS — world-class placement coach for Indian students."""
+    ATLAS_SYSTEM = """You are ATLAS — a world-class placement coach who has trained 5,000+ Indian students from tier-2 and tier-3 colleges to crack placements at top companies. You know exactly what Indian companies test, what resources work best in the Indian context, and how to build skills fast.
+
+Your superpower: You never give generic advice. Every word you write is specific to this exact candidate, this exact role, this exact company.
+
+THINKING PROCESS (follow this exactly):
+Step 1: Assess current level from resume — what do they actually know vs what they claim?
+Step 2: Map JD requirements — what does this specific role actually need?
+Step 3: Find the GAP — rank from most critical to least critical
+Step 4: For each phase, identify the FASTEST path to demonstrable skill
+Step 5: Pull questions this specific company is known to ask
+Step 6: Find resources that are FREE, Indian context, and actually effective
+
+PRIORITY FRAMEWORK:
+CRITICAL = Without this, they get rejected in screening round
+IMPORTANT = Without this, they fail technical round
+GOOD TO HAVE = Separates from other candidates in final round
+
+ANTI-GENERIC RULES (follow strictly):
+WRONG: "Learn React"
+RIGHT: "Build a Task Manager app in React with CRUD operations — deploy on Vercel with GitHub link"
+WRONG: "Practice DSA"
+RIGHT: "Solve 20 Array and String problems on GFG — focus on Two Pointer and Sliding Window patterns"
+WRONG: "Prepare for HR"
+RIGHT: "For this company's HR round: prepare why you want this specific company — mention specific things about their work culture"
+NEVER USE: "Day 1", "Day 2", "Week 1", "9 days", "9-day" — use Phase 1, Phase 2, Phase 3 only
+
+RESOURCE RULES:
+Indian creators first: CodeWithHarry, Apna College, Striver, Hitesh Choudhary
+Then international: freeCodeCamp, MDN Docs, official documentation
+Free resources only unless paid is genuinely much better
+
+OUTPUT FORMAT — use these exact section headers:
+CURRENT LEVEL ASSESSMENT
+PRIORITY 1 — CRITICAL
+PRIORITY 2 — IMPORTANT
+PRIORITY 3 — GOOD TO HAVE
+PHASE 1: FOUNDATION
+PHASE 2: CORE SKILLS
+PHASE 3: COMPANY-SPECIFIC POLISH
+TOP 10 TECHNICAL INTERVIEW QUESTIONS WITH ANSWERS
+TOP 5 HR QUESTIONS WITH ANSWERS
+FREE RESOURCES
+INTERVIEW DAY CHECKLIST"""
+
+    user_prompt = f"""Create a preparation roadmap for this candidate. Think step by step — assess their level first, then build the plan.
+
+RESUME: {resume[:2500]}
+JOB DESCRIPTION: {jd[:1500]}
 COMPANY: {company}
-JOB DESCRIPTION: {jd[:1000]}
-CANDIDATE ANALYSIS: {analysis[:1500]}
-COMPANY RESEARCH: {research[:1000]}
+COMPANY RESEARCH: {research[:1500]}
+MATCH SCORE FROM ANALYSIS: {match_score}
 
-Create a prep plan with these exact sections (use plain text only, no markdown):
+Build a plan that meets this candidate exactly where they are. Make every task specific and completable. This plan should feel like it was written personally for them — because it was."""
 
-CURRENT LEVEL: 2-3 lines honest assessment of where this candidate stands right now.
-
-PRIORITY 1 CRITICAL: What to master first. Why it matters for this exact role at {company}. Specific topics to cover.
-
-PRIORITY 2 IMPORTANT: Second tier skills needed. Why they matter. Specific topics.
-
-PRIORITY 3 GOOD TO HAVE: Polish items. Why they help. Specific topics.
-
-PHASE 1 FOUNDATION: Specific actionable tasks to build foundation. Include free resource links (GeeksForGeeks, CodeWithHarry, YouTube channels, etc.). Phase completion goal.
-
-PHASE 2 CORE SKILLS: Specific tasks to build core competencies. Resource links. Phase completion goal.
-
-PHASE 3 COMPANY PREP: Specific tasks to prepare for {company}. Company-specific resources. Phase completion goal.
-
-TECHNICAL QUESTIONS: 10 technical interview Q&A pairs specific to this role at {company}. Give both question and a brief model answer for each.
-
-HR QUESTIONS: 5 HR/behavioral interview Q&A pairs specific to {company}'s culture. Give both question and model answer.
-
-FREE RESOURCES: List of free resources with URLs. Include Indian resources (CodeWithHarry, GFG, TakeUForward, Striver's SDE Sheet, etc.).
-
-INTERVIEW DAY CHECKLIST: 10 specific items for interview day preparation.
-
-TONE: Personal coach. Directive. Everything tailored to this exact role at {company}. Zero generic advice. The student should know exactly what to do."""
-
-        text = gemini_call(prompt, retries=1)
-        return {"success": True, "data": text}
-    except Exception as e:
-        err_msg = str(e)[:60]
-        return {"success": False, "data": f"Prep plan generation encountered issues ({err_msg}). Partial plan provided."}
-
-
-def agent_resume(resume: str, jd: str, company: str) -> dict:
     try:
-        prompt = f"""You are an expert ATS-optimized resume writer for the Indian job market (2025 standards).
-
-ORIGINAL RESUME:
-{resume[:3000]}
-
-TARGET JOB DESCRIPTION:
-{jd[:2000]}
-
-TARGET COMPANY: {company}
-
-Rewrite this resume completely. Output ONLY the resume text (no commentary, no notes). Use plain text, no markdown.
-
-STRUCTURE (in this exact order):
-NAME: (candidate's full name in caps)
-JOB TITLE: (the exact job title from the JD)
-CONTACT: (phone | email | LinkedIn URL | GitHub URL | City — all on one line, separated by |)
-
-PROFESSIONAL SUMMARY: 3 lines. Must include the exact job title from the JD, top 3 relevant skills, and value proposition. No filler phrases.
-
-TECHNICAL SKILLS: Organized by category matching JD requirements. Example: "Languages: Python, Java, C++ | Frameworks: React, Node.js | Tools: Docker, AWS"
-
-WORK EXPERIENCE:
-[Company Name] | [Role] | [Duration]
-- [Action verb] [task] [quantified result]
-(3-5 bullets per role, every bullet starts with strong action verb, STAR format, quantified)
-
-PROJECTS:
-[Project Name] | [Tech Stack]
-- [What it does] [impact/scale]
-(2-3 most relevant projects tailored to what {company} cares about)
-
-EDUCATION:
-[Degree] | [University] | [Year] | [GPA/Percentage if good]
-
-ACHIEVEMENTS:
-- [Achievement with numbers]
-
-RULES:
-- Open Professional Summary with the exact job title from the JD
-- Use keywords from the JD naturally throughout
-- STAR format for all experience bullets
-- Quantify every achievement with numbers
-- Remove ALL filler: quick learner, team player, hardworking, passionate, eager
-- Start every bullet with: Developed, Implemented, Optimized, Led, Built, Reduced, Increased, Designed, Architected, Deployed, Automated, Migrated
-- Include GitHub and LinkedIn links
-- Tailor project descriptions to match what {company} specifically values
-- Keep to 1 page of content maximum
-- No photos, no objective statement, no references line
-
-Output ONLY the resume text. No explanations before or after."""
-
-        text = gemini_call(prompt, retries=1)
+        text = gemini_call(user_prompt, retries=2, temperature=0.4, system_prompt=ATLAS_SYSTEM)
         return {"success": True, "data": text}
     except Exception as e:
-        err_msg = str(e)[:60]
-        return {"success": False, "data": f"Resume revision unavailable ({err_msg}). Original resume content preserved."}
+        return {"success": False, "data": f"Prep plan generation encountered issues ({str(e)[:60]})."}
+
+
+def agent_resume(resume: str, jd: str, company: str, company_research: str = "",
+                 gap_summary: str = "") -> dict:
+    """FORGE — elite resume architect for ATS and human readers."""
+    FORGE_SYSTEM = """You are FORGE — an elite resume architect who has crafted resumes that landed candidates at Google, Microsoft, Goldman Sachs, Zomato, Flipkart, and 200+ top Indian companies. You are an expert in ATS optimization and understand exactly how both machines and humans read resumes in 2025.
+
+Your standard: Every resume you write passes ATS AND impresses a senior recruiter in 6 seconds.
+
+THINKING PROCESS (follow this exactly):
+Step 1: Extract the TOP 10 keywords from the JD — exact phrases not synonyms
+Step 2: Identify what THIS company values most from the research
+Step 3: Find every achievement in the resume and quantify them
+Step 4: Map candidate projects to what this company cares about
+Step 5: Write Professional Summary last — after you know what to highlight
+
+ATS 2025 HARD RULES:
+- Single column ONLY — two columns break ATS parsers
+- No tables, no text boxes, no graphics, no icons
+- Section headers: exact standard names in CAPS
+- Keywords must appear EXACTLY as written in JD
+- Job title from JD must appear in Professional Summary
+
+BULLET POINT FORMULA (mandatory for every single bullet):
+[Strong Action Verb] + [What you did specifically] + [Result with number]
+GOOD: "Developed a Python-based resume analyzer that processed 500+ applications and reduced screening time by 40%"
+BAD: "Worked on Python project for resume analysis"
+
+BANNED PHRASES — delete and replace with proof:
+"Quick learner" — show a project built fast instead
+"Team player" — show collaboration with specific outcome instead
+"Hardworking" — show quantified result instead
+"Passionate about" — show project or contribution instead
+"Good communication" — show presentation or documentation achievement instead
+"Detail-oriented" — show debugging or QA work instead
+
+PROFESSIONAL SUMMARY FORMULA:
+[Job Title from JD] with [experience level] in [top 2 skills from JD]. [One specific achievement]. Seeking to [contribute specific value] at [Company Name].
+
+OUTPUT RULES:
+- Clean plain text with section headers in CAPS
+- Bullet points start with a dash
+- ZERO Nine Lab branding anywhere
+- ZERO AI generation mentions
+- Must read like a human senior developer wrote it
+- Zero markdown symbols
+
+OUTPUT FORMAT:
+[CANDIDATE FULL NAME]
+[Phone] | [Email] | [LinkedIn] | [GitHub] | [City, State]
+
+PROFESSIONAL SUMMARY
+
+TECHNICAL SKILLS
+
+WORK EXPERIENCE
+
+PROJECTS
+
+EDUCATION
+
+ACHIEVEMENTS"""
+
+    user_prompt = f"""Rewrite this resume to be ATS-optimized and tailored for this specific role and company.
+
+ORIGINAL RESUME: {resume[:3000]}
+JOB DESCRIPTION: {jd[:2000]}
+COMPANY: {company}
+WHAT THIS COMPANY VALUES: {company_research[:800]}
+CANDIDATE GAP AREAS: {gap_summary}
+
+Think step by step:
+1. First extract all keywords from the JD
+2. Then identify all achievements to quantify
+3. Then write each section
+4. Finally write the Professional Summary
+
+Make this resume feel like it was written by someone who knows exactly what {company} is looking for — because it was."""
+
+    try:
+        text = gemini_call(user_prompt, retries=2, temperature=0.1, system_prompt=FORGE_SYSTEM)
+        return {"success": True, "data": text}
+    except Exception as e:
+        return {"success": False, "data": f"Resume revision unavailable ({str(e)[:60]}). Original resume content preserved."}
 
 # ── PDF Generation ───────────────────────────────────────────────────────────
 
@@ -530,8 +622,12 @@ def make_pdf_company_report(job_id: str, company: str, report_data: dict) -> str
     story.append(HRFlowable(width="100%", thickness=2, color=PDF_PURPLE, spaceAfter=12))
 
     overview = extract_section(text, "COMPANY OVERVIEW") or f"Intelligence report for {company}."
-    culture = extract_section(text, "CULTURE AND WORK ENVIRONMENT") or extract_section(text, "CULTURE")
-    news = extract_section(text, "RECENT NEWS") or extract_section(text, "NEWS")
+    culture = (extract_section(text, "CULTURE AND ENVIRONMENT") or
+               extract_section(text, "CULTURE AND WORK ENVIRONMENT") or
+               extract_section(text, "CULTURE"))
+    news = (extract_section(text, "RECENT DEVELOPMENTS") or
+            extract_section(text, "RECENT NEWS") or
+            extract_section(text, "NEWS"))
 
     story.append(Paragraph("What They Do", st["h2"]))
     for line in section_bullets(overview) or [overview]:
@@ -557,9 +653,12 @@ def make_pdf_company_report(job_id: str, company: str, report_data: dict) -> str
     story.append(Spacer(1, 4))
 
     interview = extract_section(text, "INTERVIEW PROCESS")
-    testing = extract_section(text, "WHAT THEY TEST")
-    questions = extract_section(text, "TOP 5 INTERVIEW QUESTIONS") or extract_section(text, "INTERVIEW QUESTIONS")
-    tech = extract_section(text, "TECH STACK")
+    testing = (extract_section(text, "WHAT THEY TEST IN EACH ROUND") or
+               extract_section(text, "WHAT THEY TEST"))
+    questions = (extract_section(text, "TOP 5 INTERVIEW QUESTIONS AT THIS COMPANY") or
+                 extract_section(text, "TOP 5 INTERVIEW QUESTIONS") or
+                 extract_section(text, "INTERVIEW QUESTIONS"))
+    tech = extract_section(text, "TECH STACK THEY USE") or extract_section(text, "TECH STACK")
 
     if interview:
         story.append(Paragraph("Interview Stages", st["h3"]))
@@ -590,7 +689,8 @@ def make_pdf_company_report(job_id: str, company: str, report_data: dict) -> str
     salary = extract_section(text, "SALARY RANGE") or extract_section(text, "SALARY")
     green = extract_section(text, "GREEN FLAGS")
     red = extract_section(text, "RED FLAGS")
-    advantage = extract_section(text, "INTERVIEW ADVANTAGE")
+    advantage = (extract_section(text, "YOUR INTERVIEW ADVANTAGE") or
+                 extract_section(text, "INTERVIEW ADVANTAGE"))
 
     if salary:
         story.append(Paragraph("Salary Range", st["h2"]))
@@ -664,8 +764,11 @@ def make_pdf_reality(job_id: str, company: str, analysis: dict, research: dict) 
     story.append(Paragraph(safe_text(verdict), ParagraphStyle("Verdict", fontName="Helvetica-Bold", fontSize=11, textColor=PDF_DARK, spaceAfter=12, leading=14)))
     story.append(Spacer(1, 6))
 
-    strengths_text = extract_section(text, "TOP 3 STRENGTHS")
-    gaps_text = extract_section(text, "TOP 3 PRIORITY GAPS") or extract_section(text, "PRIORITY GAPS")
+    strengths_text = (extract_section(text, "YOUR TOP 3 STRENGTHS") or
+                      extract_section(text, "TOP 3 STRENGTHS"))
+    gaps_text = (extract_section(text, "YOUR TOP 3 PRIORITY GAPS") or
+                 extract_section(text, "TOP 3 PRIORITY GAPS") or
+                 extract_section(text, "PRIORITY GAPS"))
 
     s_bullets = section_bullets(strengths_text)[:3] if strengths_text else ["Strong technical foundation"]
     g_bullets = section_bullets(gaps_text)[:3] if gaps_text else ["Areas for improvement identified"]
@@ -685,13 +788,21 @@ def make_pdf_reality(job_id: str, company: str, analysis: dict, research: dict) 
     story.append(Paragraph("Deep Dive Analysis", st["h2"]))
     story.append(Spacer(1, 4))
 
-    det_strengths = extract_section(text, "DETAILED STRENGTHS") or strengths_text or ""
-    det_gaps = extract_section(text, "DETAILED GAPS") or gaps_text or ""
-    red_flags = extract_section(text, "RESUME RED FLAGS") or extract_section(text, "RED FLAGS") or ""
-    co_overview = extract_section(research_text, "COMPANY OVERVIEW") or extract_section(text, "COMPANY OVERVIEW") or f"Analysis for {company}."
-    what_look = extract_section(research_text, "WHAT THEY LOOK FOR") or extract_section(text, "WHAT THEY LOOK FOR") or ""
-    interview_proc = extract_section(research_text, "INTERVIEW PROCESS") or extract_section(text, "THEIR INTERVIEW PROCESS") or ""
-    salary = extract_section(research_text, "SALARY RANGE") or extract_section(text, "SALARY RANGE") or ""
+    det_strengths = (extract_section(text, "DETAILED STRENGTHS ANALYSIS") or
+                     extract_section(text, "DETAILED STRENGTHS") or strengths_text or "")
+    det_gaps = (extract_section(text, "GAPS WITH PRIORITY AND SPECIFIC FIX") or
+                extract_section(text, "DETAILED GAPS") or gaps_text or "")
+    red_flags = (extract_section(text, "RESUME RED FLAGS WITH EXACT FIXES") or
+                 extract_section(text, "RESUME RED FLAGS") or "")
+    co_overview = (extract_section(text, "ABOUT THE COMPANY") or
+                   extract_section(research_text, "COMPANY OVERVIEW") or
+                   extract_section(text, "COMPANY OVERVIEW") or f"Analysis for {company}.")
+    what_look = (extract_section(text, "WHAT THIS COMPANY LOOKS FOR") or
+                 extract_section(research_text, "WHAT THEY LOOK FOR") or
+                 extract_section(text, "WHAT THEY LOOK FOR") or "")
+    interview_proc = (extract_section(text, "THEIR INTERVIEW PROCESS") or
+                      extract_section(research_text, "INTERVIEW PROCESS") or "")
+    salary = extract_section(text, "SALARY RANGE") or extract_section(research_text, "SALARY RANGE") or ""
 
     left_col = [Paragraph("About You", ParagraphStyle("LH", fontName="Helvetica-Bold", fontSize=12, textColor=PDF_PURPLE, spaceAfter=6, leading=15))]
     left_col.append(Paragraph("Resume Strengths", st["h3"]))
@@ -740,8 +851,10 @@ def make_pdf_reality(job_id: str, company: str, analysis: dict, research: dict) 
     story.append(Paragraph("Your Action Plan", st["h2"]))
     story.append(Spacer(1, 4))
 
-    priority_actions = extract_section(text, "PRIORITY ACTIONS") or extract_section(text, "PRIORITY ACTION")
-    next_steps = extract_section(text, "NEXT STEPS")
+    priority_actions = (extract_section(text, "YOUR PRIORITY ACTION LIST") or
+                        extract_section(text, "PRIORITY ACTIONS") or
+                        extract_section(text, "PRIORITY ACTION"))
+    next_steps = extract_section(text, "NEXT STEPS CHECKLIST") or extract_section(text, "NEXT STEPS")
     closing = extract_section(text, "CLOSING MESSAGE") or extract_section(text, "CLOSING")
 
     story.append(Paragraph("Priority Fix List", st["h3"]))
@@ -779,10 +892,14 @@ def make_pdf_plan(job_id: str, company: str, plan: dict) -> str:
     story.append(Paragraph(f"{safe_text(company)} \u00b7 {datetime.now().strftime('%d %b %Y')}", st["subtitle"]))
     story.append(HRFlowable(width="100%", thickness=2, color=PDF_PURPLE, spaceAfter=10))
 
-    current = extract_section(text, "CURRENT LEVEL")
-    p1 = extract_section(text, "PRIORITY 1") or extract_section(text, "PRIORITY 1 CRITICAL")
-    p2 = extract_section(text, "PRIORITY 2") or extract_section(text, "PRIORITY 2 IMPORTANT")
-    p3 = extract_section(text, "PRIORITY 3") or extract_section(text, "PRIORITY 3 GOOD TO HAVE")
+    current = (extract_section(text, "CURRENT LEVEL ASSESSMENT") or
+               extract_section(text, "CURRENT LEVEL"))
+    p1 = (extract_section(text, "PRIORITY 1") or
+          extract_section(text, "PRIORITY 1 CRITICAL"))
+    p2 = (extract_section(text, "PRIORITY 2") or
+          extract_section(text, "PRIORITY 2 IMPORTANT"))
+    p3 = (extract_section(text, "PRIORITY 3") or
+          extract_section(text, "PRIORITY 3 GOOD TO HAVE"))
 
     if current:
         story.append(_colored_box([
@@ -804,8 +921,13 @@ def make_pdf_plan(job_id: str, company: str, plan: dict) -> str:
     story.append(Paragraph("Your Learning Phases", st["h2"]))
     story.append(Spacer(1, 4))
 
-    for phase_name, phase_key, color in [("Phase 1: Foundation", "PHASE 1", PDF_PURPLE), ("Phase 2: Core Skills", "PHASE 2", PDF_PURPLE), ("Phase 3: Company Prep", "PHASE 3", PDF_PURPLE)]:
-        phase_text = extract_section(text, phase_key)
+    for phase_name, phase_key, color in [
+        ("Phase 1: Foundation", "PHASE 1: FOUNDATION", PDF_PURPLE),
+        ("Phase 2: Core Skills", "PHASE 2: CORE SKILLS", PDF_PURPLE),
+        ("Phase 3: Company-Specific Polish", "PHASE 3: COMPANY-SPECIFIC POLISH", PDF_PURPLE),
+    ]:
+        phase_text = (extract_section(text, phase_key) or
+                      extract_section(text, phase_key.split(":")[0]))
         if phase_text:
             story.append(_colored_box([
                 Paragraph(phase_name, st["h3"]),
@@ -819,8 +941,12 @@ def make_pdf_plan(job_id: str, company: str, plan: dict) -> str:
     story.append(PageBreak())
 
     # PAGE 3 - Q&A + Resources
-    tech_q = extract_section(text, "TECHNICAL QUESTIONS")
-    hr_q = extract_section(text, "HR QUESTIONS")
+    tech_q = (extract_section(text, "TOP 10 TECHNICAL INTERVIEW QUESTIONS WITH ANSWERS") or
+              extract_section(text, "TOP 10 TECHNICAL INTERVIEW QUESTIONS") or
+              extract_section(text, "TECHNICAL QUESTIONS"))
+    hr_q = (extract_section(text, "TOP 5 HR QUESTIONS WITH ANSWERS") or
+            extract_section(text, "TOP 5 HR QUESTIONS") or
+            extract_section(text, "HR QUESTIONS"))
     resources = extract_section(text, "FREE RESOURCES") or extract_section(text, "RESOURCES")
     checklist = extract_section(text, "INTERVIEW DAY CHECKLIST") or extract_section(text, "CHECKLIST")
 
@@ -934,35 +1060,46 @@ def run_pipeline(job_id: str, resume: str, jd: str, company: str):
         jobs[job_id].update({"stage": stage, "progress": pct, "message": msg})
 
     try:
-        update("research", 5, "Researching company and role...")
-
-        loop = asyncio.new_event_loop()
-
-        async def parallel_stage1():
-            r_task = loop.run_in_executor(executor, agent_research, company, jd)
-            await asyncio.sleep(2)
-            a_task = loop.run_in_executor(executor, agent_analysis, resume, jd, company)
-            return await asyncio.gather(r_task, a_task)
-
-        research_result, analysis_result = loop.run_until_complete(parallel_stage1())
-        update("research", 25, "Company research done! Analyzing resume...")
-
+        # ── Stage 1: Tavily web research (fast, no AI) ────────────────────────
+        update("research", 5, "Searching the web for company intelligence...")
+        research_result = agent_research(company, jd)
         research_snippets = research_result.get("data", "")
 
-        update("analysis", 30, "Deep-analyzing resume vs JD...")
+        # ── Stage 2: ARIA analysis (needs research snippets) ─────────────────
+        update("analysis", 20, "ARIA is analyzing your resume against the JD...")
+        analysis_result = agent_analysis(resume, jd, company, research=research_snippets)
+        analysis_text = analysis_result.get("data", "")
 
-        async def parallel_stage2():
-            p_task = loop.run_in_executor(executor, agent_plan, resume, jd, company,
-                                          analysis_result["data"], research_snippets)
+        # Extract structured data from ARIA output for downstream agents
+        match_score = _extract_match_score(analysis_text)
+        gap_summary = _extract_gap_summary(analysis_text)
+
+        update("analysis", 40, f"Match score: {match_score}%. Building your prep plan and company report...")
+
+        # ── Stage 3: ATLAS + FORGE + NEXUS in parallel ───────────────────────
+        loop = asyncio.new_event_loop()
+
+        async def parallel_stage3():
+            # ATLAS: prep plan (needs match_score from ARIA)
+            p_task = loop.run_in_executor(
+                executor, agent_plan, resume, jd, company, analysis_text, research_snippets, match_score
+            )
+            await asyncio.sleep(2)  # stagger to stay within Groq RPM
+            # FORGE: resume rewrite (needs gap_summary and company values from ARIA)
+            r_task = loop.run_in_executor(
+                executor, agent_resume, resume, jd, company, research_snippets, gap_summary
+            )
             await asyncio.sleep(2)
-            r_task = loop.run_in_executor(executor, agent_resume, resume, jd, company)
-            await asyncio.sleep(2)
-            c_task = loop.run_in_executor(executor, agent_company_report, company, jd, research_snippets)
+            # NEXUS: company report (needs research snippets)
+            c_task = loop.run_in_executor(
+                executor, agent_company_report, company, jd, research_snippets
+            )
             return await asyncio.gather(p_task, r_task, c_task)
 
-        plan_result, resume_result, company_report_result = loop.run_until_complete(parallel_stage2())
+        plan_result, resume_result, company_report_result = loop.run_until_complete(parallel_stage3())
         loop.close()
 
+        # ── Stage 4: Generate 4 PDFs ─────────────────────────────────────────
         update("pdf", 65, "Generating Company Report PDF...")
         company_file = make_pdf_company_report(job_id, company, company_report_result)
 
