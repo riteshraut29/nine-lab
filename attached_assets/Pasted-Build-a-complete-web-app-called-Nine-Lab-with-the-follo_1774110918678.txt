@@ -1,0 +1,239 @@
+Build a complete web app called "Nine Lab" with the following 
+exact specifications. Do not stop until everything is working.
+
+=== APP OVERVIEW ===
+Nine Lab is a placement preparation tool for Indian students.
+Student pastes their Resume + Job Description + Company Name,
+and gets 3 downloadable PDFs in return.
+
+=== TECH STACK ===
+- Backend: Python FastAPI with uvicorn
+- AI: Google Gemini API (google-generativeai library)
+- Search: Tavily API (tavily-python library)
+- PDF: ReportLab library
+- Database: Supabase (supabase library)
+- Frontend: HTML + CSS + Vanilla JS (no React)
+- All async/await throughout
+
+=== UI DESIGN ===
+- Clean white/light theme
+- Professional minimal design
+- Mobile responsive
+- Font: Inter from Google Fonts
+- Primary color: #6C63FF (purple)
+- Card-based layout with soft shadows
+- No heavy animations
+
+=== HOMEPAGE UI ===
+Header:
+- Logo: "Nine Lab" in purple
+- Tagline: "9 minutes mein placement ready" in gray
+
+Main Card (center of page):
+- Title: "Apna Dream Job Pao"
+- Subtitle: "Resume + JD dalo, baaki hum karenge"
+- 3 input fields:
+
+  Field 1: "Aapka Resume"
+  - Large textarea (10 rows)
+  - Placeholder: "Apna poora resume yahan paste karo..."
+
+  Field 2: "Job Description"  
+  - Large textarea (10 rows)
+  - Placeholder: "Job description yahan paste karo..."
+
+  Field 3: "Company Ka Naam"
+  - Single line text input
+  - Placeholder: "e.g. TCS, Infosys, Google India..."
+
+- Big purple button: "Generate Karo →"
+
+Progress Section (hidden initially, shows after Generate click):
+- Show 4 steps with checkmarks:
+  ⏳ "Step 1/4: Company research ho rahi hai..."
+  ⏳ "Step 2/4: Resume analyze ho raha hai..."  
+  ⏳ "Step 3/4: Prep plan ban raha hai..."
+  ⏳ "Step 4/4: PDFs generate ho rahe hain..."
+- Each step updates in real time via polling
+
+Results Section (hidden initially, shows after completion):
+- "Tera Analysis Ready Hai! 🎉" heading
+- 3 download buttons side by side:
+  📄 "Reality Report Download"
+  📚 "Prep Plan Download"  
+  📝 "Revised Resume Download"
+- Small text: "Links 24 ghante valid hain"
+
+=== BACKEND FLOW ===
+
+VALIDATION (before any API call):
+- All 3 fields must be filled
+- Resume must be minimum 100 words
+- JD must be minimum 50 words
+- Company name must be minimum 2 characters
+- If fail: show specific error message in red
+
+STAGE 1 - Run BOTH in parallel using asyncio.gather():
+
+  agent_research(company_name, jd):
+    Use Tavily API - run these 3 searches:
+    Search 1: "{company_name} interview process rounds India 2024"
+    Search 2: "{company_name} company overview revenue funding"
+    Search 3: "{company_name} salary freshers India {job_title}"
+    
+    Then use Gemini to summarize into:
+    - company_overview (what they do)
+    - why_hiring (reason from JD context)
+    - interview_rounds (list of rounds)
+    - salary_range (India specific)
+    - company_culture (values, work style)
+    - financial_health (revenue, growth, funding)
+    
+    Return: company_data dict
+    
+    If Tavily fails: use only Gemini with company name
+    to generate best possible estimates.
+    Add note: "Data JD se generate kiya gaya"
+
+  agent_analysis(resume, jd):
+    Use Gemini API with this exact prompt structure:
+    - Extract all skills from resume as list
+    - Extract all requirements from JD as list  
+    - Find matching skills (in both)
+    - Find missing skills (in JD but not resume)
+    - Calculate match_score out of 10
+    - Identify candidate's strongest points
+    - Identify biggest weaknesses for this role
+    
+    Return: analysis dict
+
+STAGE 2 - Merge:
+  master_context = {
+    company_data: from agent_research,
+    analysis: from agent_analysis,
+    original_resume: resume,
+    original_jd: jd,
+    company_name: company_name
+  }
+
+STAGE 3 - Run BOTH in parallel using asyncio.gather():
+
+  agent_plan(master_context):
+    Use Gemini API:
+    - Look at missing skills from analysis
+    - Create priority topics list (most important first)
+    - For each topic:
+      * Why important for this company
+      * Best YouTube search query
+      * Best book/resource
+      * Time needed (hours)
+    - Create day-wise 7-day study plan
+    - Interview tips specific to this company
+    - Common questions for this role
+    
+    Return: prep_plan dict
+
+  agent_resume(master_context):
+    Use Gemini API:
+    - Extract top 15 keywords from JD
+    - Rewrite resume summary/objective for this role
+    - Suggest where to add keywords naturally
+    - Improve bullet points with action verbs
+    - Add quantification suggestions
+    - Format for ATS compatibility
+    - Keep candidate's real experience intact
+    
+    Return: new_resume dict
+
+RETRY LOGIC:
+- Wrap each agent in try/except
+- If any agent fails: retry once after 2 seconds
+- If retry also fails: continue with partial data
+- Add "⚠️ Note: [section] data unavailable" in PDF
+
+STAGE 4 - PDF Generation using ReportLab:
+
+  PDF 1: "Reality Report" 
+  Filename: reality_report_{timestamp}.pdf
+  Sections:
+  - Company Overview
+  - Why They Are Hiring
+  - Financial Health
+  - Interview Rounds & Format
+  - Salary Range in India
+  - Your Profile Score: X/10
+  - Skills You Have ✅
+  - Skills You Are Missing ❌
+  - What To Highlight
+
+  PDF 2: "Prep Plan"
+  Filename: prep_plan_{timestamp}.pdf  
+  Sections:
+  - Your 7-Day Battle Plan
+  - Priority Topics (with resources)
+  - Company-Specific Interview Tips
+  - Common Questions To Prepare
+  - YouTube Links For Each Topic
+
+  PDF 3: "Revised Resume"
+  Filename: revised_resume_{timestamp}.pdf
+  Sections:
+  - Rewritten Summary
+  - Keywords Added
+  - Improved Bullet Points
+  - ATS Optimization Notes
+  - Final Tips
+
+  PDF Styling:
+  - Professional clean design
+  - Nine Lab branding on header
+  - Page numbers
+  - Color: #6C63FF for headings
+
+USAGE TRACKING via Supabase:
+- Track by IP address
+- Free users: 1 use per day
+- Store: ip_address, timestamp, status
+- If limit reached: show message
+  "Aaj ka free use ho gaya! 
+   Unlimited ke liye Rs 99/month"
+- Create Supabase table automatically on first run:
+  Table name: usage_tracking
+  Columns: id, ip_address, created_at, status
+
+=== API KEYS ===
+Read all keys from environment variables:
+TAVILY_API_KEY
+GEMINI_API_KEY  
+SUPABASE_URL
+SUPABASE_KEY
+
+=== REQUIREMENTS.TXT ===
+fastapi
+uvicorn
+google-generativeai
+tavily-python
+reportlab
+supabase
+python-multipart
+httpx
+asyncio
+
+=== ERROR HANDLING ===
+- Every API call wrapped in try/except
+- User-friendly error messages in Hinglish
+- Never show raw error to user
+- Log errors to console for debugging
+
+=== IMPORTANT RULES ===
+1. Build complete working app - no placeholders
+2. All 5 agents must actually call real APIs
+3. PDFs must be properly formatted, not blank
+4. Progress updates must work in real time
+5. Test each agent independently first
+6. Make sure asyncio.gather() works correctly
+7. App must run on Replit with single command:
+   uvicorn main:app --host 0.0.0.0 --port 8000
+
+Start building now. Show me each file as you create it.
+Do not ask clarifying questions - build everything as specified.
