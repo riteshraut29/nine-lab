@@ -572,6 +572,15 @@ def _make_progress_bar(score, width=400, height=14):
     d.add(Rect(0, 0, fill_w, height, fillColor=PDF_PURPLE, strokeColor=None, rx=4, ry=4))
     return d
 
+def _clip(text: str, max_chars: int = 280) -> str:
+    """Truncate any text that would make a single paragraph overflow the page."""
+    if not text:
+        return text
+    text = text.strip()
+    if len(text) <= max_chars:
+        return text
+    return text[:max_chars].rsplit(' ', 1)[0] + '\u2026'
+
 def _colored_box(flowables, bg_color=PDF_LIGHT, border_color=None, left_border_color=None, col_width=None):
     """Render a shaded box. One row per flowable so the table can split across pages."""
     w = col_width or 450
@@ -637,20 +646,20 @@ def make_pdf_company_report(job_id: str, company: str, report_data: dict) -> str
 
     story.append(Paragraph("What They Do", st["h2"]))
     for line in section_bullets(overview) or [overview]:
-        story.append(Paragraph(safe_text(line), st["body"]))
+        story.append(Paragraph(_clip(safe_text(line)), st["body"]))
     story.append(Spacer(1, 8))
 
     if culture:
         story.append(_colored_box([
             Paragraph("Culture &amp; Work Environment", st["h3"]),
-            *[Paragraph(safe_text(b), st["body"]) for b in section_bullets(culture) or [culture]]
+            *[Paragraph(_clip(safe_text(b)), st["body"]) for b in section_bullets(culture) or [culture]]
         ], bg_color=PDF_LIGHT))
         story.append(Spacer(1, 8))
 
     if news:
         story.append(_colored_box([
             Paragraph("Recent News", st["h3"]),
-            *[Paragraph(safe_text(b), st["body"]) for b in section_bullets(news) or [news]]
+            *[Paragraph(_clip(safe_text(b)), st["body"]) for b in section_bullets(news) or [news]]
         ], bg_color=PDF_LIGHT_AMBER))
     story.append(PageBreak())
 
@@ -669,26 +678,26 @@ def make_pdf_company_report(job_id: str, company: str, report_data: dict) -> str
     if interview:
         story.append(Paragraph("Interview Stages", st["h3"]))
         for b in section_bullets(interview) or [interview]:
-            story.append(Paragraph(safe_text(b), st["body"]))
+            story.append(Paragraph(_clip(safe_text(b)), st["body"]))
         story.append(Spacer(1, 6))
 
     if testing:
         story.append(Paragraph("What They Test", st["h3"]))
         for b in section_bullets(testing) or [testing]:
-            story.append(Paragraph(safe_text(b), st["body"]))
+            story.append(Paragraph(_clip(safe_text(b)), st["body"]))
         story.append(Spacer(1, 6))
 
     if questions:
         story.append(_colored_box([
             Paragraph("Top Interview Questions", st["h3"]),
-            *[Paragraph(safe_text(b), st["body"]) for b in section_bullets(questions) or [questions]]
+            *[Paragraph(_clip(safe_text(b)), st["body"]) for b in section_bullets(questions) or [questions]]
         ], bg_color=PDF_LIGHT, border_color=PDF_PURPLE))
         story.append(Spacer(1, 8))
 
     if tech:
         story.append(Paragraph("Tech Stack", st["h3"]))
         for b in section_bullets(tech) or [tech]:
-            story.append(Paragraph(safe_text(b), st["body"]))
+            story.append(Paragraph(_clip(safe_text(b)), st["body"]))
     story.append(PageBreak())
 
     # PAGE 3
@@ -707,27 +716,22 @@ def make_pdf_company_report(job_id: str, company: str, report_data: dict) -> str
     green_items = section_bullets(green) if green else ["Positive work culture"]
     red_items = section_bullets(red) if red else ["High workload during deadlines"]
 
-    left_col = [Paragraph("Green Flags", st["h3"])]
-    for g in green_items[:5]:
-        left_col.append(Paragraph(f"\u2713 {safe_text(g)}", st["body"]))
-
-    right_col = [Paragraph("Red Flags", st["h3"])]
-    for r in red_items[:5]:
-        right_col.append(Paragraph(f"\u26a0 {safe_text(r)}", st["body"]))
-
-    flags_table = Table([
-        [_colored_box(left_col, bg_color=PDF_LIGHT_GREEN, left_border_color=PDF_GREEN, col_width=200),
-         _colored_box(right_col, bg_color=PDF_LIGHT_RED, left_border_color=PDF_RED, col_width=200)]
-    ], colWidths=[220, 220])
-    flags_table.setStyle(TableStyle([("VALIGN", (0, 0), (-1, -1), "TOP")]))
-    story.append(flags_table)
+    story.append(_colored_box([
+        Paragraph("Green Flags", st["h3"]),
+        *[Paragraph(f"\u2713 {_clip(safe_text(g))}", st["body"]) for g in green_items[:5]]
+    ], bg_color=PDF_LIGHT_GREEN, left_border_color=PDF_GREEN))
+    story.append(Spacer(1, 8))
+    story.append(_colored_box([
+        Paragraph("Red Flags", st["h3"]),
+        *[Paragraph(f"\u26a0 {_clip(safe_text(r))}", st["body"]) for r in red_items[:5]]
+    ], bg_color=PDF_LIGHT_RED, left_border_color=PDF_RED))
     story.append(Spacer(1, 12))
 
     if advantage:
         adv_items = section_bullets(advantage) or [advantage]
         story.append(_colored_box([
             Paragraph("Your Interview Advantage", st["h3"]),
-            *[Paragraph(f"{i+1}. {safe_text(a)}", st["body"]) for i, a in enumerate(adv_items[:3])]
+            *[Paragraph(f"{i+1}. {_clip(safe_text(a))}", st["body"]) for i, a in enumerate(adv_items[:3])]
         ], bg_color=PDF_LIGHT, border_color=PDF_PURPLE))
 
     doc.build(story, onFirstPage=_footer_handler, onLaterPages=_footer_handler)
@@ -779,15 +783,15 @@ def make_pdf_reality(job_id: str, company: str, analysis: dict, research: dict) 
     s_bullets = section_bullets(strengths_text)[:3] if strengths_text else ["Strong technical foundation"]
     g_bullets = section_bullets(gaps_text)[:3] if gaps_text else ["Areas for improvement identified"]
 
-    left = [Paragraph("Your Strengths", st["h3"])] + [Paragraph(f"\u2713 {safe_text(s)}", st["body"]) for s in s_bullets]
-    right = [Paragraph("Priority Gaps", st["h3"])] + [Paragraph(f"{i+1}. {safe_text(g)}", st["body"]) for i, g in enumerate(g_bullets)]
-
-    t = Table([
-        [_colored_box(left, bg_color=PDF_LIGHT_GREEN, left_border_color=PDF_GREEN, col_width=200),
-         _colored_box(right, bg_color=PDF_LIGHT_RED, left_border_color=PDF_RED, col_width=200)]
-    ], colWidths=[220, 220])
-    t.setStyle(TableStyle([("VALIGN", (0, 0), (-1, -1), "TOP")]))
-    story.append(t)
+    story.append(_colored_box([
+        Paragraph("Your Strengths", st["h3"]),
+        *[Paragraph(f"\u2713 {_clip(safe_text(s))}", st["body"]) for s in s_bullets]
+    ], bg_color=PDF_LIGHT_GREEN, left_border_color=PDF_GREEN))
+    story.append(Spacer(1, 8))
+    story.append(_colored_box([
+        Paragraph("Priority Gaps", st["h3"]),
+        *[Paragraph(f"{i+1}. {_clip(safe_text(g))}", st["body"]) for i, g in enumerate(g_bullets)]
+    ], bg_color=PDF_LIGHT_RED, left_border_color=PDF_RED))
     story.append(PageBreak())
 
     # PAGE 2 - DEEP DIVE
@@ -810,56 +814,45 @@ def make_pdf_reality(job_id: str, company: str, analysis: dict, research: dict) 
                       extract_section(research_text, "INTERVIEW PROCESS") or "")
     salary = extract_section(text, "SALARY RANGE") or extract_section(research_text, "SALARY RANGE") or ""
 
-    left_col = [Paragraph("About You", ParagraphStyle("LH", fontName="Helvetica-Bold", fontSize=12, textColor=PDF_PURPLE, spaceAfter=6, leading=15))]
-    left_col.append(Paragraph("Resume Strengths", st["h3"]))
-    for b in section_bullets(det_strengths)[:5] or ["Strong fundamentals shown"]:
-        left_col.append(Paragraph(f"\u2022 {safe_text(b)}", st["small"]))
-    left_col.append(Spacer(1, 6))
-    left_col.append(Paragraph("Gaps (Priority Order)", st["h3"]))
-    for i, b in enumerate(section_bullets(det_gaps)[:4] or ["Review needed"], 1):
-        left_col.append(Paragraph(f"{i}. {safe_text(b)}", st["small"]))
-    left_col.append(Spacer(1, 6))
+    # "About You" — full-width stacked (no nested tables, no 2-column layout)
+    about_you = [
+        Paragraph("About You", ParagraphStyle("LH", fontName="Helvetica-Bold", fontSize=12, textColor=PDF_PURPLE, spaceAfter=4, leading=15)),
+        Paragraph("Resume Strengths", st["h3"]),
+        *[Paragraph(f"\u2022 {_clip(_clip(safe_text(b)))}", st["small"]) for b in (section_bullets(det_strengths)[:5] or ["Strong fundamentals shown"])],
+        Spacer(1, 6),
+        Paragraph("Gaps (Priority Order)", st["h3"]),
+        *[Paragraph(f"{i}. {_clip(_clip(safe_text(b)))}", st["small"]) for i, b in enumerate(section_bullets(det_gaps)[:4] or ["Review needed"], 1)],
+    ]
     if red_flags:
-        left_col.append(Paragraph("Red Flags to Fix", st["h3"]))
-        for b in section_bullets(red_flags)[:3]:
-            left_col.append(Paragraph(f"\u26a0 {safe_text(b)}", st["small"]))
+        about_you += [
+            Spacer(1, 6),
+            Paragraph("Red Flags to Fix", st["h3"]),
+            *[Paragraph(f"\u26a0 {_clip(_clip(safe_text(b)))}", st["small"]) for b in section_bullets(red_flags)[:3]],
+        ]
+    story.append(_colored_box(about_you, bg_color=PDF_LIGHT))
+    story.append(Spacer(1, 8))
 
-    right_col = [Paragraph("About The Company", ParagraphStyle("RH", fontName="Helvetica-Bold", fontSize=12, textColor=PDF_PURPLE, spaceAfter=6, leading=15))]
-    right_col.append(Paragraph("Overview", st["h3"]))
-    for b in section_bullets(co_overview)[:3] or [co_overview[:200]]:
-        right_col.append(Paragraph(safe_text(b), st["small"]))
-    right_col.append(Spacer(1, 6))
+    # "About The Company" — full-width stacked
+    about_co = [
+        Paragraph("About The Company", ParagraphStyle("RH", fontName="Helvetica-Bold", fontSize=12, textColor=PDF_PURPLE, spaceAfter=4, leading=15)),
+        Paragraph("Overview", st["h3"]),
+        *[Paragraph(_clip(_clip(safe_text(b))), st["small"]) for b in (section_bullets(co_overview)[:3] or [_clip(co_overview)])],
+    ]
     if what_look:
-        right_col.append(Paragraph("What They Value", st["h3"]))
-        for b in section_bullets(what_look)[:5]:
-            right_col.append(Paragraph(f"\u2022 {safe_text(b)}", st["small"]))
-        right_col.append(Spacer(1, 6))
+        about_co += [
+            Spacer(1, 6),
+            Paragraph("What They Value", st["h3"]),
+            *[Paragraph(f"\u2022 {_clip(_clip(safe_text(b)))}", st["small"]) for b in section_bullets(what_look)[:4]],
+        ]
     if interview_proc:
-        right_col.append(Paragraph("Interview Process", st["h3"]))
-        for i, b in enumerate(section_bullets(interview_proc)[:5], 1):
-            right_col.append(Paragraph(f"{i}. {safe_text(b)}", st["small"]))
+        about_co += [
+            Spacer(1, 6),
+            Paragraph("Interview Process", st["h3"]),
+            *[Paragraph(f"{i}. {_clip(_clip(safe_text(b)))}", st["small"]) for i, b in enumerate(section_bullets(interview_proc)[:4], 1)],
+        ]
     if salary:
-        right_col.append(Spacer(1, 6))
-        right_col.append(Paragraph(f"Salary: {safe_text(salary.split(chr(10))[0])}", st["small"]))
-
-    # Zip both columns into many rows so ReportLab can split across pages.
-    # One row per item pair instead of one giant cell per column.
-    _empty = Spacer(1, 1)
-    max_rows = max(len(left_col), len(right_col))
-    left_col  += [_empty] * (max_rows - len(left_col))
-    right_col += [_empty] * (max_rows - len(right_col))
-    paired_rows = [[l, r] for l, r in zip(left_col, right_col)]
-    deep_t = Table(paired_rows, colWidths=[220, 220])
-    deep_t.setStyle(TableStyle([
-        ("VALIGN", (0, 0), (-1, -1), "TOP"),
-        ("LEFTPADDING", (0, 0), (-1, -1), 8),
-        ("RIGHTPADDING", (0, 0), (-1, -1), 8),
-        ("TOPPADDING", (0, 0), (-1, -1), 3),
-        ("BOTTOMPADDING", (0, 0), (-1, -1), 3),
-        ("TOPPADDING", (0, 0), (-1, 0), 8),
-        ("LINEBEFORE", (1, 0), (1, -1), 0.5, PDF_GREY),
-    ]))
-    story.append(deep_t)
+        about_co += [Spacer(1, 6), Paragraph(f"Salary: {_clip(safe_text(salary.split(chr(10))[0]))}", st["small"])]
+    story.append(_colored_box(about_co, bg_color=PDF_LIGHT))
     story.append(PageBreak())
 
     # PAGE 3 - ACTION PLAN
@@ -874,18 +867,18 @@ def make_pdf_reality(job_id: str, company: str, analysis: dict, research: dict) 
 
     story.append(Paragraph("Priority Fix List", st["h3"]))
     for i, b in enumerate(section_bullets(priority_actions)[:3] if priority_actions else ["Review gaps and create study plan"], 1):
-        story.append(Paragraph(f"<b>{i}.</b> {safe_text(b)}", st["body"]))
+        story.append(Paragraph(f"<b>{i}.</b> {_clip(safe_text(b))}", st["body"]))
     story.append(Spacer(1, 10))
 
     if next_steps:
         story.append(Paragraph("Next Steps", st["h3"]))
         for b in section_bullets(next_steps)[:5]:
-            story.append(Paragraph(f"\u25a1 {safe_text(b)}", st["body"]))
+            story.append(Paragraph(f"\u25a1 {_clip(safe_text(b))}", st["body"]))
         story.append(Spacer(1, 10))
 
     closing_msg = closing or f"You have real strengths for this role at {company}. Every gap here is fixable. Focus on the priorities, put in the work, and you will be ready. You have got this!"
     story.append(_colored_box([
-        Paragraph(safe_text(closing_msg.split('\n')[0] if closing_msg else "You've got this!"), ParagraphStyle("Close", fontName="Helvetica-Bold", fontSize=10.5, textColor=PDF_DARK, leading=14, alignment=1))
+        Paragraph(_clip(safe_text(closing_msg.split('\n')[0] if closing_msg else "You've got this!"), 400), ParagraphStyle("Close", fontName="Helvetica-Bold", fontSize=10.5, textColor=PDF_DARK, leading=14, alignment=1))
     ], bg_color=PDF_LIGHT, border_color=PDF_PURPLE))
 
     doc.build(story, onFirstPage=_footer_handler, onLaterPages=_footer_handler)
@@ -919,7 +912,7 @@ def make_pdf_plan(job_id: str, company: str, plan: dict) -> str:
     if current:
         story.append(_colored_box([
             Paragraph("Current Level Assessment", st["h3"]),
-            Paragraph(safe_text(current.split('\n')[0]), st["body"])
+            Paragraph(_clip(safe_text(current.split('\n')[0])), st["body"])
         ], bg_color=HexColor("#F3F4F6")))
         story.append(Spacer(1, 8))
 
@@ -927,7 +920,7 @@ def make_pdf_plan(job_id: str, company: str, plan: dict) -> str:
         if content:
             items = [Paragraph(f"<b>{label}</b>", st["h3"])]
             for b in section_bullets(content)[:3]:
-                items.append(Paragraph(safe_text(b), st["body"]))
+                items.append(Paragraph(_clip(safe_text(b)), st["body"]))
             story.append(_colored_box(items, bg_color=PDF_WHITE, left_border_color=color))
             story.append(Spacer(1, 6))
     story.append(PageBreak())
@@ -946,7 +939,7 @@ def make_pdf_plan(job_id: str, company: str, plan: dict) -> str:
         if phase_text:
             story.append(_colored_box([
                 Paragraph(phase_name, st["h3"]),
-                *[Paragraph(safe_text(b), st["small"]) for b in section_bullets(phase_text)[:6]]
+                *[Paragraph(_clip(safe_text(b)), st["small"]) for b in section_bullets(phase_text)[:6]]
             ], bg_color=PDF_LIGHT, left_border_color=color))
             story.append(Spacer(1, 6))
         else:
@@ -969,26 +962,26 @@ def make_pdf_plan(job_id: str, company: str, plan: dict) -> str:
         story.append(Paragraph("Technical Interview Questions", st["h2"]))
         for i, b in enumerate(section_bullets(tech_q)[:10], 1):
             bg = HexColor("#F9FAFB") if i % 2 == 0 else PDF_WHITE
-            story.append(_colored_box([Paragraph(f"{i}. {safe_text(b)}", st["small"])], bg_color=bg))
+            story.append(_colored_box([Paragraph(f"{i}. {_clip(safe_text(b))}", st["small"])], bg_color=bg))
         story.append(Spacer(1, 8))
 
     if hr_q:
         story.append(Paragraph("HR Interview Questions", st["h2"]))
         for i, b in enumerate(section_bullets(hr_q)[:5], 1):
             bg = HexColor("#F9FAFB") if i % 2 == 0 else PDF_WHITE
-            story.append(_colored_box([Paragraph(f"{i}. {safe_text(b)}", st["small"])], bg_color=bg))
+            story.append(_colored_box([Paragraph(f"{i}. {_clip(safe_text(b))}", st["small"])], bg_color=bg))
         story.append(Spacer(1, 8))
 
     if resources:
         story.append(Paragraph("Free Resources", st["h2"]))
         for b in section_bullets(resources)[:8]:
-            story.append(Paragraph(f"\u2022 {safe_text(b)}", st["body"]))
+            story.append(Paragraph(f"\u2022 {_clip(safe_text(b))}", st["body"]))
         story.append(Spacer(1, 8))
 
     if checklist:
         story.append(Paragraph("Interview Day Checklist", st["h2"]))
         for b in section_bullets(checklist)[:10]:
-            story.append(Paragraph(f"\u25a1 {safe_text(b)}", st["body"]))
+            story.append(Paragraph(f"\u25a1 {_clip(safe_text(b))}", st["body"]))
 
     # Fallback: if no sections parsed, render raw text
     if not tech_q and not hr_q and not resources:
