@@ -21,6 +21,147 @@
     --error: #ef4444;
   }
 
+  /* Auth panel */
+  .auth-panel {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: var(--bg);
+  }
+  .auth-box {
+    width: 100%;
+    max-width: 400px;
+  }
+  .auth-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 36px;
+    justify-content: center;
+  }
+  .auth-brand-icon {
+    width: 34px;
+    height: 34px;
+    background: var(--purple);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 800;
+    color: white;
+    letter-spacing: -0.5px;
+  }
+  .auth-brand-name { font-size: 17px; font-weight: 700; color: var(--text); }
+  .auth-title { font-size: 22px; font-weight: 700; color: var(--text); margin-bottom: 6px; letter-spacing: -0.3px; }
+  .auth-subtitle { font-size: 14px; color: var(--text-muted); margin-bottom: 28px; line-height: 1.5; }
+  .auth-card {
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px;
+    background: var(--bg);
+  }
+  .auth-field { margin-bottom: 16px; }
+  .auth-field label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+  .auth-field input {
+    width: 100%;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 11px 14px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    color: var(--text);
+    background: var(--bg-subtle);
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .auth-field input:focus {
+    border-color: var(--purple);
+    box-shadow: 0 0 0 3px rgba(108,99,255,0.08);
+    background: var(--bg);
+  }
+  .auth-btn {
+    width: 100%;
+    padding: 12px;
+    background: var(--purple);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    transition: background 0.15s, opacity 0.15s;
+    margin-top: 4px;
+  }
+  .auth-btn:hover:not(:disabled) { background: var(--purple-dark); }
+  .auth-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .auth-toggle {
+    text-align: center;
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-top: 20px;
+  }
+  .auth-toggle a { color: var(--purple); font-weight: 600; cursor: pointer; text-decoration: none; }
+  .auth-toggle a:hover { text-decoration: underline; }
+  .auth-error {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+    padding: 10px 14px;
+    color: var(--error);
+    font-size: 13px;
+    margin-bottom: 14px;
+    display: none;
+    line-height: 1.5;
+  }
+  .auth-error.visible { display: block; }
+  .auth-success {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-radius: 8px;
+    padding: 10px 14px;
+    color: #166534;
+    font-size: 13px;
+    margin-bottom: 14px;
+    display: none;
+    line-height: 1.5;
+  }
+  .auth-success.visible { display: block; }
+
+  /* User header bar */
+  .user-bar {
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 0;
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .user-bar.visible { display: flex; }
+  .user-bar-info { font-size: 13px; color: var(--text-muted); }
+  .user-bar-info strong { color: var(--text); font-weight: 600; }
+  .logout-btn {
+    font-size: 12px;
+    color: var(--text-muted);
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 5px 10px;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .logout-btn:hover { color: var(--error); border-color: var(--error); }
+
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
   body {
@@ -387,7 +528,67 @@
 </style>
 </head>
 <body>
-<div class="page">
+
+<!-- AUTH PANEL -->
+<div class="auth-panel" id="authPanel">
+  <div class="auth-box">
+    <div class="auth-brand">
+      <div class="auth-brand-icon">9L</div>
+      <span class="auth-brand-name">Nine Lab</span>
+    </div>
+
+    <!-- Login form -->
+    <div id="loginForm">
+      <div class="auth-title">Welcome back</div>
+      <div class="auth-subtitle">Log in to continue your placement prep.</div>
+      <div class="auth-card">
+        <div class="auth-error" id="loginError"></div>
+        <div class="auth-success" id="loginSuccess"></div>
+        <form onsubmit="handleLogin(); return false;" autocomplete="on">
+        <div class="auth-field">
+          <label>Email</label>
+          <input type="email" id="loginEmail" placeholder="you@email.com" autocomplete="email">
+        </div>
+        <div class="auth-field">
+          <label>Password</label>
+          <input type="password" id="loginPassword" placeholder="Your password" autocomplete="current-password">
+        </div>
+        <button class="auth-btn" id="loginBtn" type="submit">Log In →</button>
+        </form>
+      </div>
+      <div class="auth-toggle">Don't have an account? <a onclick="showRegister()">Sign up free</a></div>
+    </div>
+
+    <!-- Register form -->
+    <div id="registerForm" style="display:none">
+      <div class="auth-title">Create your account</div>
+      <div class="auth-subtitle">Free forever. No credit card needed.</div>
+      <div class="auth-card">
+        <div class="auth-error" id="registerError"></div>
+        <div class="auth-success" id="registerSuccess"></div>
+        <form onsubmit="handleRegister(); return false;" autocomplete="on">
+        <div class="auth-field">
+          <label>Full Name</label>
+          <input type="text" id="registerName" placeholder="Your name" autocomplete="name">
+        </div>
+        <div class="auth-field">
+          <label>Email</label>
+          <input type="email" id="registerEmail" placeholder="you@email.com" autocomplete="email">
+        </div>
+        <div class="auth-field">
+          <label>Password <span style="font-weight:400;color:var(--text-subtle)">(min 6 characters)</span></label>
+          <input type="password" id="registerPassword" placeholder="Create a password" autocomplete="new-password">
+        </div>
+        <button class="auth-btn" id="registerBtn" type="submit">Create Account →</button>
+        </form>
+      </div>
+      <div class="auth-toggle">Already have an account? <a onclick="showLogin()">Log in</a></div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div class="page" id="mainApp" style="display:none">
 
   <div class="brand">
     <div class="brand-icon">9L</div>
@@ -395,6 +596,12 @@
       <span class="brand-name">Nine Lab</span>
       <span class="brand-tag">· Placement prep, simplified</span>
     </div>
+  </div>
+
+  <!-- User bar -->
+  <div class="user-bar" id="userBar">
+    <div class="user-bar-info">Signed in as <strong id="userEmail"></strong></div>
+    <button class="logout-btn" onclick="handleLogout()">Log out</button>
   </div>
 
   <div class="hero">
@@ -527,6 +734,215 @@
   let currentJobId = null;
   let pollInterval = null;
 
+  // ── Auth State ───────────────────────────────────────────────────────────
+  let authToken = null;
+  let authUser = null;
+
+  function saveSession(token, refreshToken, user) {
+    authToken = token;
+    authUser = user;
+    localStorage.setItem('nl_token', token);
+    localStorage.setItem('nl_refresh', refreshToken || '');
+    localStorage.setItem('nl_user', JSON.stringify(user));
+  }
+
+  function clearSession() {
+    authToken = null;
+    authUser = null;
+    localStorage.removeItem('nl_token');
+    localStorage.removeItem('nl_refresh');
+    localStorage.removeItem('nl_user');
+  }
+
+  function showAuthPanel() {
+    document.getElementById('authPanel').style.display = 'flex';
+    document.getElementById('mainApp').style.display = 'none';
+  }
+
+  function showMainApp() {
+    document.getElementById('authPanel').style.display = 'none';
+    document.getElementById('mainApp').style.display = 'block';
+    document.getElementById('userBar').classList.add('visible');
+    document.getElementById('userEmail').textContent = authUser?.email || '';
+  }
+
+  function showLogin() {
+    document.getElementById('loginForm').style.display = 'block';
+    document.getElementById('registerForm').style.display = 'none';
+    clearAuthMessages();
+  }
+
+  function showRegister() {
+    document.getElementById('loginForm').style.display = 'none';
+    document.getElementById('registerForm').style.display = 'block';
+    clearAuthMessages();
+  }
+
+  function clearAuthMessages() {
+    ['loginError','loginSuccess','registerError','registerSuccess'].forEach(id => {
+      const el = document.getElementById(id);
+      el.textContent = '';
+      el.classList.remove('visible');
+    });
+  }
+
+  function setAuthError(id, msg) {
+    const el = document.getElementById(id);
+    el.textContent = msg;
+    el.classList.add('visible');
+    document.getElementById(id.replace('Error','Success')).classList.remove('visible');
+  }
+
+  function setAuthSuccess(id, msg) {
+    const el = document.getElementById(id);
+    el.textContent = msg;
+    el.classList.add('visible');
+    document.getElementById(id.replace('Success','Error')).classList.remove('visible');
+  }
+
+  async function handleLogin() {
+    const email = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPassword').value;
+    clearAuthMessages();
+    if (!email) { setAuthError('loginError', 'Please enter your email.'); return; }
+    if (!password) { setAuthError('loginError', 'Please enter your password.'); return; }
+
+    const btn = document.getElementById('loginBtn');
+    btn.disabled = true;
+    btn.textContent = 'Logging in...';
+
+    try {
+      const resp = await fetch(`${BASE}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await resp.json();
+      if (!resp.ok) {
+        setAuthError('loginError', data.detail || 'Login failed. Please try again.');
+        return;
+      }
+      saveSession(data.access_token, data.refresh_token, data.user);
+      showMainApp();
+    } catch(e) {
+      setAuthError('loginError', 'Network error. Please try again.');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Log In →';
+    }
+  }
+
+  async function handleRegister() {
+    const name = document.getElementById('registerName').value.trim();
+    const email = document.getElementById('registerEmail').value.trim();
+    const password = document.getElementById('registerPassword').value;
+    clearAuthMessages();
+    if (!name) { setAuthError('registerError', 'Please enter your full name.'); return; }
+    if (!email) { setAuthError('registerError', 'Please enter your email.'); return; }
+    if (password.length < 6) { setAuthError('registerError', 'Password must be at least 6 characters.'); return; }
+
+    const btn = document.getElementById('registerBtn');
+    btn.disabled = true;
+    btn.textContent = 'Creating account...';
+
+    try {
+      const resp = await fetch(`${BASE}/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, full_name: name })
+      });
+      const data = await resp.json();
+      if (!resp.ok) {
+        setAuthError('registerError', data.detail || 'Registration failed. Please try again.');
+        return;
+      }
+      if (data.access_token) {
+        saveSession(data.access_token, data.refresh_token, data.user);
+        showMainApp();
+      } else {
+        setAuthSuccess('registerSuccess', data.message || 'Account created! Please check your email to confirm, then log in.');
+        setTimeout(showLogin, 3000);
+      }
+    } catch(e) {
+      setAuthError('registerError', 'Network error. Please try again.');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Create Account →';
+    }
+  }
+
+  async function handleLogout() {
+    if (authToken) {
+      fetch(`${BASE}/auth/logout`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${authToken}` }
+      }).catch(() => {});
+    }
+    clearSession();
+    showAuthPanel();
+    showLogin();
+  }
+
+  async function tryRefreshToken() {
+    const refreshToken = localStorage.getItem('nl_refresh');
+    if (!refreshToken) return false;
+    try {
+      const resp = await fetch(`${BASE}/auth/refresh`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refresh_token: refreshToken })
+      });
+      if (!resp.ok) return false;
+      const data = await resp.json();
+      saveSession(data.access_token, data.refresh_token, data.user);
+      return true;
+    } catch(e) { return false; }
+  }
+
+  async function initAuth() {
+    const storedToken = localStorage.getItem('nl_token');
+    const storedUser = localStorage.getItem('nl_user');
+    if (!storedToken) { showAuthPanel(); return; }
+
+    try {
+      const resp = await fetch(`${BASE}/auth/me`, {
+        headers: { 'Authorization': `Bearer ${storedToken}` }
+      });
+      if (resp.ok) {
+        const user = await resp.json();
+        authToken = storedToken;
+        authUser = user;
+        showMainApp();
+        checkHealth();
+      } else {
+        const refreshed = await tryRefreshToken();
+        if (refreshed) { showMainApp(); checkHealth(); }
+        else { clearSession(); showAuthPanel(); }
+      }
+    } catch(e) {
+      const storedUserData = storedUser ? JSON.parse(storedUser) : null;
+      if (storedToken && storedUserData) {
+        authToken = storedToken;
+        authUser = storedUserData;
+        showMainApp();
+        checkHealth();
+      } else {
+        showAuthPanel();
+      }
+    }
+  }
+
+  // Keyboard shortcuts for auth forms
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      if (document.getElementById('authPanel').style.display !== 'none') {
+        const loginVisible = document.getElementById('loginForm').style.display !== 'none';
+        if (loginVisible) handleLogin();
+        else handleRegister();
+      }
+    }
+  });
+
   function wordCount(text) {
     return text.trim().split(/\s+/).filter(w => w.length > 0).length;
   }
@@ -551,8 +967,6 @@
       }
     } catch(e) {}
   }
-  checkHealth();
-
   const stageMap = {
     queued: [],
     research: ['step-research'],
@@ -742,6 +1156,7 @@
   }
 
   setUploadState('default');
+  initAuth();
 </script>
 </body>
 </html>

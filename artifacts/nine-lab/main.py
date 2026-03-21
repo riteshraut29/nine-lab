@@ -2,10 +2,11 @@ import os, uuid, asyncio, time, json, re, textwrap
 from datetime import datetime, date
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
-from fastapi import FastAPI, Request, HTTPException, UploadFile, File
+from fastapi import FastAPI, Request, HTTPException, UploadFile, File, Header
 from fastapi.responses import HTMLResponse, FileResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
+from typing import Optional
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -23,9 +24,42 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 TAVILY_API_KEY = os.getenv("TAVILY_API_KEY", "")
 SUPABASE_URL = os.getenv("SUPABASE_URL", "")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY", "")
+SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SERVICE_KEY", "")
 
 jobs: dict[str, dict] = {}
 executor = ThreadPoolExecutor(max_workers=8)
+
+# ── Supabase Auth helpers ─────────────────────────────────────────────────────
+
+def supabase_auth_request(method: str, path: str, payload: dict = None, token: str = None) -> dict:
+    import httpx
+    key = token or SUPABASE_KEY
+    headers = {
+        "apikey": SUPABASE_KEY,
+        "Authorization": f"Bearer {key}",
+        "Content-Type": "application/json",
+    }
+    url = f"{SUPABASE_URL}/auth/v1{path}"
+    try:
+        if method == "POST":
+            r = httpx.post(url, headers=headers, json=payload, timeout=10)
+        elif method == "GET":
+            r = httpx.get(url, headers=headers, timeout=10)
+        else:
+            r = httpx.delete(url, headers=headers, json=payload, timeout=10)
+        return {"status": r.status_code, "data": r.json() if r.text else {}}
+    except Exception as e:
+        return {"status": 500, "data": {"error": str(e)}}
+
+
+def get_user_from_token(token: str) -> Optional[dict]:
+    if not token or not SUPABASE_URL or not SUPABASE_KEY:
+        return None
+    result = supabase_auth_request("GET", "/user", token=token)
+    if result["status"] == 200 and "id" in result["data"]:
+        return result["data"]
+    return None
+
 
 # ── Supabase usage tracking ─────────────────────────────────────────────────
 
@@ -698,7 +732,158 @@ class GenerateRequest(BaseModel):
     jd: str
     company: str
 
+class AuthRequest(BaseModel):
+    email: str
+    password: str
+    full_name: Optional[str] = None
+
 # ── Routes ───────────────────────────────────────────────────────────────────
+
+# ── Auth routes ───────────────────────────────────────────────────────────────
+
+@app.post("/ninelab/auth/register")
+async def auth_register(req: AuthRequest):
+    if not SUPABASE_URL or not SUPABASE_KEY:
+        raise HTTPException(503, detail="Auth not configured. Set SUPABASE_URL and SUPABASE_KEY.")
+    if not req.email or "@" not in req.email:
+        raise HTTPException(400, detail="Please enter a valid email address.")
+    if len(req.password) < 6:
+        raise HTTPException(400, detail="Password must be at least 6 characters.")
+
+    import httpx
+    # Use admin endpoint with service key to auto-confirm email
+    admin_headers = {
+        "apikey": SUPABASE_SERVICE_KEY,
+        "Authorization": f"Bearer {SUPABASE_SERVICE_KEY}",
+        "Content-Type": "application/json",
+    }
+    payload = {
+        "email": req.email,
+        "password": req.password,
+        "email_confirm": True,
+        "user_metadata": {"full_name": req.full_name or ""}
+    }
+    try:
+        r = httpx.post(f"{SUPABASE_URL}/auth/v1/admin/users",
+                        headers=admin_headers, json=payload, timeout=10)
+        data = r.json()
+    except Exception as e:
+        raise HTTPException(500, detail=f"Registration failed: {str(e)[:100]}")
+
+    if r.status_code == 200 and data.get("id"):
+        # Now log the user in to get a token
+        login_payload = {"email": req.email, "password": req.password}
+        anon_headers = {
+            "apikey": SUPABASE_KEY,
+            "Authorization": f"Bearer {SUPABASE_KEY}",
+            "Content-Type": "application/json",
+        }
+        lr = httpx.post(f"{SUPABASE_URL}/auth/v1/token?grant_type=password",
+                         headers=anon_headers, json=login_payload, timeout=10)
+        ldata = lr.json()
+        if lr.status_code == 200 and ldata.get("access_token"):
+            user = ldata.get("user") or {}
+            return JSONResponse({
+                "success": True,
+                "access_token": ldata["access_token"],
+                "refresh_token": ldata.get("refresh_token", ""),
+                "user": {
+                    "id": user.get("id"),
+                    "email": user.get("email"),
+                    "full_name": (user.get("user_metadata") or {}).get("full_name", ""),
+                },
+            })
+        raise HTTPException(500, detail="Account created but login failed. Please try logging in.")
+    elif r.status_code == 422:
+        msg = data.get("msg") or data.get("message") or ""
+        if "already" in str(msg).lower() or "exists" in str(msg).lower():
+            raise HTTPException(409, detail="An account with this email already exists. Please log in.")
+        raise HTTPException(400, detail=msg or "Registration failed.")
+    else:
+        msg = data.get("msg") or data.get("message") or data.get("error", "") or "Registration failed."
+        if "already" in str(msg).lower():
+            raise HTTPException(409, detail="An account with this email already exists. Please log in.")
+        raise HTTPException(r.status_code if r.status_code >= 400 else 500, detail=str(msg)[:200])
+
+
+@app.post("/ninelab/auth/login")
+async def auth_login(req: AuthRequest):
+    if not SUPABASE_URL or not SUPABASE_KEY:
+        raise HTTPException(503, detail="Auth not configured.")
+    if not req.email or not req.password:
+        raise HTTPException(400, detail="Email and password are required.")
+
+    payload = {"email": req.email, "password": req.password}
+    result = supabase_auth_request("POST", "/token?grant_type=password", payload=payload)
+    data = result["data"]
+
+    if result["status"] == 200 and data.get("access_token"):
+        user = data.get("user") or {}
+        return JSONResponse({
+            "success": True,
+            "access_token": data["access_token"],
+            "refresh_token": data.get("refresh_token", ""),
+            "user": {
+                "id": user.get("id"),
+                "email": user.get("email"),
+                "full_name": (user.get("user_metadata") or {}).get("full_name", ""),
+            },
+        })
+    elif result["status"] in (400, 401, 422):
+        raise HTTPException(401, detail="Invalid email or password.")
+    else:
+        raise HTTPException(500, detail="Login failed. Please try again.")
+
+
+@app.post("/ninelab/auth/logout")
+async def auth_logout(authorization: Optional[str] = Header(None)):
+    token = None
+    if authorization and authorization.startswith("Bearer "):
+        token = authorization[7:]
+    if token:
+        supabase_auth_request("POST", "/logout", token=token)
+    return JSONResponse({"success": True})
+
+
+@app.get("/ninelab/auth/me")
+async def auth_me(authorization: Optional[str] = Header(None)):
+    token = None
+    if authorization and authorization.startswith("Bearer "):
+        token = authorization[7:]
+    if not token:
+        raise HTTPException(401, detail="Not authenticated.")
+    user = get_user_from_token(token)
+    if not user:
+        raise HTTPException(401, detail="Session expired. Please log in again.")
+    return JSONResponse({
+        "id": user.get("id"),
+        "email": user.get("email"),
+        "full_name": (user.get("user_metadata") or {}).get("full_name", ""),
+    })
+
+
+@app.post("/ninelab/auth/refresh")
+async def auth_refresh(request: Request):
+    body = await request.json()
+    refresh_token = body.get("refresh_token", "")
+    if not refresh_token:
+        raise HTTPException(400, detail="Refresh token required.")
+    result = supabase_auth_request("POST", "/token?grant_type=refresh_token",
+                                    payload={"refresh_token": refresh_token})
+    data = result["data"]
+    if result["status"] == 200 and data.get("access_token"):
+        user = data.get("user") or {}
+        return JSONResponse({
+            "access_token": data["access_token"],
+            "refresh_token": data.get("refresh_token", refresh_token),
+            "user": {
+                "id": user.get("id"),
+                "email": user.get("email"),
+                "full_name": (user.get("user_metadata") or {}).get("full_name", ""),
+            },
+        })
+    raise HTTPException(401, detail="Session expired. Please log in again.")
+
 
 @app.post("/ninelab/extract-resume")
 async def extract_resume(file: UploadFile = File(...)):
