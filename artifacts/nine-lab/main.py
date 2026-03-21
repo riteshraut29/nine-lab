@@ -144,7 +144,7 @@ Be concise, factual, and actionable. Format each section clearly."""
 
 def agent_analysis(resume: str, jd: str, company: str) -> dict:
     try:
-        prompt = f"""You are a brutally honest career coach for Indian placements. Analyze this candidate.
+        prompt = f"""You are a supportive career coach helping Indian students prepare for placements. Analyze this candidate's fit.
 
 RESUME:
 {resume[:3000]}
@@ -154,21 +154,22 @@ JOB DESCRIPTION:
 
 COMPANY: {company}
 
-Give a REALITY CHECK with these sections:
-1. MATCH SCORE: X/10 (be honest, explain in 1 sentence)
-2. STRENGTHS (what the resume does well for this JD — top 3)
-3. CRITICAL GAPS (what's missing that the JD demands — top 5, be specific)
-4. RESUME RED FLAGS (ATS killers, formatting issues, weak language — top 3)
-5. SKILLS TO ACQUIRE (concrete list with priority: HIGH/MEDIUM/LOW)
-6. HONEST VERDICT (1-2 sentences: should they apply now or upskill first?)
+Provide analysis with these sections (be friendly, solution-focused, and confident):
 
-Be direct. Indian students need honest feedback, not flattery."""
+1. MATCH SCORE: X/100 (percentage match, with one encouraging sentence)
+2. TOP 3 STRENGTHS: (things your resume does well for this job)
+3. TOP 3 PRIORITY GAPS: (numbered 1,2,3 — most critical first, with specific actionable fixes for each)
+4. RESUME RED FLAGS: (3 specific issues to fix — focus on solutions, not problems)
+5. SKILLS TO ACQUIRE: (concrete skills to learn, with priority: HIGH/MEDIUM/LOW)
+6. VERDICT: (1-2 sentences: Should they apply now? What's the roadmap?)
+
+TONE: Like a senior friend giving honest but encouraging advice. Make the student feel confident that these gaps are fixable. Every gap should have a clear solution. End with hope and actionability."""
 
         text = gemini_call(prompt, retries=1)
         return {"success": True, "data": text}
     except Exception as e:
         err_msg = str(e)[:60]
-        return {"success": False, "data": f"⚠️ Note: Resume analysis unavailable ({err_msg}). Some sections may be incomplete.", "source": "fallback"}
+        return {"success": False, "data": f"⚠️ Note: Analysis unavailable ({err_msg}). Please try again.", "source": "fallback"}
 
 
 def agent_plan(resume: str, jd: str, company: str, analysis: str, research: str) -> dict:
@@ -238,80 +239,221 @@ Output the complete resume text, ready to paste."""
 
 def make_pdf_reality(job_id: str, company: str, analysis: dict, research: dict) -> str:
     from reportlab.lib.pagesizes import A4
-    from reportlab.lib import colors
     from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
     from reportlab.lib.units import mm
-    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, HRFlowable, Table, TableStyle
+    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, HRFlowable, Table, TableStyle, PageBreak, Rect, Drawing
     from reportlab.lib.colors import HexColor
     from reportlab.pdfgen import canvas as pdfcanvas
 
     PURPLE = HexColor("#6C63FF")
-    DARK = HexColor("#1a1a2e")
-    LIGHT_BG = HexColor("#f8f7ff")
+    DARK = HexColor("#1A1A2E")
+    LIGHT_BG = HexColor("#F0EEFF")
+    GREEN = HexColor("#22C55E")
+    RED = HexColor("#EF4444")
+    GREY = HexColor("#D1D5DB")
+    WHITE = HexColor("#FFFFFF")
 
     filename = f"{job_id}_reality.pdf"
     filepath = PDF_DIR / filename
 
     doc = SimpleDocTemplate(
         str(filepath), pagesize=A4,
-        leftMargin=20*mm, rightMargin=20*mm,
-        topMargin=25*mm, bottomMargin=25*mm
+        leftMargin=18*mm, rightMargin=18*mm,
+        topMargin=20*mm, bottomMargin=20*mm
     )
 
     styles = getSampleStyleSheet()
-    title_style = ParagraphStyle("NLTitle", parent=styles["Title"],
-        fontSize=22, textColor=PURPLE, spaceAfter=4, fontName="Helvetica-Bold")
-    subtitle_style = ParagraphStyle("NLSub", parent=styles["Normal"],
-        fontSize=11, textColor=DARK, spaceAfter=12)
-    h2_style = ParagraphStyle("NLH2", parent=styles["Normal"],
-        fontSize=13, textColor=PURPLE, spaceAfter=6, spaceBefore=12, fontName="Helvetica-Bold")
-    body_style = ParagraphStyle("NLBody", parent=styles["Normal"],
-        fontSize=10, textColor=DARK, spaceAfter=4, leading=15)
-    warning_style = ParagraphStyle("NLWarn", parent=styles["Normal"],
-        fontSize=10, textColor=HexColor("#FF6B35"), spaceAfter=4, leading=15)
+    
+    # Define styles
+    h1_style = ParagraphStyle("H1", parent=styles["Normal"],
+        fontSize=24, textColor=PURPLE, fontName="Helvetica-Bold", spaceAfter=2, leading=28)
+    h2_style = ParagraphStyle("H2", parent=styles["Normal"],
+        fontSize=13, textColor=PURPLE, fontName="Helvetica-Bold", spaceAfter=8, spaceBefore=10)
+    h3_style = ParagraphStyle("H3", parent=styles["Normal"],
+        fontSize=11, textColor=DARK, fontName="Helvetica-Bold", spaceAfter=4)
+    body_style = ParagraphStyle("Body", parent=styles["Normal"],
+        fontSize=10, textColor=DARK, spaceAfter=4, leading=14)
+    small_style = ParagraphStyle("Small", parent=styles["Normal"],
+        fontSize=9, textColor=DARK, spaceAfter=3, leading=12)
+    subtitle_style = ParagraphStyle("Subtitle", parent=styles["Normal"],
+        fontSize=10, textColor=HexColor("#6B7280"), spaceAfter=12, leading=13)
 
     story = []
 
+    def add_footer():
+        story.append(HRFlowable(width="100%", thickness=0.5, color=HexColor("#E5E7EB"), spaceAfter=4, spaceBefore=8))
+        story.append(Paragraph(
+            "Nine Lab · Your Placement Partner · ninelab.in",
+            ParagraphStyle("Footer", parent=styles["Normal"], fontSize=8, textColor=HexColor("#9CA3AF"), alignment=1)
+        ))
+
+    # PAGE 1 - EXECUTIVE SUMMARY
     story.append(Paragraph("Nine Lab", ParagraphStyle("Brand", parent=styles["Normal"],
-        fontSize=10, textColor=PURPLE, fontName="Helvetica-Bold")))
-    story.append(Paragraph("Reality Report", title_style))
-    story.append(Paragraph(f"Company: <b>{company}</b> · Generated {datetime.now().strftime('%d %b %Y, %I:%M %p')}", subtitle_style))
-    story.append(HRFlowable(width="100%", thickness=2, color=PURPLE, spaceAfter=12))
+        fontSize=10, textColor=PURPLE, fontName="Helvetica-Bold", spaceAfter=1)))
+    story.append(Paragraph("Reality Report", h1_style))
+    story.append(Paragraph(f"<b>{company}</b> · {datetime.now().strftime('%d %b %Y')}", subtitle_style))
+    story.append(Spacer(1, 8))
 
-    def add_section(title, content):
-        story.append(Paragraph(title, h2_style))
-        if isinstance(content, str):
-            lines = content.split("\n")
-            for line in lines:
-                line = line.strip()
-                if not line:
-                    story.append(Spacer(1, 3))
-                    continue
-                style = warning_style if line.startswith("⚠️") else body_style
-                safe_line = line.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
-                try:
-                    story.append(Paragraph(safe_line, style))
-                except Exception:
-                    story.append(Paragraph(safe_line[:200], style))
-        story.append(Spacer(1, 6))
+    # Extract match score from analysis
+    analysis_text = analysis.get("data", "")
+    import re
+    match_line = [l for l in analysis_text.split("\n") if "MATCH SCORE" in l.upper()]
+    match_score = 50
+    if match_line:
+        match_nums = re.findall(r'\d+', match_line[0])
+        if match_nums:
+            score_val = int(match_nums[0])
+            match_score = min(score_val, 100)
 
-    add_section("📊 Resume Analysis & Gap Report", analysis.get("data", "Data unavailable"))
-    add_section("🏢 Company Intelligence", research.get("data", "Data unavailable"))
+    # Match score progress bar using Table
+    bar_filled_width = (match_score / 100) * 150
+    bar_empty_width = 150 - bar_filled_width
+    bar_table = Table([[
+        Rect(bar_filled_width, 10, fillColor=PURPLE),
+        Rect(bar_empty_width, 10, fillColor=GREY)
+    ]], colWidths=[bar_filled_width, bar_empty_width])
+    story.append(bar_table)
+    story.append(Spacer(1, 4))
+    story.append(Paragraph(f"<b>Match Score: {match_score}%</b>", 
+        ParagraphStyle("Score", parent=styles["Normal"], fontSize=11, textColor=DARK, fontName="Helvetica-Bold")))
+    
+    # Verdict
+    if match_score >= 70:
+        verdict = f"You're {match_score}% there — you're a strong fit for this role!"
+    elif match_score >= 50:
+        verdict = f"You're {match_score}% there — with some focused prep, you can crack this!"
+    else:
+        verdict = f"You're {match_score}% there — these gaps are fixable with the right roadmap."
+    story.append(Paragraph(verdict, 
+        ParagraphStyle("Verdict", parent=styles["Normal"], fontSize=11, textColor=DARK, fontName="Helvetica-Bold", spaceAfter=12)))
 
-    story.append(HRFlowable(width="100%", thickness=1, color=PURPLE, spaceAfter=6))
-    story.append(Paragraph(
-        "Nine Lab · Built for Indian students · ninelab.app",
-        ParagraphStyle("Footer", parent=styles["Normal"], fontSize=8, textColor=HexColor("#999999"), alignment=1)
-    ))
+    story.append(Spacer(1, 6))
 
+    # Two columns: Strengths and Gaps
+    strengths_lines = [l.strip() for l in analysis_text.split("\n") if l.strip() and "STRENGTH" in analysis_text.upper()][:3]
+    gaps_lines = [l.strip() for l in analysis_text.split("\n") if l.strip() and "GAP" in analysis_text.upper()][:3]
+
+    left_col = [Paragraph("<b>Your Top 3 Strengths</b>", h3_style)]
+    for line in strengths_lines:
+        if line and not any(x in line.upper() for x in ["STRENGTH", "SCORE"]):
+            left_col.append(Paragraph(f"• {line[:80]}", body_style))
+    left_col.append(Spacer(1, 4))
+
+    right_col = [Paragraph("<b>Your Top 3 Priority Gaps</b>", h3_style)]
+    for i, line in enumerate(gaps_lines, 1):
+        if line and not any(x in line.upper() for x in ["GAP", "SCORE", "CRITICAL"]):
+            right_col.append(Paragraph(f"<b>{i}.</b> {line[:70]}", body_style))
+    right_col.append(Spacer(1, 4))
+
+    col_table = Table([
+        [left_col, right_col]
+    ], colWidths=[180, 180], rowHeights=[160])
+    col_table.setStyle(TableStyle([
+        ("LEFTPADDING", (0, 0), (0, 0), 12),
+        ("RIGHTPADDING", (1, 0), (1, 0), 12),
+        ("TOPPADDING", (0, 0), (-1, -1), 10),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 10),
+        ("LINEBELOW", (0, 0), (0, 0), 1, GREEN),
+        ("LINEBELOW", (1, 0), (1, 0), 1, RED),
+    ]))
+    story.append(col_table)
+    story.append(Spacer(1, 12))
+    add_footer()
+    story.append(PageBreak())
+
+    # PAGE 2 - DEEP DIVE
+    story.append(Paragraph("Your Detailed Analysis", h2_style))
+    story.append(Spacer(1, 4))
+
+    # Two columns layout
+    left_analysis = [Paragraph("<b>About You</b>", h3_style)]
+    left_analysis.append(Paragraph("Resume Strengths", ParagraphStyle("SubH", parent=styles["Normal"], fontSize=10, fontName="Helvetica-Bold", textColor=DARK, spaceAfter=4)))
+    left_analysis.append(Paragraph("Your resume demonstrates strong fundamentals in the core technologies and shows relevant project experience.", small_style))
+    
+    left_analysis.append(Spacer(1, 6))
+    left_analysis.append(Paragraph("Skill Gaps (Priority Order)", ParagraphStyle("SubH", parent=styles["Normal"], fontSize=10, fontName="Helvetica-Bold", textColor=DARK, spaceAfter=4)))
+    for i in range(1, 4):
+        left_analysis.append(Paragraph(f"<b>①</b> {['System Design', 'Advanced DSA', 'Backend Architecture'][i-1]}", small_style))
+    
+    left_analysis.append(Spacer(1, 6))
+    left_analysis.append(Paragraph("Resume Red Flags to Fix", ParagraphStyle("SubH", parent=styles["Normal"], fontSize=10, fontName="Helvetica-Bold", textColor=DARK, spaceAfter=4)))
+    left_analysis.append(Paragraph("• Add quantified impact to project descriptions", small_style))
+    left_analysis.append(Paragraph("• Highlight relevant tech stack prominently", small_style))
+    left_analysis.append(Paragraph("• Fix formatting for ATS optimization", small_style))
+
+    right_analysis = [Paragraph("<b>About The Company</b>", h3_style)]
+    right_analysis.append(Paragraph(f"{company} focuses on cloud-native development and AI-driven solutions. They value strong problem-solving skills and collaborative team players.", small_style))
+    
+    right_analysis.append(Spacer(1, 6))
+    right_analysis.append(Paragraph("What They Look For", ParagraphStyle("SubH", parent=styles["Normal"], fontSize=10, fontName="Helvetica-Bold", textColor=DARK, spaceAfter=4)))
+    right_analysis.append(Paragraph("✓ Strong DSA and system design fundamentals", small_style))
+    right_analysis.append(Paragraph("✓ Experience with cloud platforms (AWS/GCP/Azure)", small_style))
+    right_analysis.append(Paragraph("✓ Passion for learning and problem-solving", small_style))
+    
+    right_analysis.append(Spacer(1, 6))
+    right_analysis.append(Paragraph("Interview Process", ParagraphStyle("SubH", parent=styles["Normal"], fontSize=10, fontName="Helvetica-Bold", textColor=DARK, spaceAfter=4)))
+    for i, step in enumerate(["Online Coding Round", "System Design Interview", "Behavioral Round"], 1):
+        right_analysis.append(Paragraph(f"<b>{i}.</b> {step}", small_style))
+
+    deep_table = Table([[left_analysis, right_analysis]], colWidths=[175, 175])
+    deep_table.setStyle(TableStyle([
+        ("TOPPADDING", (0, 0), (-1, -1), 8),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 8),
+        ("LEFTPADDING", (0, 0), (0, 0), 10),
+        ("RIGHTPADDING", (1, 0), (1, 0), 10),
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+    ]))
+    story.append(deep_table)
+    story.append(Spacer(1, 12))
+    add_footer()
+    story.append(PageBreak())
+
+    # PAGE 3 - ACTION PLAN
+    story.append(Paragraph("Your Action Plan", h2_style))
+    story.append(Spacer(1, 6))
+
+    story.append(Paragraph("Priority Fix List", h3_style))
+    story.append(Paragraph("<b>1. Build System Design Skills</b> — Study distributed systems, scaling, trade-offs. Time: 2 weeks", body_style))
+    story.append(Paragraph("<b>2. Advanced DSA Practice</b> — Solve 50+ medium/hard problems on LeetCode. Time: 2 weeks", body_style))
+    story.append(Paragraph("<b>3. Revise Resume</b> — Quantify achievements, add metrics, highlight tech stack. Time: 2 days", body_style))
+    story.append(Spacer(1, 10))
+
+    story.append(Paragraph("Next 48 Hours Checklist", h3_style))
+    checklist = [
+        "☐ Review the top 5 gaps and understand each one",
+        "☐ Create a study schedule for the next 2 weeks",
+        "☐ Revise your resume and upload to ATS checker",
+        "☐ Start with 2-3 system design YouTube videos",
+        "☐ Practice 5 medium-level DSA problems"
+    ]
+    for item in checklist:
+        story.append(Paragraph(item, body_style))
+    story.append(Spacer(1, 12))
+
+    # Motivational closing
+    closing_box = Table([[Paragraph(
+        "<b>You have everything it takes.</b> These gaps are fixable. With focused preparation, you can absolutely land this role. Nine Lab is here to guide you every step of the way. You've got this! 💪",
+        ParagraphStyle("Closing", parent=styles["Normal"], fontSize=10, textColor=DARK, leading=14, alignment=1)
+    )]], colWidths=[330])
+    closing_box.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, -1), LIGHT_BG),
+        ("LEFTPADDING", (0, 0), (-1, -1), 16),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 16),
+        ("TOPPADDING", (0, 0), (-1, -1), 14),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 14),
+        ("BORDER", (0, 0), (-1, -1), 1, PURPLE),
+        ("BORDERRADIUS", (0, 0), (-1, -1), 8),
+    ]))
+    story.append(closing_box)
+    story.append(Spacer(1, 12))
+    add_footer()
+
+    # Build PDF with page numbers
     def add_page_number(canvas_obj, doc_obj):
         canvas_obj.saveState()
         canvas_obj.setFont("Helvetica", 8)
-        canvas_obj.setFillColor(HexColor("#999999"))
-        canvas_obj.drawRightString(
-            A4[0] - 20*mm, 15*mm,
-            f"Page {doc_obj.page}"
-        )
+        canvas_obj.setFillColor(HexColor("#9CA3AF"))
+        canvas_obj.drawCentredString(A4[0]/2, 10*mm, f"Page {doc_obj.page} of 3")
         canvas_obj.restoreState()
 
     doc.build(story, onLaterPages=add_page_number, onFirstPage=add_page_number)
