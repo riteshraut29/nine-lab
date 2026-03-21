@@ -842,13 +842,22 @@ def make_pdf_reality(job_id: str, company: str, analysis: dict, research: dict) 
         right_col.append(Spacer(1, 6))
         right_col.append(Paragraph(f"Salary: {safe_text(salary.split(chr(10))[0])}", st["small"]))
 
-    deep_t = Table([[left_col, right_col]], colWidths=[220, 220])
+    # Zip both columns into many rows so ReportLab can split across pages.
+    # One row per item pair instead of one giant cell per column.
+    _empty = Spacer(1, 1)
+    max_rows = max(len(left_col), len(right_col))
+    left_col  += [_empty] * (max_rows - len(left_col))
+    right_col += [_empty] * (max_rows - len(right_col))
+    paired_rows = [[l, r] for l, r in zip(left_col, right_col)]
+    deep_t = Table(paired_rows, colWidths=[220, 220])
     deep_t.setStyle(TableStyle([
         ("VALIGN", (0, 0), (-1, -1), "TOP"),
         ("LEFTPADDING", (0, 0), (-1, -1), 8),
         ("RIGHTPADDING", (0, 0), (-1, -1), 8),
-        ("TOPPADDING", (0, 0), (-1, -1), 8),
-        ("LINEBEFORE", (1, 0), (1, 0), 0.5, PDF_GREY),
+        ("TOPPADDING", (0, 0), (-1, -1), 3),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 3),
+        ("TOPPADDING", (0, 0), (-1, 0), 8),
+        ("LINEBEFORE", (1, 0), (1, -1), 0.5, PDF_GREY),
     ]))
     story.append(deep_t)
     story.append(PageBreak())
