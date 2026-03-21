@@ -578,6 +578,115 @@
   }
   .footer strong { color: var(--purple); }
 
+  /* ── PDF Upload Zone ── */
+  .upload-zone {
+    border: 2px dashed var(--border);
+    border-radius: 12px;
+    padding: 20px 16px;
+    text-align: center;
+    background: var(--bg);
+    transition: border-color 0.2s, background 0.2s;
+    cursor: pointer;
+    margin-bottom: 12px;
+    position: relative;
+  }
+  .upload-zone:hover, .upload-zone.dragover {
+    border-color: var(--purple);
+    background: var(--purple-light);
+  }
+  .upload-zone.success {
+    border-color: var(--success);
+    border-style: solid;
+    background: #f0fdf4;
+  }
+  .upload-zone.uploading {
+    border-color: var(--purple);
+    border-style: solid;
+    background: var(--purple-light);
+    pointer-events: none;
+  }
+  .upload-zone.error-zone {
+    border-color: var(--error);
+    border-style: solid;
+    background: #fef2f2;
+  }
+  .upload-icon { font-size: 28px; margin-bottom: 6px; display: block; }
+  .upload-main {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 2px;
+  }
+  .upload-sub {
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  .upload-sub b { color: var(--purple); }
+  .upload-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--purple);
+    color: white;
+    padding: 8px 18px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    margin-top: 10px;
+    cursor: pointer;
+    border: none;
+    transition: background 0.2s;
+  }
+  .upload-btn:hover { background: var(--purple-dark); }
+  .upload-success-msg {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--success);
+  }
+  .upload-success-msg .clear-upload {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-muted);
+    cursor: pointer;
+    text-decoration: underline;
+    margin-left: 4px;
+  }
+  .upload-error-msg {
+    font-size: 13px;
+    color: var(--error);
+    font-weight: 500;
+  }
+  .upload-spinner {
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    border: 2px solid rgba(108,99,255,0.3);
+    border-top-color: var(--purple);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    vertical-align: middle;
+    margin-right: 6px;
+  }
+  .or-divider {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 8px 0 10px;
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 500;
+  }
+  .or-divider::before, .or-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
   /* ── Responsive ── */
   @media (max-width: 600px) {
     .steps { flex-direction: column; }
@@ -677,6 +786,40 @@
         Your Resume
         <span class="badge">Required · Min 50 words</span>
       </label>
+
+      <!-- PDF Upload Zone -->
+      <input type="file" id="resumePdfInput" accept=".pdf" style="display:none" onchange="handlePdfFile(this.files[0])">
+      <div class="upload-zone" id="uploadZone"
+           onclick="document.getElementById('resumePdfInput').click()"
+           ondragover="handleDragOver(event)"
+           ondragleave="handleDragLeave(event)"
+           ondrop="handleDrop(event)">
+        <div id="uploadDefault">
+          <span class="upload-icon">📎</span>
+          <div class="upload-main">Upload your resume PDF</div>
+          <div class="upload-sub">Drag & drop here or <b>click to browse</b></div>
+          <button class="upload-btn" onclick="event.stopPropagation(); document.getElementById('resumePdfInput').click()">📄 Choose PDF</button>
+        </div>
+        <div id="uploadLoading" style="display:none">
+          <span class="upload-spinner"></span>
+          <span style="font-size:13px; color:var(--purple); font-weight:600">Reading PDF...</span>
+        </div>
+        <div id="uploadSuccess" style="display:none">
+          <div class="upload-success-msg">
+            <span>✅</span>
+            <span id="uploadSuccessText">Resume extracted successfully!</span>
+            <span class="clear-upload" onclick="event.stopPropagation(); clearUpload()">Remove</span>
+          </div>
+        </div>
+        <div id="uploadError" style="display:none">
+          <span style="font-size:24px; display:block; margin-bottom:6px">⚠️</span>
+          <div class="upload-error-msg" id="uploadErrorText">Could not read PDF</div>
+          <button class="upload-btn" style="background:var(--error); margin-top:8px" onclick="event.stopPropagation(); document.getElementById('resumePdfInput').click()">Try Another File</button>
+        </div>
+      </div>
+
+      <div class="or-divider">or paste text below</div>
+
       <div class="form-hint">Paste your complete resume text (plain text is fine). The more detail, the better the AI analysis.</div>
       <textarea id="resumeInput" rows="10" placeholder="Paste your entire resume here...
 
@@ -1079,6 +1222,93 @@ Requirements:
       handleSubmit();
     }
   });
+
+  // ── PDF Upload ────────────────────────────────────────────────────────────
+
+  function setUploadState(state, msg) {
+    const zone = document.getElementById('uploadZone');
+    zone.className = 'upload-zone';
+    document.getElementById('uploadDefault').style.display = 'none';
+    document.getElementById('uploadLoading').style.display = 'none';
+    document.getElementById('uploadSuccess').style.display = 'none';
+    document.getElementById('uploadError').style.display = 'none';
+    if (state === 'default') {
+      zone.classList.add('');
+      document.getElementById('uploadDefault').style.display = 'block';
+    } else if (state === 'loading') {
+      zone.classList.add('uploading');
+      document.getElementById('uploadLoading').style.display = 'block';
+    } else if (state === 'success') {
+      zone.classList.add('success');
+      document.getElementById('uploadSuccessText').textContent = msg || 'Resume extracted!';
+      document.getElementById('uploadSuccess').style.display = 'block';
+    } else if (state === 'error') {
+      zone.classList.add('error-zone');
+      document.getElementById('uploadErrorText').textContent = msg || 'Could not read PDF';
+      document.getElementById('uploadError').style.display = 'block';
+    }
+  }
+
+  function handleDragOver(e) {
+    e.preventDefault();
+    document.getElementById('uploadZone').classList.add('dragover');
+  }
+
+  function handleDragLeave(e) {
+    document.getElementById('uploadZone').classList.remove('dragover');
+  }
+
+  function handleDrop(e) {
+    e.preventDefault();
+    document.getElementById('uploadZone').classList.remove('dragover');
+    const file = e.dataTransfer.files[0];
+    if (file) handlePdfFile(file);
+  }
+
+  function clearUpload() {
+    document.getElementById('resumePdfInput').value = '';
+    document.getElementById('resumeInput').value = '';
+    document.getElementById('resumeCount').textContent = '0 words';
+    document.getElementById('resumeCount').className = 'word-count';
+    setUploadState('default');
+  }
+
+  async function handlePdfFile(file) {
+    if (!file) return;
+    if (!file.name.toLowerCase().endsWith('.pdf')) {
+      setUploadState('error', 'Sirf .pdf files allowed hain. Please choose a PDF file.');
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      setUploadState('error', 'File too large! Max 10MB allowed.');
+      return;
+    }
+
+    setUploadState('loading');
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const resp = await fetch(`${BASE}/extract-resume`, {
+        method: 'POST',
+        body: formData
+      });
+      const data = await resp.json();
+      if (!resp.ok) {
+        setUploadState('error', data.detail || 'PDF read karne mein error aaya.');
+        return;
+      }
+      document.getElementById('resumeInput').value = data.text;
+      updateWordCount('resumeInput', 'resumeCount', 50);
+      setUploadState('success', `✅ ${data.pages} page${data.pages !== 1 ? 's' : ''} extracted · ${data.words} words`);
+    } catch(e) {
+      setUploadState('error', 'Network error. Please try again.');
+    }
+  }
+
+  // Initialize upload zone
+  setUploadState('default');
 </script>
 </body>
 </html>

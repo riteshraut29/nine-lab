@@ -2,7 +2,7 @@ import os, uuid, asyncio, time, json, re, textwrap
 from datetime import datetime, date
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
-from fastapi import FastAPI, Request, HTTPException
+from fastapi import FastAPI, Request, HTTPException, UploadFile, File
 from fastapi.responses import HTMLResponse, FileResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -557,6 +557,35 @@ class GenerateRequest(BaseModel):
     company: str
 
 # ── Routes ───────────────────────────────────────────────────────────────────
+
+@app.post("/ninelab/extract-resume")
+async def extract_resume(file: UploadFile = File(...)):
+    if not file.filename or not file.filename.lower().endswith(".pdf"):
+        raise HTTPException(400, detail="Sirf PDF files allowed hain. Please upload a .pdf file.")
+    if file.size and file.size > 10 * 1024 * 1024:
+        raise HTTPException(400, detail="File bahut bada hai! Max 10MB allowed hai.")
+    try:
+        from pypdf import PdfReader
+        import io
+        contents = await file.read()
+        if len(contents) > 10 * 1024 * 1024:
+            raise HTTPException(400, detail="File bahut bada hai! Max 10MB allowed hai.")
+        reader = PdfReader(io.BytesIO(contents))
+        pages_text = []
+        for page in reader.pages:
+            text = page.extract_text()
+            if text:
+                pages_text.append(text.strip())
+        full_text = "\n\n".join(pages_text).strip()
+        if not full_text:
+            raise HTTPException(422, detail="Is PDF se text extract nahi ho saka. PDF mein scannable text hona chahiye (image-based PDFs work nahi karte).")
+        word_count = len(full_text.split())
+        return JSONResponse({"text": full_text, "pages": len(reader.pages), "words": word_count})
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(500, detail=f"PDF read karne mein error aaya: {str(e)}")
+
 
 @app.get("/", response_class=RedirectResponse)
 async def root_redirect():
