@@ -28,6 +28,7 @@ SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SERVICE_KEY", "")
 
 jobs: dict[str, dict] = {}
 executor = ThreadPoolExecutor(max_workers=8)
+user_daily_usage: dict[str, dict] = {}  # {user_id: {"date": "YYYY-MM-DD", "count": N}}
 
 # ── Supabase Auth helpers ─────────────────────────────────────────────────────
 
@@ -949,14 +950,22 @@ async def generate(req: GenerateRequest, request: Request,
     if not TAVILY_API_KEY:
         raise HTTPException(400, detail="TAVILY_API_KEY not configured. Add it to your environment variables.")
 
-    # Logged-in users bypass the daily rate limit
+    # Rate limiting: 3/day for logged-in users, 1/day for anonymous
     token = authorization[7:] if authorization and authorization.startswith("Bearer ") else None
-    is_authenticated = bool(token and get_user_from_token(token))
+    auth_user_data = get_user_from_token(token) if token else None
+    is_authenticated = bool(auth_user_data)
 
-    if not is_authenticated and not check_usage_limit(ip):
-        raise HTTPException(429, detail=(
-            "Daily limit reached. Please log in or create a free account for unlimited access."
-        ))
+    if is_authenticated:
+        user_id = auth_user_data["id"]
+        today = date.today().isoformat()
+        rec = user_daily_usage.get(user_id, {})
+        if rec.get("date") == today and rec.get("count", 0) >= 3:
+            raise HTTPException(429, detail="You've used all 3 of your daily generations. Come back tomorrow!")
+    else:
+        if not check_usage_limit(ip):
+            raise HTTPException(429, detail=(
+                "Daily limit reached. Please log in or create a free account for unlimited access."
+            ))
 
     job_id = str(uuid.uuid4())[:8]
     jobs[job_id] = {
@@ -967,7 +976,16 @@ async def generate(req: GenerateRequest, request: Request,
         "created_at": time.time(),
     }
 
-    record_usage(ip)
+    if is_authenticated:
+        today = date.today().isoformat()
+        rec = user_daily_usage.get(user_id, {})
+        if rec.get("date") == today:
+            user_daily_usage[user_id]["count"] = rec.get("count", 0) + 1
+        else:
+            user_daily_usage[user_id] = {"date": today, "count": 1}
+    else:
+        record_usage(ip)
+
     executor.submit(run_pipeline, job_id, req.resume, req.jd, req.company)
 
     return JSONResponse({"job_id": job_id})
