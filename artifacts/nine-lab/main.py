@@ -573,14 +573,20 @@ def _make_progress_bar(score, width=400, height=14):
     return d
 
 def _colored_box(flowables, bg_color=PDF_LIGHT, border_color=None, left_border_color=None, col_width=None):
+    """Render a shaded box. One row per flowable so the table can split across pages."""
     w = col_width or 450
-    t = Table([[flowables]], colWidths=[w])
+    rows = [[f] for f in flowables]
+    t = Table(rows, colWidths=[w])
+    n = len(rows)
     style_cmds = [
         ("BACKGROUND", (0, 0), (-1, -1), bg_color),
         ("LEFTPADDING", (0, 0), (-1, -1), 12),
         ("RIGHTPADDING", (0, 0), (-1, -1), 12),
-        ("TOPPADDING", (0, 0), (-1, -1), 10),
-        ("BOTTOMPADDING", (0, 0), (-1, -1), 10),
+        ("TOPPADDING", (0, 0), (-1, -1), 3),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 3),
+        # Extra breathing room on first and last row
+        ("TOPPADDING", (0, 0), (0, 0), 10),
+        ("BOTTOMPADDING", (0, n - 1), (0, n - 1), 10),
         ("VALIGN", (0, 0), (-1, -1), "TOP"),
     ]
     if border_color:
