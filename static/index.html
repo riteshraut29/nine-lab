@@ -1,0 +1,1799 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nine Lab — Placement Prep, Simplified</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --purple: #6c63ff;
+        --purple-dark: #5a52d5;
+        --purple-light: #f0efff;
+        --text: #1a1a1a;
+        --text-muted: #6b7280;
+        --text-subtle: #9ca3af;
+        --border: #e5e7eb;
+        --bg: #ffffff;
+        --bg-subtle: #f9fafb;
+        --success: #10b981;
+        --error: #ef4444;
+      }
+
+      /* Auth panel */
+      .auth-panel {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        background: var(--bg);
+      }
+      .auth-box {
+        width: 100%;
+        max-width: 400px;
+      }
+      .auth-brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 36px;
+        justify-content: center;
+      }
+      .auth-brand-icon {
+        width: 34px;
+        height: 34px;
+        background: var(--purple);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        font-weight: 800;
+        color: white;
+        letter-spacing: -0.5px;
+      }
+      .auth-brand-name {
+        font-size: 17px;
+        font-weight: 700;
+        color: var(--text);
+      }
+      .auth-title {
+        font-size: 22px;
+        font-weight: 700;
+        color: var(--text);
+        margin-bottom: 6px;
+        letter-spacing: -0.3px;
+      }
+      .auth-subtitle {
+        font-size: 14px;
+        color: var(--text-muted);
+        margin-bottom: 28px;
+        line-height: 1.5;
+      }
+      .auth-card {
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 28px;
+        background: var(--bg);
+      }
+      .auth-field {
+        margin-bottom: 16px;
+      }
+      .auth-field label {
+        display: block;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text);
+        margin-bottom: 6px;
+      }
+      .auth-field input {
+        width: 100%;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 11px 14px;
+        font-family: "Inter", sans-serif;
+        font-size: 14px;
+        color: var(--text);
+        background: var(--bg-subtle);
+        outline: none;
+        transition:
+          border-color 0.15s,
+          box-shadow 0.15s;
+      }
+      .auth-field input:focus {
+        border-color: var(--purple);
+        box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.08);
+        background: var(--bg);
+      }
+      .auth-btn {
+        width: 100%;
+        padding: 12px;
+        background: var(--purple);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        font-size: 15px;
+        font-weight: 600;
+        font-family: "Inter", sans-serif;
+        cursor: pointer;
+        transition:
+          background 0.15s,
+          opacity 0.15s;
+        margin-top: 4px;
+      }
+      .auth-btn:hover:not(:disabled) {
+        background: var(--purple-dark);
+      }
+      .auth-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      .auth-toggle {
+        text-align: center;
+        font-size: 13px;
+        color: var(--text-muted);
+        margin-top: 20px;
+      }
+      .auth-toggle a {
+        color: var(--purple);
+        font-weight: 600;
+        cursor: pointer;
+        text-decoration: none;
+      }
+      .auth-toggle a:hover {
+        text-decoration: underline;
+      }
+      .auth-error {
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        border-radius: 8px;
+        padding: 10px 14px;
+        color: var(--error);
+        font-size: 13px;
+        margin-bottom: 14px;
+        display: none;
+        line-height: 1.5;
+      }
+      .auth-error.visible {
+        display: block;
+      }
+      .auth-success {
+        background: #f0fdf4;
+        border: 1px solid #bbf7d0;
+        border-radius: 8px;
+        padding: 10px 14px;
+        color: #166534;
+        font-size: 13px;
+        margin-bottom: 14px;
+        display: none;
+        line-height: 1.5;
+      }
+      .auth-success.visible {
+        display: block;
+      }
+
+      /* User header bar */
+      .user-bar {
+        display: none;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 0;
+        margin-bottom: 20px;
+        border-bottom: 1px solid var(--border);
+      }
+      .user-bar.visible {
+        display: flex;
+      }
+      .user-bar-info {
+        font-size: 13px;
+        color: var(--text-muted);
+      }
+      .user-bar-info strong {
+        color: var(--text);
+        font-weight: 600;
+      }
+      .logout-btn {
+        font-size: 12px;
+        color: var(--text-muted);
+        background: none;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 5px 10px;
+        cursor: pointer;
+        font-family: "Inter", sans-serif;
+        transition:
+          color 0.15s,
+          border-color 0.15s;
+      }
+      .logout-btn:hover {
+        color: var(--error);
+        border-color: var(--error);
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family:
+          "Inter",
+          -apple-system,
+          BlinkMacSystemFont,
+          sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        min-height: 100vh;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      .page {
+        max-width: 580px;
+        margin: 0 auto;
+        padding: 52px 24px 80px;
+      }
+
+      /* Brand */
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 52px;
+      }
+      .brand-icon {
+        width: 30px;
+        height: 30px;
+        background: var(--purple);
+        border-radius: 7px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 13px;
+        font-weight: 800;
+        color: white;
+        letter-spacing: -0.5px;
+        flex-shrink: 0;
+      }
+      .brand-name {
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--text);
+      }
+      .brand-tag {
+        font-size: 13px;
+        color: var(--text-muted);
+        margin-left: 2px;
+      }
+
+      /* Hero */
+      .hero {
+        margin-bottom: 36px;
+      }
+      .hero h1 {
+        font-size: 30px;
+        font-weight: 700;
+        line-height: 1.25;
+        letter-spacing: -0.5px;
+        color: var(--text);
+        margin-bottom: 10px;
+      }
+      .hero h1 span {
+        color: var(--purple);
+      }
+      .hero p {
+        font-size: 15px;
+        color: var(--text-muted);
+        line-height: 1.6;
+      }
+
+      /* Setup banner */
+      .setup-banner {
+        background: #fffbeb;
+        border: 1px solid #fcd34d;
+        border-radius: 10px;
+        padding: 12px 16px;
+        margin-bottom: 20px;
+        display: none;
+      }
+      .setup-banner.visible {
+        display: block;
+      }
+      .setup-banner p {
+        font-size: 13px;
+        color: #92400e;
+        line-height: 1.5;
+      }
+
+      /* Form card */
+      .form-card {
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 28px;
+        margin-bottom: 16px;
+      }
+
+      .form-group {
+        margin-bottom: 22px;
+      }
+
+      .form-label {
+        display: block;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text);
+        margin-bottom: 8px;
+      }
+      .form-label .req {
+        font-size: 11px;
+        font-weight: 400;
+        color: var(--text-subtle);
+      }
+
+      textarea,
+      input[type="text"] {
+        width: 100%;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 12px 14px;
+        font-family: "Inter", sans-serif;
+        font-size: 14px;
+        color: var(--text);
+        background: var(--bg-subtle);
+        transition:
+          border-color 0.15s,
+          box-shadow 0.15s,
+          background 0.15s;
+        resize: vertical;
+        outline: none;
+        line-height: 1.5;
+      }
+      textarea:focus,
+      input[type="text"]:focus {
+        border-color: var(--purple);
+        box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.08);
+        background: var(--bg);
+      }
+      textarea::placeholder,
+      input::placeholder {
+        color: var(--text-subtle);
+      }
+
+      .word-count {
+        font-size: 11px;
+        color: var(--text-subtle);
+        text-align: right;
+        margin-top: 5px;
+      }
+      .word-count.ok {
+        color: var(--success);
+      }
+      .word-count.warn {
+        color: #f59e0b;
+      }
+
+      /* Upload zone */
+      .upload-zone {
+        border: 1.5px dashed var(--border);
+        border-radius: 10px;
+        padding: 16px;
+        text-align: center;
+        background: var(--bg-subtle);
+        transition:
+          border-color 0.15s,
+          background 0.15s;
+        cursor: pointer;
+        margin-bottom: 10px;
+      }
+      .upload-zone:hover,
+      .upload-zone.dragover {
+        border-color: var(--purple);
+        background: var(--purple-light);
+      }
+      .upload-zone.success {
+        border-style: solid;
+        border-color: var(--success);
+        background: #f0fdf4;
+      }
+      .upload-zone.uploading {
+        border-style: solid;
+        border-color: var(--purple);
+        background: var(--purple-light);
+        pointer-events: none;
+      }
+      .upload-zone.error-zone {
+        border-style: solid;
+        border-color: var(--error);
+        background: #fef2f2;
+      }
+      .upload-main {
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--text);
+        margin-bottom: 2px;
+      }
+      .upload-sub {
+        font-size: 12px;
+        color: var(--text-muted);
+      }
+      .upload-sub b {
+        color: var(--purple);
+      }
+      .upload-success-msg {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        justify-content: center;
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--success);
+      }
+      .clear-upload {
+        font-size: 11px;
+        font-weight: 400;
+        color: var(--text-muted);
+        cursor: pointer;
+        text-decoration: underline;
+        margin-left: 4px;
+      }
+      .upload-error-msg {
+        font-size: 12px;
+        color: var(--error);
+      }
+      .upload-spinner {
+        display: inline-block;
+        width: 14px;
+        height: 14px;
+        border: 2px solid rgba(108, 99, 255, 0.2);
+        border-top-color: var(--purple);
+        border-radius: 50%;
+        animation: spin 0.7s linear infinite;
+        vertical-align: middle;
+        margin-right: 6px;
+      }
+      .or-divider {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin: 8px 0;
+        color: var(--text-subtle);
+        font-size: 11px;
+      }
+      .or-divider::before,
+      .or-divider::after {
+        content: "";
+        flex: 1;
+        height: 1px;
+        background: var(--border);
+      }
+
+      /* LinkedIn Import */
+      .linkedin-import-box {
+        background: #f0f7ff;
+        border: 1px solid #c7dff7;
+        border-radius: 8px;
+        padding: 10px 12px;
+        margin-bottom: 8px;
+      }
+      .linkedin-import-header {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        color: #0a66c2;
+        margin-bottom: 8px;
+      }
+      .linkedin-import-row {
+        display: flex;
+        gap: 8px;
+      }
+      .linkedin-import-row input {
+        flex: 1;
+        padding: 7px 10px;
+        border: 1px solid #c7dff7;
+        border-radius: 6px;
+        font-size: 12px;
+        background: #fff;
+        color: var(--text-dark);
+        outline: none;
+      }
+      .linkedin-import-row input:focus {
+        border-color: #0a66c2;
+      }
+      .linkedin-import-btn {
+        padding: 7px 14px;
+        background: #0a66c2;
+        color: #fff;
+        border: none;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: background 0.2s;
+      }
+      .linkedin-import-btn:hover {
+        background: #084e98;
+      }
+      .linkedin-import-btn:disabled {
+        background: #6fa8d8;
+        cursor: not-allowed;
+      }
+      .linkedin-status {
+        margin-top: 7px;
+        font-size: 11px;
+        padding: 5px 8px;
+        border-radius: 5px;
+      }
+      .linkedin-status.loading {
+        color: #0a66c2;
+        background: #deeeff;
+      }
+      .linkedin-status.success {
+        color: #166534;
+        background: #dcfce7;
+      }
+      .linkedin-status.error {
+        color: #991b1b;
+        background: #fee2e2;
+      }
+
+      /* Submit */
+      .submit-btn {
+        width: 100%;
+        padding: 13px;
+        background: var(--purple);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        font-size: 15px;
+        font-weight: 600;
+        font-family: "Inter", sans-serif;
+        cursor: pointer;
+        transition:
+          background 0.15s,
+          opacity 0.15s;
+        letter-spacing: -0.2px;
+      }
+      .submit-btn:hover:not(:disabled) {
+        background: var(--purple-dark);
+      }
+      .submit-btn:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+      }
+
+      /* Error */
+      .error-box {
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        border-radius: 8px;
+        padding: 11px 14px;
+        color: var(--error);
+        font-size: 13px;
+        margin-bottom: 14px;
+        display: none;
+        line-height: 1.5;
+      }
+      .error-box.visible {
+        display: block;
+      }
+
+      /* Progress */
+      .progress-panel {
+        display: none;
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 32px 28px;
+        text-align: center;
+      }
+      .progress-panel.visible {
+        display: block;
+      }
+
+      .progress-emoji {
+        font-size: 32px;
+        margin-bottom: 10px;
+        display: block;
+        animation: pulse 1.5s ease-in-out infinite;
+      }
+      @keyframes pulse {
+        0%,
+        100% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.08);
+        }
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      .progress-title {
+        font-size: 16px;
+        font-weight: 700;
+        margin-bottom: 4px;
+      }
+      .progress-msg {
+        font-size: 13px;
+        color: var(--text-muted);
+        margin-bottom: 20px;
+        min-height: 18px;
+      }
+
+      .progress-bar-wrap {
+        background: var(--purple-light);
+        border-radius: 100px;
+        height: 5px;
+        overflow: hidden;
+        margin-bottom: 6px;
+      }
+      .progress-bar {
+        height: 100%;
+        background: var(--purple);
+        border-radius: 100px;
+        width: 0%;
+        transition: width 0.5s ease;
+      }
+      .progress-pct {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--purple);
+        margin-bottom: 20px;
+      }
+
+      .pipeline-steps {
+        display: flex;
+        gap: 6px;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+      .pipe-step {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        padding: 5px 12px;
+        border-radius: 100px;
+        font-size: 12px;
+        font-weight: 500;
+        background: var(--bg-subtle);
+        border: 1px solid var(--border);
+        color: var(--text-muted);
+        transition: all 0.2s;
+      }
+      .pipe-step.active {
+        background: var(--purple-light);
+        border-color: var(--purple);
+        color: var(--purple);
+      }
+      .pipe-step.done {
+        background: #d1fae5;
+        border-color: var(--success);
+        color: var(--success);
+      }
+      .pipe-dot {
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: currentColor;
+      }
+      .pipe-dot.spinning {
+        animation: spin 1s linear infinite;
+      }
+
+      /* Results */
+      .results-panel {
+        display: none;
+      }
+      .results-panel.visible {
+        display: block;
+      }
+
+      .results-header {
+        text-align: center;
+        margin-bottom: 24px;
+      }
+      .results-header h2 {
+        font-size: 22px;
+        font-weight: 700;
+        margin-bottom: 6px;
+        letter-spacing: -0.3px;
+      }
+      .results-header p {
+        font-size: 14px;
+        color: var(--text-muted);
+      }
+
+      .pdf-cards {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+        margin-bottom: 16px;
+      }
+      .pdf-card {
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 16px 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        transition: border-color 0.15s;
+      }
+      .pdf-card:hover {
+        border-color: #c7c4f8;
+      }
+      .pdf-card-left {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+      .pdf-icon-sm {
+        font-size: 22px;
+        flex-shrink: 0;
+      }
+      .pdf-title {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text);
+      }
+      .pdf-desc {
+        font-size: 12px;
+        color: var(--text-muted);
+        margin-top: 2px;
+        line-height: 1.4;
+      }
+      .download-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        background: var(--purple);
+        color: white;
+        padding: 8px 16px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        text-decoration: none;
+        white-space: nowrap;
+        transition: background 0.15s;
+        flex-shrink: 0;
+      }
+      .download-btn:hover {
+        background: var(--purple-dark);
+      }
+
+      .try-again-btn {
+        display: block;
+        width: 100%;
+        padding: 12px;
+        background: var(--bg);
+        color: var(--text-muted);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        font-size: 14px;
+        font-weight: 500;
+        font-family: "Inter", sans-serif;
+        cursor: pointer;
+        transition: all 0.15s;
+      }
+      .try-again-btn:hover {
+        border-color: var(--purple);
+        color: var(--purple);
+      }
+
+      /* Footer */
+      .footer {
+        text-align: center;
+        padding: 40px 0 0;
+        color: var(--text-subtle);
+        font-size: 12px;
+      }
+
+      @media (max-width: 600px) {
+        .page {
+          padding: 32px 16px 60px;
+        }
+        .hero h1 {
+          font-size: 24px;
+        }
+        .pdf-card {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+        .download-btn {
+          width: 100%;
+          justify-content: center;
+        }
+        .form-card {
+          padding: 20px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- AUTH PANEL -->
+    <div class="auth-panel" id="authPanel">
+      <div class="auth-box">
+        <div class="auth-brand">
+          <div class="auth-brand-icon">9L</div>
+          <span class="auth-brand-name">Nine Lab</span>
+        </div>
+
+        <!-- Login form -->
+        <div id="loginForm">
+          <div class="auth-title">Welcome back</div>
+          <div class="auth-subtitle">
+            Log in to continue your placement prep.
+          </div>
+          <div class="auth-card">
+            <div class="auth-error" id="loginError"></div>
+            <div class="auth-success" id="loginSuccess"></div>
+            <form onsubmit="handleLogin(); return false;" autocomplete="on">
+              <div class="auth-field">
+                <label>Email</label>
+                <input
+                  type="email"
+                  id="loginEmail"
+                  placeholder="you@email.com"
+                  autocomplete="email"
+                />
+              </div>
+              <div class="auth-field">
+                <label>Password</label>
+                <input
+                  type="password"
+                  id="loginPassword"
+                  placeholder="Your password"
+                  autocomplete="current-password"
+                />
+              </div>
+              <button class="auth-btn" id="loginBtn" type="submit">
+                Log In →
+              </button>
+            </form>
+          </div>
+          <div class="auth-toggle">
+            Don't have an account? <a onclick="showRegister()">Sign up free</a>
+          </div>
+        </div>
+
+        <!-- Register form -->
+        <div id="registerForm" style="display: none">
+          <div class="auth-title">Create your account</div>
+          <div class="auth-subtitle">Free forever. No credit card needed.</div>
+          <div class="auth-card">
+            <div class="auth-error" id="registerError"></div>
+            <div class="auth-success" id="registerSuccess"></div>
+            <form onsubmit="handleRegister(); return false;" autocomplete="on">
+              <div class="auth-field">
+                <label>Full Name</label>
+                <input
+                  type="text"
+                  id="registerName"
+                  placeholder="Your name"
+                  autocomplete="name"
+                />
+              </div>
+              <div class="auth-field">
+                <label>Email</label>
+                <input
+                  type="email"
+                  id="registerEmail"
+                  placeholder="you@email.com"
+                  autocomplete="email"
+                />
+              </div>
+              <div class="auth-field">
+                <label
+                  >Password
+                  <span style="font-weight: 400; color: var(--text-subtle)"
+                    >(min 6 characters)</span
+                  ></label
+                >
+                <input
+                  type="password"
+                  id="registerPassword"
+                  placeholder="Create a password"
+                  autocomplete="new-password"
+                />
+              </div>
+              <button class="auth-btn" id="registerBtn" type="submit">
+                Create Account →
+              </button>
+            </form>
+          </div>
+          <div class="auth-toggle">
+            Already have an account? <a onclick="showLogin()">Log in</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MAIN APP -->
+    <div class="page" id="mainApp" style="display: none">
+      <div class="brand">
+        <div class="brand-icon">9L</div>
+        <div>
+          <span class="brand-name">Nine Lab</span>
+          <span class="brand-tag">· Placement prep, simplified</span>
+        </div>
+      </div>
+
+      <!-- User bar -->
+      <div class="user-bar" id="userBar">
+        <div class="user-bar-info">
+          Signed in as <strong id="userEmail"></strong>
+        </div>
+        <button class="logout-btn" onclick="handleLogout()">Log out</button>
+      </div>
+
+      <div class="hero">
+        <h1>Your placement kit,<br /><span>ready in minutes.</span></h1>
+        <p>
+          Paste your resume and job description. Our AI generates a personalized
+          Reality Report, Prep Plan, and revised resume — all as downloadable
+          PDFs.
+        </p>
+      </div>
+
+      <div class="setup-banner" id="setupBanner">
+        <p>
+          <strong>Setup required:</strong> GEMINI_API_KEY and/or TAVILY_API_KEY
+          are not configured as environment variables.
+        </p>
+      </div>
+
+      <div class="form-card" id="formCard">
+        <div class="form-group">
+          <label class="form-label">Resume</label>
+          <input
+            type="file"
+            id="resumePdfInput"
+            accept=".pdf"
+            style="display: none"
+            onchange="handlePdfFile(this.files[0])"
+          />
+          <div
+            class="upload-zone"
+            id="uploadZone"
+            onclick="document.getElementById('resumePdfInput').click()"
+            ondragover="handleDragOver(event)"
+            ondragleave="handleDragLeave(event)"
+            ondrop="handleDrop(event)"
+          >
+            <div id="uploadDefault">
+              <div class="upload-main">Upload PDF</div>
+              <div class="upload-sub">
+                Drag & drop or
+                <b
+                  onclick="event.stopPropagation(); document.getElementById('resumePdfInput').click()"
+                  >browse</b
+                >
+              </div>
+            </div>
+            <div id="uploadLoading" style="display: none">
+              <span class="upload-spinner"></span>
+              <span
+                style="font-size: 13px; color: var(--purple); font-weight: 500"
+                >Reading PDF...</span
+              >
+            </div>
+            <div id="uploadSuccess" style="display: none">
+              <div class="upload-success-msg">
+                <span>✓</span>
+                <span id="uploadSuccessText">Extracted</span>
+                <span
+                  class="clear-upload"
+                  onclick="event.stopPropagation(); clearUpload()"
+                  >Remove</span
+                >
+              </div>
+            </div>
+            <div id="uploadError" style="display: none">
+              <div class="upload-error-msg" id="uploadErrorText">
+                Could not read PDF
+              </div>
+              <span
+                style="
+                  font-size: 11px;
+                  color: var(--text-muted);
+                  cursor: pointer;
+                  display: block;
+                  margin-top: 4px;
+                "
+                onclick="event.stopPropagation(); document.getElementById('resumePdfInput').click()"
+                >Try another file</span
+              >
+            </div>
+          </div>
+          <div class="or-divider">or paste below</div>
+
+          <div class="linkedin-import-box">
+            <div class="linkedin-import-header">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="#0A66C2"
+                style="flex-shrink: 0"
+              >
+                <path
+                  d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"
+                />
+              </svg>
+              <span>Import from LinkedIn</span>
+            </div>
+            <div class="linkedin-import-row">
+              <input
+                type="url"
+                id="linkedinUrl"
+                placeholder="https://linkedin.com/in/your-profile"
+                autocomplete="off"
+              />
+              <button
+                class="linkedin-import-btn"
+                id="linkedinImportBtn"
+                onclick="importLinkedIn()"
+              >
+                Import
+              </button>
+            </div>
+            <div
+              id="linkedinStatus"
+              class="linkedin-status"
+              style="display: none"
+            ></div>
+          </div>
+
+          <textarea
+            id="resumeInput"
+            rows="8"
+            placeholder="Paste your resume text here..."
+          ></textarea>
+          <div class="word-count" id="resumeCount">0 words</div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Job Description</label>
+          <textarea
+            id="jdInput"
+            rows="6"
+            placeholder="Paste the job description here..."
+          ></textarea>
+          <div class="word-count" id="jdCount">0 words</div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Company Name</label>
+          <input
+            type="text"
+            id="companyInput"
+            placeholder="e.g. Google, Infosys, Zomato..."
+            maxlength="100"
+          />
+        </div>
+
+        <div class="error-box" id="errorBox"></div>
+
+        <button class="submit-btn" id="submitBtn" onclick="handleSubmit()">
+          <span id="submitBtnText">Generate My Kit →</span>
+        </button>
+      </div>
+
+      <div class="progress-panel" id="progressPanel">
+        <div class="progress-emoji" id="progressEmoji">🤖</div>
+        <div class="progress-title">Generating your kit</div>
+        <div class="progress-msg" id="progressMsg">Starting up...</div>
+        <div class="progress-bar-wrap">
+          <div class="progress-bar" id="progressBar"></div>
+        </div>
+        <div class="progress-pct" id="progressPct">0%</div>
+        <div class="pipeline-steps">
+          <div class="pipe-step" id="step-research">
+            <div class="pipe-dot"></div>
+            Research
+          </div>
+          <div class="pipe-step" id="step-analysis">
+            <div class="pipe-dot"></div>
+            Analysis
+          </div>
+          <div class="pipe-step" id="step-plan">
+            <div class="pipe-dot"></div>
+            Prep Plan
+          </div>
+          <div class="pipe-step" id="step-pdf">
+            <div class="pipe-dot"></div>
+            PDFs
+          </div>
+        </div>
+      </div>
+
+      <div class="results-panel" id="resultsPanel">
+        <div class="results-header">
+          <h2>Your kit is ready</h2>
+          <p>Download your 4 personalized PDFs below</p>
+        </div>
+        <div class="pdf-cards">
+          <div class="pdf-card">
+            <div class="pdf-card-left">
+              <span class="pdf-icon-sm">📊</span>
+              <div>
+                <div class="pdf-title">Reality Report</div>
+                <div class="pdf-desc">
+                  Match score, gap analysis, and honest skill assessment
+                </div>
+              </div>
+            </div>
+            <a href="#" class="download-btn" id="downloadReality">↓ Download</a>
+          </div>
+          <div class="pdf-card">
+            <div class="pdf-card-left">
+              <span class="pdf-icon-sm">📅</span>
+              <div>
+                <div class="pdf-title">Prep Plan</div>
+                <div class="pdf-desc">
+                  Structured schedule, mock questions, and resources
+                </div>
+              </div>
+            </div>
+            <a href="#" class="download-btn" id="downloadPlan">↓ Download</a>
+          </div>
+          <div class="pdf-card">
+            <div class="pdf-card-left">
+              <span class="pdf-icon-sm">✨</span>
+              <div>
+                <div class="pdf-title">Revised Resume</div>
+                <div class="pdf-desc">
+                  ATS-optimized and tailored to this job description
+                </div>
+              </div>
+            </div>
+            <a href="#" class="download-btn" id="downloadResume">↓ Download</a>
+          </div>
+          <div class="pdf-card">
+            <div class="pdf-card-left">
+              <span class="pdf-icon-sm">🏢</span>
+              <div>
+                <div class="pdf-title">Company Report</div>
+                <div class="pdf-desc">
+                  Interview process, culture, salary, and insider tips
+                </div>
+              </div>
+            </div>
+            <a href="#" class="download-btn" id="downloadCompany">↓ Download</a>
+          </div>
+        </div>
+        <button class="try-again-btn" onclick="resetApp()">Start over</button>
+      </div>
+
+      <footer class="footer">Nine Lab · Built for Indian students</footer>
+    </div>
+    <script>
+      const BASE = "/ninelab";
+      let currentJobId = null;
+      let pollInterval = null;
+
+      // ── Auth State ───────────────────────────────────────────────────────────
+      let authToken = null;
+      let authUser = null;
+
+      function saveSession(token, refreshToken, user) {
+        authToken = token;
+        authUser = user;
+        localStorage.setItem("nl_token", token);
+        localStorage.setItem("nl_refresh", refreshToken || "");
+        localStorage.setItem("nl_user", JSON.stringify(user));
+      }
+
+      function clearSession() {
+        authToken = null;
+        authUser = null;
+        localStorage.removeItem("nl_token");
+        localStorage.removeItem("nl_refresh");
+        localStorage.removeItem("nl_user");
+      }
+
+      function showAuthPanel() {
+        document.getElementById("authPanel").style.display = "flex";
+        document.getElementById("mainApp").style.display = "none";
+      }
+
+      function showMainApp() {
+        document.getElementById("authPanel").style.display = "none";
+        document.getElementById("mainApp").style.display = "block";
+        document.getElementById("userBar").classList.add("visible");
+        document.getElementById("userEmail").textContent =
+          authUser?.email || "";
+      }
+
+      function showLogin() {
+        document.getElementById("loginForm").style.display = "block";
+        document.getElementById("registerForm").style.display = "none";
+        clearAuthMessages();
+      }
+
+      function showRegister() {
+        document.getElementById("loginForm").style.display = "none";
+        document.getElementById("registerForm").style.display = "block";
+        clearAuthMessages();
+      }
+
+      function clearAuthMessages() {
+        [
+          "loginError",
+          "loginSuccess",
+          "registerError",
+          "registerSuccess",
+        ].forEach((id) => {
+          const el = document.getElementById(id);
+          el.textContent = "";
+          el.classList.remove("visible");
+        });
+      }
+
+      function setAuthError(id, msg) {
+        const el = document.getElementById(id);
+        el.textContent = msg;
+        el.classList.add("visible");
+        document
+          .getElementById(id.replace("Error", "Success"))
+          .classList.remove("visible");
+      }
+
+      function setAuthSuccess(id, msg) {
+        const el = document.getElementById(id);
+        el.textContent = msg;
+        el.classList.add("visible");
+        document
+          .getElementById(id.replace("Success", "Error"))
+          .classList.remove("visible");
+      }
+
+      async function handleLogin() {
+        const email = document.getElementById("loginEmail").value.trim();
+        const password = document.getElementById("loginPassword").value;
+        clearAuthMessages();
+        if (!email) {
+          setAuthError("loginError", "Please enter your email.");
+          return;
+        }
+        if (!password) {
+          setAuthError("loginError", "Please enter your password.");
+          return;
+        }
+
+        const btn = document.getElementById("loginBtn");
+        btn.disabled = true;
+        btn.textContent = "Logging in...";
+
+        try {
+          const resp = await fetch(`${BASE}/auth/login`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password }),
+          });
+          const data = await resp.json();
+          if (!resp.ok) {
+            setAuthError(
+              "loginError",
+              data.detail || "Login failed. Please try again.",
+            );
+            return;
+          }
+          saveSession(data.access_token, data.refresh_token, data.user);
+          showMainApp();
+        } catch (e) {
+          setAuthError("loginError", "Network error. Please try again.");
+        } finally {
+          btn.disabled = false;
+          btn.textContent = "Log In →";
+        }
+      }
+
+      async function handleRegister() {
+        const name = document.getElementById("registerName").value.trim();
+        const email = document.getElementById("registerEmail").value.trim();
+        const password = document.getElementById("registerPassword").value;
+        clearAuthMessages();
+        if (!name) {
+          setAuthError("registerError", "Please enter your full name.");
+          return;
+        }
+        if (!email) {
+          setAuthError("registerError", "Please enter your email.");
+          return;
+        }
+        if (password.length < 6) {
+          setAuthError(
+            "registerError",
+            "Password must be at least 6 characters.",
+          );
+          return;
+        }
+
+        const btn = document.getElementById("registerBtn");
+        btn.disabled = true;
+        btn.textContent = "Creating account...";
+
+        try {
+          const resp = await fetch(`${BASE}/auth/register`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password, full_name: name }),
+          });
+          const data = await resp.json();
+          if (!resp.ok) {
+            setAuthError(
+              "registerError",
+              data.detail || "Registration failed. Please try again.",
+            );
+            return;
+          }
+          if (data.access_token) {
+            saveSession(data.access_token, data.refresh_token, data.user);
+            showMainApp();
+          } else {
+            setAuthSuccess(
+              "registerSuccess",
+              data.message ||
+                "Account created! Please check your email to confirm, then log in.",
+            );
+            setTimeout(showLogin, 3000);
+          }
+        } catch (e) {
+          setAuthError("registerError", "Network error. Please try again.");
+        } finally {
+          btn.disabled = false;
+          btn.textContent = "Create Account →";
+        }
+      }
+
+      async function handleLogout() {
+        if (authToken) {
+          fetch(`${BASE}/auth/logout`, {
+            method: "POST",
+            headers: { Authorization: `Bearer ${authToken}` },
+          }).catch(() => {});
+        }
+        clearSession();
+        showAuthPanel();
+        showLogin();
+      }
+
+      async function tryRefreshToken() {
+        const refreshToken = localStorage.getItem("nl_refresh");
+        if (!refreshToken) return false;
+        try {
+          const resp = await fetch(`${BASE}/auth/refresh`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ refresh_token: refreshToken }),
+          });
+          if (!resp.ok) return false;
+          const data = await resp.json();
+          saveSession(data.access_token, data.refresh_token, data.user);
+          return true;
+        } catch (e) {
+          return false;
+        }
+      }
+
+      async function initAuth() {
+        const storedToken = localStorage.getItem("nl_token");
+        const storedUser = localStorage.getItem("nl_user");
+        if (!storedToken) {
+          showAuthPanel();
+          return;
+        }
+
+        try {
+          const resp = await fetch(`${BASE}/auth/me`, {
+            headers: { Authorization: `Bearer ${storedToken}` },
+          });
+          if (resp.ok) {
+            const user = await resp.json();
+            authToken = storedToken;
+            authUser = user;
+            showMainApp();
+            checkHealth();
+          } else {
+            const refreshed = await tryRefreshToken();
+            if (refreshed) {
+              showMainApp();
+              checkHealth();
+            } else {
+              clearSession();
+              showAuthPanel();
+            }
+          }
+        } catch (e) {
+          const storedUserData = storedUser ? JSON.parse(storedUser) : null;
+          if (storedToken && storedUserData) {
+            authToken = storedToken;
+            authUser = storedUserData;
+            showMainApp();
+            checkHealth();
+          } else {
+            showAuthPanel();
+          }
+        }
+      }
+
+      // Keyboard shortcuts for auth forms
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          if (document.getElementById("authPanel").style.display !== "none") {
+            const loginVisible =
+              document.getElementById("loginForm").style.display !== "none";
+            if (loginVisible) handleLogin();
+            else handleRegister();
+          }
+        }
+      });
+
+      function wordCount(text) {
+        return text
+          .trim()
+          .split(/\s+/)
+          .filter((w) => w.length > 0).length;
+      }
+
+      function updateWordCount(inputId, countId, min) {
+        const input = document.getElementById(inputId);
+        const counter = document.getElementById(countId);
+        const count = wordCount(input.value);
+        counter.textContent = `${count} words`;
+        counter.className =
+          "word-count " + (count >= min ? "ok" : count > 0 ? "warn" : "");
+      }
+
+      document
+        .getElementById("resumeInput")
+        .addEventListener("input", () =>
+          updateWordCount("resumeInput", "resumeCount", 0),
+        );
+      document
+        .getElementById("jdInput")
+        .addEventListener("input", () =>
+          updateWordCount("jdInput", "jdCount", 0),
+        );
+
+      async function checkHealth() {
+        try {
+          const r = await fetch(`${BASE}/health`);
+          const data = await r.json();
+          if (!data.keys.gemini || !data.keys.tavily) {
+            document.getElementById("setupBanner").classList.add("visible");
+          }
+        } catch (e) {}
+      }
+      const stageMap = {
+        queued: [],
+        research: ["step-research"],
+        analysis: ["step-research", "step-analysis", "step-plan"],
+        pdf: ["step-research", "step-analysis", "step-plan", "step-pdf"],
+        done: ["step-research", "step-analysis", "step-plan", "step-pdf"],
+        error: [],
+      };
+
+      function updatePipelineSteps(stage, progress) {
+        const allSteps = [
+          "step-research",
+          "step-analysis",
+          "step-plan",
+          "step-pdf",
+        ];
+        const activeSteps = stageMap[stage] || [];
+        allSteps.forEach((s) => {
+          const el = document.getElementById(s);
+          el.className = "pipe-step";
+          el.querySelector(".pipe-dot").className = "pipe-dot";
+        });
+        if (stage === "done") {
+          activeSteps.forEach((s) =>
+            document.getElementById(s).classList.add("done"),
+          );
+          return;
+        }
+        for (let i = 0; i < activeSteps.length; i++) {
+          const el = document.getElementById(activeSteps[i]);
+          if (i < activeSteps.length - 1) {
+            el.classList.add("done");
+          } else {
+            el.classList.add("active");
+            el.querySelector(".pipe-dot").classList.add("spinning");
+          }
+        }
+      }
+
+      const stageEmojis = {
+        queued: "⏳",
+        research: "🔍",
+        analysis: "🧠",
+        pdf: "📄",
+        done: "🎉",
+        error: "❌",
+      };
+
+      async function handleSubmit() {
+        const resume = document.getElementById("resumeInput").value.trim();
+        const jd = document.getElementById("jdInput").value.trim();
+        const company = document.getElementById("companyInput").value.trim();
+        document.getElementById("errorBox").classList.remove("visible");
+        const btn = document.getElementById("submitBtn");
+
+        if (!resume) {
+          showError("Please enter your resume.");
+          return;
+        }
+        if (!jd) {
+          showError("Please paste the job description.");
+          return;
+        }
+        if (company.length < 2) {
+          showError("Please enter the company name.");
+          return;
+        }
+
+        btn.disabled = true;
+        document.getElementById("submitBtnText").textContent = "Generating...";
+
+        try {
+          const headers = { "Content-Type": "application/json" };
+          if (authToken) headers["Authorization"] = `Bearer ${authToken}`;
+          const resp = await fetch(`${BASE}/generate`, {
+            method: "POST",
+            headers,
+            body: JSON.stringify({ resume, jd, company }),
+          });
+          const data = await resp.json();
+          if (!resp.ok) {
+            let errMsg =
+              data.detail || "Something went wrong. Please try again.";
+            if (resp.status === 429)
+              errMsg =
+                data.detail ||
+                "Daily limit reached. Please log in for unlimited access.";
+            showError(errMsg);
+            btn.disabled = false;
+            document.getElementById("submitBtnText").textContent =
+              "Generate My Kit →";
+            return;
+          }
+          currentJobId = data.job_id;
+          startPolling(company);
+        } catch (e) {
+          showError("Network error. Please refresh and try again.");
+          btn.disabled = false;
+          document.getElementById("submitBtnText").textContent =
+            "Generate My Kit →";
+        }
+      }
+
+      function startPolling(company) {
+        document.getElementById("formCard").style.display = "none";
+        document.getElementById("progressPanel").classList.add("visible");
+        pollInterval = setInterval(async () => {
+          try {
+            const resp = await fetch(`${BASE}/status/${currentJobId}`);
+            const data = await resp.json();
+            if (!resp.ok) {
+              clearInterval(pollInterval);
+              showProgressError("Job not found. Please try again.");
+              return;
+            }
+            const pct = data.progress || 0;
+            document.getElementById("progressBar").style.width = pct + "%";
+            document.getElementById("progressPct").textContent = pct + "%";
+            document.getElementById("progressMsg").textContent =
+              data.message || "";
+            document.getElementById("progressEmoji").textContent =
+              stageEmojis[data.stage] || "🤖";
+            updatePipelineSteps(data.stage, pct);
+            if (data.stage === "done") {
+              clearInterval(pollInterval);
+              showResults(data.files, company);
+            } else if (data.stage === "error") {
+              clearInterval(pollInterval);
+              showProgressError(data.message || "Something went wrong");
+            }
+          } catch (e) {}
+        }, 1500);
+      }
+
+      function showResults(files, company) {
+        document.getElementById("progressPanel").classList.remove("visible");
+        document.getElementById("resultsPanel").classList.add("visible");
+        document.getElementById("downloadReality").href =
+          `${BASE}/pdf/${files.reality}`;
+        document.getElementById("downloadPlan").href =
+          `${BASE}/pdf/${files.plan}`;
+        document.getElementById("downloadResume").href =
+          `${BASE}/pdf/${files.resume}`;
+        document.getElementById("downloadCompany").href =
+          `${BASE}/pdf/${files.company}`;
+        ["downloadReality", "downloadPlan", "downloadResume", "downloadCompany"].forEach((id) =>
+          document.getElementById(id).setAttribute("download", ""),
+        );
+        document.getElementById("submitBtn").disabled = false;
+        document.getElementById("submitBtnText").textContent =
+          "Generate My Kit →";
+      }
+
+      function showProgressError(msg) {
+        document.getElementById("progressPanel").classList.remove("visible");
+        document.getElementById("formCard").style.display = "block";
+        showError(msg);
+        document.getElementById("submitBtn").disabled = false;
+        document.getElementById("submitBtnText").textContent =
+          "Generate My Kit →";
+      }
+
+      function showError(msg) {
+        const box = document.getElementById("errorBox");
+        box.textContent = msg;
+        box.classList.add("visible");
+        box.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }
+
+      async function importLinkedIn() {
+        const url = document.getElementById("linkedinUrl").value.trim();
+        const statusEl = document.getElementById("linkedinStatus");
+        const btn = document.getElementById("linkedinImportBtn");
+        if (!url || !url.includes("linkedin.com/in/")) {
+          statusEl.textContent = "Please enter a valid LinkedIn profile URL.";
+          statusEl.style.display = "block";
+          statusEl.style.color = "#EF4444";
+          return;
+        }
+        btn.disabled = true;
+        btn.textContent = "Importing...";
+        statusEl.textContent = "Extracting profile data...";
+        statusEl.style.display = "block";
+        statusEl.style.color = "#6C63FF";
+        try {
+          const headers = { "Content-Type": "application/json" };
+          if (authToken) headers["Authorization"] = `Bearer ${authToken}`;
+          const resp = await fetch(`${BASE}/import-linkedin`, {
+            method: "POST",
+            headers,
+            body: JSON.stringify({ url }),
+          });
+          const data = await resp.json();
+          if (resp.ok && data.text) {
+            document.getElementById("resumeInput").value = data.text;
+            statusEl.textContent = "Profile imported successfully!";
+            statusEl.style.color = "#22C55E";
+          } else {
+            statusEl.textContent = data.detail || "Could not extract profile data.";
+            statusEl.style.color = "#EF4444";
+          }
+        } catch (e) {
+          statusEl.textContent = "Network error. Please try again.";
+          statusEl.style.color = "#EF4444";
+        } finally {
+          btn.disabled = false;
+          btn.textContent = "Import";
+        }
+      }
+
+      function resetApp() {
+        clearInterval(pollInterval);
+        currentJobId = null;
+        document.getElementById("formCard").style.display = "block";
+        document.getElementById("progressPanel").classList.remove("visible");
+        document.getElementById("resultsPanel").classList.remove("visible");
+        document.getElementById("errorBox").classList.remove("visible");
+        document.getElementById("progressBar").style.width = "0%";
+        document.getElementById("progressPct").textContent = "0%";
+        document.getElementById("progressMsg").textContent = "Starting up...";
+        document.getElementById("submitBtn").disabled = false;
+        document.getElementById("submitBtnText").textContent =
+          "Generate My Kit →";
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+
+      document.addEventListener("keydown", (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key === "Enter") handleSubmit();
+      });
+
+      function setUploadState(state, msg) {
+        const zone = document.getElementById("uploadZone");
+        zone.className = "upload-zone";
+        [
+          "uploadDefault",
+          "uploadLoading",
+          "uploadSuccess",
+          "uploadError",
+        ].forEach((id) => {
+          document.getElementById(id).style.display = "none";
+        });
+        if (state === "default") {
+          document.getElementById("uploadDefault").style.display = "block";
+        } else if (state === "loading") {
+          zone.classList.add("uploading");
+          document.getElementById("uploadLoading").style.display = "block";
+        } else if (state === "success") {
+          zone.classList.add("success");
+          document.getElementById("uploadSuccessText").textContent =
+            msg || "Extracted";
+          document.getElementById("uploadSuccess").style.display = "block";
+        } else if (state === "error") {
+          zone.classList.add("error-zone");
+          document.getElementById("uploadErrorText").textContent =
+            msg || "Could not read PDF";
+          document.getElementById("uploadError").style.display = "block";
+        }
+      }
+
+      function handleDragOver(e) {
+        e.preventDefault();
+        document.getElementById("uploadZone").classList.add("dragover");
+      }
+      function handleDragLeave(e) {
+        document.getElementById("uploadZone").classList.remove("dragover");
+      }
+      function handleDrop(e) {
+        e.preventDefault();
+        document.getElementById("uploadZone").classList.remove("dragover");
+        const file = e.dataTransfer.files[0];
+        if (file) handlePdfFile(file);
+      }
+
+      function clearUpload() {
+        document.getElementById("resumePdfInput").value = "";
+        document.getElementById("resumeInput").value = "";
+        document.getElementById("resumeCount").textContent = "0 words";
+        document.getElementById("resumeCount").className = "word-count";
+        setUploadState("default");
+      }
+
+      async function handlePdfFile(file) {
+        if (!file) return;
+        if (!file.name.toLowerCase().endsWith(".pdf")) {
+          setUploadState("error", "Only .pdf files are supported.");
+          return;
+        }
+        if (file.size > 10 * 1024 * 1024) {
+          setUploadState("error", "File too large — max 10MB.");
+          return;
+        }
+        setUploadState("loading");
+        const formData = new FormData();
+        formData.append("file", file);
+        try {
+          const resp = await fetch(`${BASE}/extract-resume`, {
+            method: "POST",
+            body: formData,
+          });
+          const data = await resp.json();
+          if (!resp.ok) {
+            setUploadState("error", data.detail || "Could not read PDF.");
+            return;
+          }
+          document.getElementById("resumeInput").value = data.text;
+          updateWordCount("resumeInput", "resumeCount", 0);
+          setUploadState(
+            "success",
+            `${data.pages} page${data.pages !== 1 ? "s" : ""} · ${data.words} words`,
+          );
+        } catch (e) {
+          setUploadState("error", "Network error. Please try again.");
+        }
+      }
+
+      setUploadState("default");
+      initAuth();
+    </script>
+  </body>
+</html>
