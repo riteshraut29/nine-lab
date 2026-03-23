@@ -435,82 +435,100 @@ Build a plan that meets this candidate exactly where they are. Make every task s
 def agent_resume(resume: str, jd: str, company: str, company_research: str = "",
                  gap_summary: str = "") -> dict:
     """FORGE — elite resume architect for ATS and human readers."""
-    FORGE_SYSTEM = """You are FORGE — an elite resume architect who has crafted resumes that landed candidates at Google, Microsoft, Goldman Sachs, Zomato, Flipkart, and 200+ top Indian companies. You are an expert in ATS optimization and understand exactly how both machines and humans read resumes in 2025.
+    FORGE_SYSTEM = """You are FORGE — an elite resume architect. You write resumes that pass ATS scanners AND impress recruiters in 6 seconds.
 
-Your standard: Every resume you write passes ATS AND impresses a senior recruiter in 6 seconds.
-
-THINKING PROCESS (follow this exactly):
-Step 1: Extract the TOP 10 keywords from the JD — exact phrases not synonyms
-Step 2: Identify what THIS company values most from the research
-Step 3: Find every achievement in the resume and quantify them
-Step 4: Map candidate projects to what this company cares about
-Step 5: Write Professional Summary last — after you know what to highlight
-
-ATS 2025 HARD RULES:
-- Single column ONLY — two columns break ATS parsers
-- No tables, no text boxes, no graphics, no icons
-- Section headers: exact standard names in CAPS
-- Keywords must appear EXACTLY as written in JD
-- Job title from JD must appear in Professional Summary
-
-BULLET POINT FORMULA (mandatory for every single bullet):
+BULLET POINT FORMULA (every bullet MUST follow this):
 [Strong Action Verb] + [What you did specifically] + [Result with number]
-GOOD: "Developed a Python-based resume analyzer that processed 500+ applications and reduced screening time by 40%"
-BAD: "Worked on Python project for resume analysis"
+GOOD: "Built Python-based API serving 10,000+ daily requests with 99.9% uptime"
+BAD: "Worked on Python project"
 
-BANNED PHRASES — delete and replace with proof:
-"Quick learner" — show a project built fast instead
-"Team player" — show collaboration with specific outcome instead
-"Hardworking" — show quantified result instead
-"Passionate about" — show project or contribution instead
-"Good communication" — show presentation or documentation achievement instead
-"Detail-oriented" — show debugging or QA work instead
+BANNED PHRASES — never use:
+"Quick learner", "Team player", "Hardworking", "Passionate about", "Good communication", "Detail-oriented", "Responsible for"
 
-PROFESSIONAL SUMMARY FORMULA:
-[Job Title from JD] with [experience level] in [top 2 skills from JD]. [One specific achievement]. Seeking to [contribute specific value] at [Company Name].
+ATS RULES:
+- Single column only
+- No tables, graphics, or icons
+- Keywords from JD must appear EXACTLY as written
+- Job title from JD must appear in Summary
 
-OUTPUT RULES:
-- Clean plain text with section headers in CAPS
-- Bullet points start with a dash
-- ZERO Nine Lab branding anywhere
-- ZERO AI generation mentions
-- Must read like a human senior developer wrote it
-- Zero markdown symbols
+OUTPUT FORMAT — follow this EXACTLY with no deviations:
 
-OUTPUT FORMAT:
-[CANDIDATE FULL NAME]
-[Phone] | [Email] | [LinkedIn] | [GitHub] | [City, State]
+<<NAME>>
+[Candidate's Full Name]
+<</NAME>>
 
-PROFESSIONAL SUMMARY
+<<CONTACT>>
+[City, State] | [email] | [phone] | [LinkedIn URL if available] | [GitHub URL if available]
+<</CONTACT>>
 
-TECHNICAL SKILLS
+<<SUMMARY>>
+[2-3 sentence professional summary. Include job title from JD, top 2 skills, one achievement, and company name.]
+<</SUMMARY>>
 
-WORK EXPERIENCE
+<<TECHNICAL SKILLS>>
+Languages: [list]
+Frameworks & Libraries: [list]
+Databases: [list]
+Tools & Platforms: [list]
+[Add or remove categories as appropriate — only include what candidate actually has]
+<</TECHNICAL SKILLS>>
 
-PROJECTS
+<<WORK EXPERIENCE>>
+[ONLY include if candidate has work experience. Skip entire section if fresher.]
+[Job Title] | [Company Name] | [Duration]
+• [bullet: action verb + what + quantified result]
+• [bullet]
+<</WORK EXPERIENCE>>
 
-EDUCATION
+<<PROJECTS>>
+[Project Name] | [Year]
+Tech: [comma-separated tech stack]
+• [bullet: action verb + what + quantified result]
+• [bullet]
+• [bullet]
 
-ACHIEVEMENTS"""
+[Repeat for each project — include ALL projects from original resume]
+<</PROJECTS>>
 
-    user_prompt = f"""Rewrite this resume to be ATS-optimized and tailored for this specific role and company.
+<<EDUCATION>>
+[University/College Name] | [City, State]
+[Degree], [Field of Study] | [Start Year] – [End Year] | CGPA: [X.XX] or Percentage: XX%
 
-ORIGINAL RESUME: {resume[:3000]}
-JOB DESCRIPTION: {jd[:2000]}
+[If polytechnic/diploma, add it as second entry in same format]
+<</EDUCATION>>
+
+<<ACHIEVEMENTS>>
+• [Award/Achievement — include competition name, organizer, date, and what project won]
+[Only include if candidate has achievements. Skip if none.]
+<</ACHIEVEMENTS>>
+
+RULES:
+- Use ONLY information from the original resume — do NOT invent facts, numbers, or experiences
+- You MAY rephrase bullet points to be stronger and more quantified IF the data supports it
+- ZERO Nine Lab or AI mentions anywhere
+- Output must look like a human expert wrote it"""
+
+    user_prompt = f"""Rewrite this resume for maximum ATS score and recruiter impact for this specific role.
+
+ORIGINAL RESUME:
+{resume[:3000]}
+
+JOB DESCRIPTION:
+{jd[:2000]}
+
 COMPANY: {company}
-WHAT THIS COMPANY VALUES: {company_research[:800]}
-CANDIDATE GAP AREAS: {gap_summary}
+COMPANY VALUES: {company_research[:600]}
+GAPS TO ADDRESS: {gap_summary}
 
-Think step by step:
-1. First extract all keywords from the JD
-2. Then identify all achievements to quantify
-3. Then write each section
-4. Finally write the Professional Summary
-
-Make this resume feel like it was written by someone who knows exactly what {company} is looking for — because it was."""
+Instructions:
+1. Extract top keywords from JD — use them EXACTLY in the resume
+2. Quantify every achievement possible using numbers from original resume
+3. Tailor the Summary specifically for {company} and this role
+4. Follow the OUTPUT FORMAT exactly — use the << >> tags as shown
+5. Do NOT add any experience, skills, or achievements not in the original resume"""
 
     try:
-        text = gemini_call(user_prompt, retries=2, temperature=0.1, system_prompt=FORGE_SYSTEM)
+        text = gemini_call(user_prompt, retries=2, temperature=0.05, system_prompt=FORGE_SYSTEM)
         return {"success": True, "data": text}
     except Exception as e:
         return {"success": False, "data": f"Resume revision unavailable ({str(e)[:60]}). Original resume content preserved."}
@@ -989,72 +1007,233 @@ def make_pdf_plan(job_id: str, company: str, plan: dict) -> str:
     return filename
 
 
+def _parse_resume_sections(raw: str) -> dict:
+    """Parse FORGE output (with <<SECTION>> tags) into a structured dict."""
+    sections = {}
+    tag_pattern = re.compile(r'<<(\w[\w\s]*)>>(.*?)<</\1>>', re.DOTALL | re.IGNORECASE)
+    for m in tag_pattern.finditer(raw):
+        key = m.group(1).strip().upper()
+        val = m.group(2).strip()
+        sections[key] = val
+
+    # Fallback: if no tags found, try plain-text parsing
+    if not sections:
+        lines = strip_md(raw).split('\n')
+        SECTION_NAMES = ["SUMMARY", "PROFESSIONAL SUMMARY", "TECHNICAL SKILLS", "SKILLS",
+                         "WORK EXPERIENCE", "EXPERIENCE", "PROJECTS", "EDUCATION",
+                         "ACHIEVEMENTS", "AWARDS", "LEADERSHIP", "CERTIFICATIONS"]
+        current_key = None
+        current_lines = []
+        name_done = False
+        contact_done = False
+        for line in lines:
+            ls = line.strip()
+            if not ls:
+                if current_key:
+                    current_lines.append("")
+                continue
+            upper = ls.upper()
+            matched_section = next((s for s in SECTION_NAMES if upper.startswith(s)), None)
+            if matched_section:
+                if current_key and current_lines:
+                    sections[current_key] = '\n'.join(current_lines).strip()
+                current_key = matched_section
+                current_lines = []
+            elif not name_done and not contact_done and not current_key:
+                sections["NAME"] = ls
+                name_done = True
+            elif name_done and not contact_done and not current_key:
+                sections["CONTACT"] = ls
+                contact_done = True
+            elif current_key:
+                current_lines.append(ls)
+        if current_key and current_lines:
+            sections[current_key] = '\n'.join(current_lines).strip()
+    return sections
+
+
 def make_pdf_resume(job_id: str, company: str, resume_data: dict) -> str:
-    _, st = _pdf_styles()
+    """Generate a clean, professional resume PDF matching reference format."""
     filename = f"{job_id}_resume.pdf"
     filepath = PDF_DIR / filename
-    doc = SimpleDocTemplate(str(filepath), pagesize=A4, leftMargin=72, rightMargin=72, topMargin=60, bottomMargin=40)
+
+    # ── Styles ────────────────────────────────────────────────────────────────
+    BLACK       = HexColor("#111111")
+    DARK_GREY   = HexColor("#333333")
+    MED_GREY    = HexColor("#555555")
+    LIGHT_GREY  = HexColor("#888888")
+    RULE_GREY   = HexColor("#CCCCCC")
+    ACCENT      = HexColor("#1a1a2e")   # dark navy for section headers
+
+    name_st = ParagraphStyle("RN", fontName="Helvetica-Bold", fontSize=22,
+                              textColor=BLACK, spaceAfter=2, leading=26, alignment=0)
+    contact_st = ParagraphStyle("RC", fontName="Helvetica", fontSize=9,
+                                 textColor=MED_GREY, spaceAfter=0, leading=13, alignment=0)
+    sec_st = ParagraphStyle("RS", fontName="Helvetica-Bold", fontSize=10.5,
+                              textColor=ACCENT, spaceBefore=10, spaceAfter=2, leading=14,
+                              textTransform='uppercase')
+    entry_title_st = ParagraphStyle("RET", fontName="Helvetica-Bold", fontSize=10.5,
+                                     textColor=BLACK, spaceAfter=1, leading=14)
+    entry_meta_st = ParagraphStyle("REM", fontName="Helvetica-Oblique", fontSize=9.5,
+                                    textColor=LIGHT_GREY, spaceAfter=2, leading=13)
+    body_st = ParagraphStyle("RB", fontName="Helvetica", fontSize=10,
+                              textColor=DARK_GREY, spaceAfter=2, leading=14)
+    bullet_st = ParagraphStyle("RBu", fontName="Helvetica", fontSize=10,
+                                textColor=DARK_GREY, spaceAfter=2, leading=14,
+                                leftIndent=14, firstLineIndent=-8)
+    skill_label_st = ParagraphStyle("RSL", fontName="Helvetica-Bold", fontSize=10,
+                                     textColor=BLACK, spaceAfter=0, leading=14)
+    summary_st = ParagraphStyle("RSu", fontName="Helvetica", fontSize=10,
+                                  textColor=DARK_GREY, spaceAfter=3, leading=15)
+
+    def section_header(label: str) -> list:
+        return [
+            Paragraph(safe_text(label.upper()), sec_st),
+            HRFlowable(width="100%", thickness=0.8, color=RULE_GREY, spaceAfter=4),
+        ]
+
+    def bullet_line(text: str) -> Paragraph:
+        clean = re.sub(r'^[\u2022\-\*]\s*', '', text.strip())
+        return Paragraph(f"\u2022\u00a0{safe_text(clean)}", bullet_st)
+
+    # ── Parse content ─────────────────────────────────────────────────────────
+    raw = resume_data.get("data", "")
+    sec = _parse_resume_sections(raw)
 
     story = []
-    content = strip_md(resume_data.get("data", ""))
-    lines = content.split('\n')
+    doc = SimpleDocTemplate(
+        str(filepath), pagesize=A4,
+        leftMargin=50, rightMargin=50, topMargin=50, bottomMargin=40
+    )
 
-    name_style = ParagraphStyle("RName", fontName="Helvetica-Bold", fontSize=20, textColor=PDF_DARK, spaceAfter=2, leading=24)
-    jobtitle_style = ParagraphStyle("RJob", fontName="Helvetica", fontSize=12, textColor=PDF_PURPLE, spaceAfter=2, leading=15)
-    contact_style = ParagraphStyle("RContact", fontName="Helvetica", fontSize=9, textColor=PDF_MUTED, spaceAfter=6, leading=12)
-    section_style = ParagraphStyle("RSec", fontName="Helvetica-Bold", fontSize=12, textColor=PDF_PURPLE, spaceAfter=3, spaceBefore=8, leading=15)
-    rbody_style = ParagraphStyle("RBody", fontName="Helvetica", fontSize=10.5, textColor=PDF_DARK, spaceAfter=3, leading=14)
-    rbullet_style = ParagraphStyle("RBullet", fontName="Helvetica", fontSize=10.5, textColor=PDF_DARK, spaceAfter=2, leading=14, leftIndent=12)
+    # ── HEADER: Name + Contact ────────────────────────────────────────────────
+    name_text = sec.get("NAME", "").strip()
+    contact_text = sec.get("CONTACT", "").strip()
 
-    section_keywords = ["CONTACT", "SUMMARY", "PROFESSIONAL SUMMARY", "SKILLS", "TECHNICAL SKILLS",
-                        "EXPERIENCE", "WORK EXPERIENCE", "PROJECTS", "EDUCATION", "CERTIFICATIONS",
-                        "ACHIEVEMENTS", "AWARDS", "NAME", "JOB TITLE"]
+    if name_text:
+        story.append(Paragraph(safe_text(name_text), name_st))
+    if contact_text:
+        story.append(Paragraph(safe_text(contact_text), contact_st))
+    story.append(HRFlowable(width="100%", thickness=1.5, color=ACCENT, spaceAfter=6, spaceBefore=4))
 
-    name_found = False
-    for line in lines:
-        ls = line.strip()
-        if not ls:
-            story.append(Spacer(1, 3))
-            continue
+    # ── SUMMARY ───────────────────────────────────────────────────────────────
+    summary_key = next((k for k in ["SUMMARY", "PROFESSIONAL SUMMARY"] if k in sec), None)
+    if summary_key:
+        story += section_header("Summary")
+        for line in sec[summary_key].split('\n'):
+            if line.strip():
+                story.append(Paragraph(safe_text(line.strip()), summary_st))
+        story.append(Spacer(1, 2))
 
-        ls_clean = ls
-        for prefix in ["NAME:", "JOB TITLE:", "CONTACT:"]:
-            if ls.upper().startswith(prefix):
-                ls_clean = ls[len(prefix):].strip()
-                break
+    # ── TECHNICAL SKILLS ─────────────────────────────────────────────────────
+    skills_key = next((k for k in ["TECHNICAL SKILLS", "SKILLS"] if k in sec), None)
+    if skills_key:
+        story += section_header("Technical Skills")
+        for line in sec[skills_key].split('\n'):
+            ls = line.strip()
+            if not ls:
+                continue
+            if ':' in ls:
+                label, _, rest = ls.partition(':')
+                p = Paragraph(f"<b>{safe_text(label.strip())}:</b> {safe_text(rest.strip())}", body_st)
+            else:
+                p = Paragraph(safe_text(ls), body_st)
+            story.append(p)
+        story.append(Spacer(1, 2))
 
-        if not name_found and (ls.upper().startswith("NAME:") or (not any(kw in ls.upper() for kw in section_keywords[3:]) and len(ls) < 60 and not ls.startswith(("\u2022", "-", "*")))):
-            story.append(Paragraph(safe_text(ls_clean), name_style))
-            name_found = True
-            continue
+    # ── WORK EXPERIENCE ───────────────────────────────────────────────────────
+    exp_key = next((k for k in ["WORK EXPERIENCE", "EXPERIENCE"] if k in sec), None)
+    if exp_key:
+        story += section_header("Work Experience")
+        lines = sec[exp_key].split('\n')
+        i = 0
+        while i < len(lines):
+            ls = lines[i].strip()
+            if not ls:
+                i += 1
+                continue
+            if ls.startswith(('•', '-', '*')):
+                story.append(bullet_line(ls))
+            elif '|' in ls and not ls.startswith(('•', '-')):
+                # Entry title line: "Job Title | Company | Duration"
+                story.append(Paragraph(safe_text(ls), entry_title_st))
+            else:
+                story.append(Paragraph(safe_text(ls), body_st))
+            i += 1
+        story.append(Spacer(1, 2))
 
-        if ls.upper().startswith("JOB TITLE:"):
-            story.append(Paragraph(safe_text(ls_clean), jobtitle_style))
-            continue
+    # ── PROJECTS ──────────────────────────────────────────────────────────────
+    if "PROJECTS" in sec:
+        story += section_header("Projects")
+        lines = sec["PROJECTS"].split('\n')
+        i = 0
+        while i < len(lines):
+            ls = lines[i].strip()
+            if not ls:
+                story.append(Spacer(1, 4))
+                i += 1
+                continue
+            if ls.startswith(('•', '-', '*')):
+                story.append(bullet_line(ls))
+            elif ls.lower().startswith('tech:') or ls.lower().startswith('tech stack:'):
+                # Tech stack line — italic meta style
+                _, _, tech = ls.partition(':')
+                story.append(Paragraph(safe_text(tech.strip()), entry_meta_st))
+            elif '|' in ls and not ls.startswith(('•', '-')):
+                # Project title: "Project Name | Year" or "Project Name | GitHub | Year"
+                story.append(Paragraph(safe_text(ls), entry_title_st))
+            else:
+                story.append(Paragraph(safe_text(ls), body_st))
+            i += 1
+        story.append(Spacer(1, 2))
 
-        if ls.upper().startswith("CONTACT:") or ("|" in ls and "@" in ls):
-            story.append(Paragraph(safe_text(ls_clean), contact_style))
-            story.append(HRFlowable(width="100%", thickness=1.5, color=PDF_PURPLE, spaceAfter=6))
-            continue
+    # ── EDUCATION ─────────────────────────────────────────────────────────────
+    if "EDUCATION" in sec:
+        story += section_header("Education")
+        lines = sec["EDUCATION"].split('\n')
+        for ls in lines:
+            ls = ls.strip()
+            if not ls:
+                story.append(Spacer(1, 4))
+                continue
+            if '|' in ls and not ls.startswith(('•', '-')):
+                story.append(Paragraph(safe_text(ls), entry_title_st))
+            elif ls.lower().startswith(('cgpa', 'percentage', 'grade')):
+                story.append(Paragraph(safe_text(ls), entry_meta_st))
+            else:
+                story.append(Paragraph(safe_text(ls), body_st))
+        story.append(Spacer(1, 2))
 
-        is_section = any(ls.upper().startswith(kw) for kw in section_keywords[3:])
-        is_bullet = ls.startswith(("\u2022", "-", "*"))
+    # ── ACHIEVEMENTS ──────────────────────────────────────────────────────────
+    ach_key = next((k for k in ["ACHIEVEMENTS", "AWARDS"] if k in sec), None)
+    if ach_key:
+        story += section_header("Achievements")
+        for ls in sec[ach_key].split('\n'):
+            ls = ls.strip()
+            if not ls:
+                continue
+            if ls.startswith(('•', '-', '*')):
+                story.append(bullet_line(ls))
+            else:
+                story.append(bullet_line(ls))
+        story.append(Spacer(1, 2))
 
-        if is_section:
-            clean_label = ls
-            for kw in section_keywords[3:]:
-                if ls.upper().startswith(kw):
-                    clean_label = ls[:len(kw)]
-                    break
-            story.append(Paragraph(safe_text(clean_label), section_style))
-            story.append(HRFlowable(width="100%", thickness=0.5, color=PDF_GREY, spaceAfter=3))
-            remainder = ls[len(clean_label):].strip(': ')
-            if remainder:
-                story.append(Paragraph(safe_text(remainder), rbody_style))
-        elif is_bullet:
-            story.append(Paragraph(safe_text(ls), rbullet_style))
-        else:
-            story.append(Paragraph(safe_text(ls), rbody_style))
+    # ── LEADERSHIP / EXTRA ────────────────────────────────────────────────────
+    lead_key = next((k for k in ["LEADERSHIP", "LEADERSHIP & EXTRACURRICULARS",
+                                   "EXTRACURRICULARS", "CERTIFICATIONS"] if k in sec), None)
+    if lead_key:
+        story += section_header(lead_key.title())
+        for ls in sec[lead_key].split('\n'):
+            ls = ls.strip()
+            if not ls:
+                story.append(Spacer(1, 3))
+                continue
+            if ls.startswith(('•', '-', '*')):
+                story.append(bullet_line(ls))
+            elif '|' in ls:
+                story.append(Paragraph(safe_text(ls), entry_title_st))
+            else:
+                story.append(Paragraph(safe_text(ls), body_st))
 
     doc.build(story, onFirstPage=_no_footer, onLaterPages=_no_footer)
     return filename
