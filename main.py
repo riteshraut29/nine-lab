@@ -1146,6 +1146,10 @@ class GenerateRequest(BaseModel):
     jd: str
     company: str
 
+class ATSScoreRequest(BaseModel):
+    resume: str
+    jd: str
+
 class AuthRequest(BaseModel):
     email: str
     password: str
@@ -1485,6 +1489,196 @@ async def download_pdf(filename: str):
         raise HTTPException(404, detail="PDF not found")
     return FileResponse(str(filepath), media_type="application/pdf",
                         filename=filename, headers={"Content-Disposition": f"attachment; filename={filename}"})
+
+
+@app.post("/ninelab/ats-score")
+async def ats_score(req: ATSScoreRequest):
+    """Calculate ATS compatibility score between resume and job description."""
+    if not req.resume.strip():
+        raise HTTPException(400, detail="Please provide your resume.")
+    if not req.jd.strip():
+        raise HTTPException(400, detail="Please provide the job description.")
+
+    resume_text = req.resume.lower()
+    jd_text = req.jd.lower()
+
+    # ── 1. Extract keywords from JD ──────────────────────────────────────────
+
+    # Technical skills library
+    TECH_SKILLS = [
+        # Languages
+        "python","java","javascript","typescript","c++","c#","go","rust","kotlin","swift",
+        "php","ruby","scala","r","matlab","perl","bash","shell","sql","nosql",
+        # Web/Frontend
+        "react","angular","vue","html","css","sass","webpack","nextjs","nuxt","gatsby",
+        "jquery","bootstrap","tailwind","redux","graphql","rest api","restful",
+        # Backend
+        "nodejs","node.js","express","django","flask","fastapi","spring","spring boot",
+        "laravel","rails","asp.net",".net","microservices","kafka","rabbitmq",
+        # Databases
+        "mysql","postgresql","mongodb","redis","elasticsearch","sqlite","oracle",
+        "dynamodb","firebase","supabase","cassandra","snowflake","bigquery",
+        # Cloud/DevOps
+        "aws","azure","gcp","google cloud","docker","kubernetes","terraform","ansible",
+        "jenkins","github actions","ci/cd","devops","linux","nginx","apache",
+        # AI/ML/Data
+        "machine learning","deep learning","neural network","tensorflow","pytorch",
+        "scikit-learn","pandas","numpy","nlp","computer vision","llm","data science",
+        "data analysis","data engineering","etl","tableau","power bi","spark","hadoop",
+        # Tools
+        "git","github","gitlab","jira","confluence","agile","scrum","kanban",
+        "postman","swagger","figma","photoshop","excel","powerpoint",
+        # Mobile
+        "android","ios","flutter","react native","xamarin",
+        # Security
+        "cybersecurity","penetration testing","owasp","ssl","oauth","jwt",
+    ]
+
+    # Soft skills
+    SOFT_SKILLS = [
+        "communication","leadership","teamwork","problem solving","critical thinking",
+        "time management","adaptability","creativity","collaboration","interpersonal",
+        "project management","analytical","detail oriented","self motivated","initiative",
+        "presentation","negotiation","mentoring","coaching","strategic",
+    ]
+
+    # Extract all meaningful words from JD (3+ chars, not stopwords)
+    STOPWORDS = {"the","and","for","are","but","not","you","all","any","can","had",
+                 "her","was","one","our","out","day","get","has","him","his","how",
+                 "its","may","new","now","own","see","two","way","who","did","each",
+                 "from","this","that","with","have","will","been","they","their",
+                 "more","also","into","over","some","such","than","then","them",
+                 "well","were","what","when","whom","your","able","about","after",
+                 "being","below","could","doing","during","other","these","those",
+                 "through","under","until","while","would","should","shall","must",
+                 "work","year","years","good","role","team","need","able","must",
+                 "strong","experience","candidate","looking","join","help","great",
+                 "including","required","requirements","responsibilities","minimum",
+                 "preferred","plus","bonus","nice","have","will","across","within"}
+
+    def extract_keywords(text: str) -> list[str]:
+        words = re.findall(r'\b[a-z][a-z0-9+#.\-]*[a-z0-9]\b|\b[a-z]{3,}\b', text.lower())
+        # Also extract bigrams (two-word phrases)
+        bigrams = [f"{words[i]} {words[i+1]}" for i in range(len(words)-1)]
+        all_terms = words + bigrams
+        return [t for t in all_terms if t not in STOPWORDS and len(t) >= 3]
+
+    jd_keywords = extract_keywords(jd_text)
+    resume_keywords = extract_keywords(resume_text)
+
+    # Word frequency from JD (higher freq = more important)
+    from collections import Counter
+    jd_freq = Counter(jd_keywords)
+
+    # Top 40 most frequent JD terms (excluding very common noise)
+    jd_top = [word for word, _ in jd_freq.most_common(80) if len(word) > 3][:40]
+
+    resume_word_set = set(resume_keywords)
+
+    # ── 2. Match technical skills ──────────────────────────────────────────────
+    jd_tech = [s for s in TECH_SKILLS if s in jd_text]
+    resume_tech = [s for s in jd_tech if s in resume_text]
+    missing_tech = [s for s in jd_tech if s not in resume_text]
+
+    tech_score = (len(resume_tech) / len(jd_tech) * 100) if jd_tech else 100
+
+    # ── 3. Match soft skills ──────────────────────────────────────────────────
+    jd_soft = [s for s in SOFT_SKILLS if s in jd_text]
+    resume_soft = [s for s in jd_soft if s in resume_text]
+    missing_soft = [s for s in jd_soft if s not in resume_text]
+
+    soft_score = (len(resume_soft) / len(jd_soft) * 100) if jd_soft else 100
+
+    # ── 4. Match top JD keywords ─────────────────────────────────────────────
+    matched_keywords = [w for w in jd_top if w in resume_word_set]
+    missing_keywords = [w for w in jd_top if w not in resume_word_set]
+
+    keyword_score = (len(matched_keywords) / len(jd_top) * 100) if jd_top else 100
+
+    # ── 5. Format / structure check ──────────────────────────────────────────
+    format_score = 100
+    format_tips = []
+
+    # Check for key resume sections
+    if not any(w in resume_text for w in ["experience","work history","employment"]):
+        format_score -= 20
+        format_tips.append("Add a clear 'Experience' section")
+    if not any(w in resume_text for w in ["education","degree","university","college","bachelor","master"]):
+        format_score -= 15
+        format_tips.append("Add an 'Education' section")
+    if not any(w in resume_text for w in ["skill","skills","technologies","tools","expertise"]):
+        format_score -= 15
+        format_tips.append("Add a dedicated 'Skills' section")
+    if len(req.resume.split()) < 150:
+        format_score -= 20
+        format_tips.append("Resume seems too short — aim for 400–700 words")
+    if len(req.resume.split()) > 1200:
+        format_score -= 10
+        format_tips.append("Resume is very long — consider trimming to 1 page")
+    if not any(w in resume_text for w in ["@","email","phone","linkedin","github","contact"]):
+        format_score -= 10
+        format_tips.append("Add contact information (email, phone, LinkedIn)")
+
+    format_score = max(format_score, 0)
+
+    # ── 6. Weighted final score ───────────────────────────────────────────────
+    # Keywords 35% | Tech skills 35% | Soft skills 15% | Format 15%
+    final_score = (
+        keyword_score * 0.35 +
+        tech_score * 0.35 +
+        soft_score * 0.15 +
+        format_score * 0.15
+    )
+    final_score = round(min(final_score, 100), 1)
+
+    # ── 7. Generate suggestions ───────────────────────────────────────────────
+    suggestions = []
+    if missing_tech:
+        top_missing_tech = missing_tech[:5]
+        suggestions.append(f"Add these technical skills if you have them: {', '.join(top_missing_tech)}")
+    if missing_soft:
+        suggestions.append(f"Mention soft skills: {', '.join(missing_soft[:3])}")
+    if missing_keywords:
+        important_missing = [k for k in missing_keywords if len(k) > 4][:5]
+        if important_missing:
+            suggestions.append(f"Include these JD keywords in your resume: {', '.join(important_missing)}")
+    suggestions.extend(format_tips)
+    if final_score >= 80:
+        suggestions.append("Great match! Your resume is well-aligned with this role.")
+    elif final_score >= 60:
+        suggestions.append("Good foundation. Tailor your resume further to boost your score.")
+    else:
+        suggestions.append("Significant gaps found. Customize your resume to match the JD closely.")
+
+    # Score label
+    if final_score >= 85:
+        label = "Excellent"
+    elif final_score >= 70:
+        label = "Good"
+    elif final_score >= 55:
+        label = "Fair"
+    else:
+        label = "Needs Work"
+
+    return JSONResponse({
+        "score": final_score,
+        "label": label,
+        "breakdown": {
+            "keywords": round(keyword_score, 1),
+            "technical_skills": round(tech_score, 1),
+            "soft_skills": round(soft_score, 1),
+            "format": round(format_score, 1),
+        },
+        "matched_keywords": list(set(matched_keywords + resume_tech + resume_soft))[:20],
+        "missing_keywords": list(set(missing_keywords[:5] + missing_tech[:5] + missing_soft[:3])),
+        "suggestions": suggestions[:6],
+        "stats": {
+            "jd_tech_skills_found": len(jd_tech),
+            "resume_tech_matched": len(resume_tech),
+            "jd_keywords_checked": len(jd_top),
+            "resume_keywords_matched": len(matched_keywords),
+        }
+    })
 
 
 @app.get("/ninelab/health")

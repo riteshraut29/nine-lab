@@ -10,6 +10,54 @@
       rel="stylesheet"
     />
     <style>
+      /* ATS Score Panel */
+      .ats-btn {
+        width: 100%; padding: 14px 24px; background: transparent;
+        color: #6c63ff; border: 2px solid #6c63ff; border-radius: 12px;
+        font-size: 15px; font-weight: 600; cursor: pointer;
+        transition: all 0.2s; margin-top: 10px;
+      }
+      .ats-btn:hover { background: #6c63ff; color: #fff; }
+      .ats-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+      .ats-panel {
+        display: none; background: #fff; border-radius: 16px;
+        border: 1px solid #e5e7eb; padding: 24px; margin-top: 16px;
+        box-shadow: 0 4px 24px rgba(108,99,255,0.08);
+      }
+      .ats-panel.visible { display: block; }
+      .ats-header { display: flex; align-items: center; gap: 20px; margin-bottom: 20px; }
+      .ats-circle {
+        width: 90px; height: 90px; border-radius: 50%; flex-shrink: 0;
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        font-weight: 700; position: relative;
+      }
+      .ats-circle-score { font-size: 28px; line-height: 1; }
+      .ats-circle-pct { font-size: 12px; opacity: 0.7; margin-top: 2px; }
+      .ats-score-excellent { background: #dcfce7; color: #15803d; border: 3px solid #22c55e; }
+      .ats-score-good { background: #dbeafe; color: #1d4ed8; border: 3px solid #3b82f6; }
+      .ats-score-fair { background: #fef9c3; color: #a16207; border: 3px solid #eab308; }
+      .ats-score-needswork { background: #fee2e2; color: #dc2626; border: 3px solid #f87171; }
+      .ats-score-info { flex: 1; }
+      .ats-score-label { font-size: 20px; font-weight: 700; color: #1a1a2e; }
+      .ats-score-sub { font-size: 13px; color: #64748b; margin-top: 4px; }
+      .ats-breakdown { margin-bottom: 18px; }
+      .ats-breakdown-title { font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 10px; letter-spacing: 0.5px; text-transform: uppercase; }
+      .ats-bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+      .ats-bar-label { width: 130px; font-size: 13px; color: #374151; flex-shrink: 0; }
+      .ats-bar-track { flex: 1; height: 8px; background: #f1f5f9; border-radius: 4px; overflow: hidden; }
+      .ats-bar-fill { height: 100%; border-radius: 4px; transition: width 0.6s ease; }
+      .ats-bar-val { width: 38px; font-size: 12px; font-weight: 600; color: #374151; text-align: right; }
+      .ats-tags-section { margin-bottom: 14px; }
+      .ats-tags-title { font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 8px; }
+      .ats-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+      .ats-tag { padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 500; }
+      .ats-tag.matched { background: #dcfce7; color: #15803d; }
+      .ats-tag.missing { background: #fee2e2; color: #dc2626; }
+      .ats-suggestions { background: #f8fafc; border-radius: 10px; padding: 14px; }
+      .ats-suggestions-title { font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 8px; }
+      .ats-suggestion-item { display: flex; gap: 8px; margin-bottom: 6px; font-size: 13px; color: #374151; }
+      .ats-suggestion-item::before { content: "→"; color: #6c63ff; font-weight: 700; flex-shrink: 0; }
+
       /* Welcome Screen */
       #welcome-screen {
         position: fixed;
@@ -1118,6 +1166,63 @@
         <button class="submit-btn" id="submitBtn" onclick="handleSubmit()">
           <span id="submitBtnText">Generate My Kit →</span>
         </button>
+
+        <button class="ats-btn" id="atsBtn" onclick="handleATSScore()">
+          🎯 Check ATS Score First
+        </button>
+
+        <!-- ATS Score Results Panel -->
+        <div class="ats-panel" id="atsPanel">
+          <div class="ats-header">
+            <div class="ats-circle" id="atsCircle">
+              <div class="ats-circle-score" id="atsScoreNum">--</div>
+              <div class="ats-circle-pct">/ 100</div>
+            </div>
+            <div class="ats-score-info">
+              <div class="ats-score-label" id="atsScoreLabel">Checking...</div>
+              <div class="ats-score-sub" id="atsScoreSub">ATS compatibility score for your resume vs this job description</div>
+            </div>
+          </div>
+
+          <div class="ats-breakdown">
+            <div class="ats-breakdown-title">Score Breakdown</div>
+            <div class="ats-bar-row">
+              <div class="ats-bar-label">JD Keywords</div>
+              <div class="ats-bar-track"><div class="ats-bar-fill" id="barKeywords" style="width:0%;background:#6c63ff"></div></div>
+              <div class="ats-bar-val" id="valKeywords">0%</div>
+            </div>
+            <div class="ats-bar-row">
+              <div class="ats-bar-label">Technical Skills</div>
+              <div class="ats-bar-track"><div class="ats-bar-fill" id="barTech" style="width:0%;background:#3b82f6"></div></div>
+              <div class="ats-bar-val" id="valTech">0%</div>
+            </div>
+            <div class="ats-bar-row">
+              <div class="ats-bar-label">Soft Skills</div>
+              <div class="ats-bar-track"><div class="ats-bar-fill" id="barSoft" style="width:0%;background:#22c55e"></div></div>
+              <div class="ats-bar-val" id="valSoft">0%</div>
+            </div>
+            <div class="ats-bar-row">
+              <div class="ats-bar-label">Resume Format</div>
+              <div class="ats-bar-track"><div class="ats-bar-fill" id="barFormat" style="width:0%;background:#f59e0b"></div></div>
+              <div class="ats-bar-val" id="valFormat">0%</div>
+            </div>
+          </div>
+
+          <div class="ats-tags-section" id="atsMatchedSection">
+            <div class="ats-tags-title">✅ Matched Keywords</div>
+            <div class="ats-tags" id="atsMatchedTags"></div>
+          </div>
+
+          <div class="ats-tags-section" id="atsMissingSection">
+            <div class="ats-tags-title">❌ Missing Keywords</div>
+            <div class="ats-tags" id="atsMissingTags"></div>
+          </div>
+
+          <div class="ats-suggestions">
+            <div class="ats-suggestions-title">💡 How to Improve</div>
+            <div id="atsSuggestions"></div>
+          </div>
+        </div>
       </div>
 
       <div class="progress-panel" id="progressPanel">
@@ -1717,6 +1822,116 @@
         }
       }
 
+      async function handleATSScore() {
+        const resume = document.getElementById("resumeInput").value.trim();
+        const jd = document.getElementById("jdInput").value.trim();
+        if (!resume) { showError("Please paste your resume to check ATS score."); return; }
+        if (!jd) { showError("Please paste the job description to check ATS score."); return; }
+        document.getElementById("errorBox").classList.remove("visible");
+
+        const btn = document.getElementById("atsBtn");
+        btn.disabled = true;
+        btn.textContent = "⏳ Analyzing...";
+
+        // Show panel in loading state
+        const panel = document.getElementById("atsPanel");
+        panel.classList.add("visible");
+        document.getElementById("atsScoreNum").textContent = "--";
+        document.getElementById("atsScoreLabel").textContent = "Analyzing...";
+        document.getElementById("atsSuggestions").innerHTML = "";
+        document.getElementById("atsMatchedTags").innerHTML = "";
+        document.getElementById("atsMissingTags").innerHTML = "";
+
+        try {
+          const resp = await fetch(`${BASE}/ats-score`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ resume, jd }),
+          });
+          const data = await resp.json();
+          if (!resp.ok) {
+            showError(data.detail || "ATS check failed. Please try again.");
+            panel.classList.remove("visible");
+            return;
+          }
+
+          // Score circle
+          const score = data.score;
+          const circle = document.getElementById("atsCircle");
+          circle.className = "ats-circle";
+          if (score >= 85) circle.classList.add("ats-score-excellent");
+          else if (score >= 70) circle.classList.add("ats-score-good");
+          else if (score >= 55) circle.classList.add("ats-score-fair");
+          else circle.classList.add("ats-score-needswork");
+
+          document.getElementById("atsScoreNum").textContent = score;
+          document.getElementById("atsScoreLabel").textContent = `${data.label} Match — ${score}/100`;
+          document.getElementById("atsScoreSub").textContent =
+            `Keywords: ${data.stats.resume_keywords_matched}/${data.stats.jd_keywords_checked} matched · Tech Skills: ${data.stats.resume_tech_matched}/${data.stats.jd_tech_skills_found} matched`;
+
+          // Breakdown bars
+          const bd = data.breakdown;
+          const bars = [
+            ["barKeywords", "valKeywords", bd.keywords],
+            ["barTech", "valTech", bd.technical_skills],
+            ["barSoft", "valSoft", bd.soft_skills],
+            ["barFormat", "valFormat", bd.format],
+          ];
+          bars.forEach(([barId, valId, val]) => {
+            document.getElementById(barId).style.width = val + "%";
+            document.getElementById(valId).textContent = Math.round(val) + "%";
+          });
+
+          // Matched keywords
+          const matchedEl = document.getElementById("atsMatchedTags");
+          matchedEl.innerHTML = "";
+          if (data.matched_keywords && data.matched_keywords.length > 0) {
+            data.matched_keywords.slice(0, 15).forEach(kw => {
+              const tag = document.createElement("span");
+              tag.className = "ats-tag matched";
+              tag.textContent = kw;
+              matchedEl.appendChild(tag);
+            });
+            document.getElementById("atsMatchedSection").style.display = "block";
+          } else {
+            document.getElementById("atsMatchedSection").style.display = "none";
+          }
+
+          // Missing keywords
+          const missingEl = document.getElementById("atsMissingTags");
+          missingEl.innerHTML = "";
+          if (data.missing_keywords && data.missing_keywords.length > 0) {
+            data.missing_keywords.slice(0, 12).forEach(kw => {
+              const tag = document.createElement("span");
+              tag.className = "ats-tag missing";
+              tag.textContent = kw;
+              missingEl.appendChild(tag);
+            });
+            document.getElementById("atsMissingSection").style.display = "block";
+          } else {
+            document.getElementById("atsMissingSection").style.display = "none";
+          }
+
+          // Suggestions
+          const sugEl = document.getElementById("atsSuggestions");
+          sugEl.innerHTML = "";
+          (data.suggestions || []).forEach(s => {
+            const div = document.createElement("div");
+            div.className = "ats-suggestion-item";
+            div.textContent = s;
+            sugEl.appendChild(div);
+          });
+
+          panel.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        } catch (e) {
+          showError("Network error during ATS check. Please try again.");
+          panel.classList.remove("visible");
+        } finally {
+          btn.disabled = false;
+          btn.textContent = "🎯 Check ATS Score Again";
+        }
+      }
+
       function resetApp() {
         clearInterval(pollInterval);
         currentJobId = null;
@@ -1724,6 +1939,8 @@
         document.getElementById("progressPanel").classList.remove("visible");
         document.getElementById("resultsPanel").classList.remove("visible");
         document.getElementById("errorBox").classList.remove("visible");
+        document.getElementById("atsPanel").classList.remove("visible");
+        document.getElementById("atsBtn").textContent = "🎯 Check ATS Score First";
         document.getElementById("progressBar").style.width = "0%";
         document.getElementById("progressPct").textContent = "0%";
         document.getElementById("progressMsg").textContent = "Starting up...";
