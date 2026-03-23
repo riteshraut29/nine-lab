@@ -5,31 +5,421 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Nine Lab — Placement Prep, Simplified</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
     <style>
-      /* ATS Score Panel */
-      .ats-btn {
-        width: 100%; padding: 14px 24px; background: transparent;
-        color: #6c63ff; border: 2px solid #6c63ff; border-radius: 12px;
-        font-size: 15px; font-weight: 600; cursor: pointer;
-        transition: all 0.2s; margin-top: 10px;
+      /* ─── CSS Variables ─────────────────────────────────────────────── */
+      :root {
+        --purple: #6c63ff;
+        --purple-dark: #5a52d5;
+        --purple-light: #f0efff;
+        --text: #1a1a2e;
+        --text-muted: #64748b;
+        --text-subtle: #9ca3af;
+        --border: #e5e7eb;
+        --bg: #f4f6fb;
+        --bg-card: #ffffff;
+        --bg-subtle: #f9fafb;
+        --success: #22c55e;
+        --error: #ef4444;
       }
-      .ats-btn:hover { background: #6c63ff; color: #fff; }
-      .ats-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-      .ats-panel {
-        display: none; background: #fff; border-radius: 16px;
-        border: 1px solid #e5e7eb; padding: 24px; margin-top: 16px;
+
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+
+      body {
+        font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        min-height: 100vh;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      /* ─── Welcome Splash Screen ─────────────────────────────────────── */
+      #welcome-screen {
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background: var(--purple);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        transition: opacity 0.8s ease;
+      }
+      #welcome-screen h1 {
+        color: white;
+        font-size: 42px;
+        font-weight: 700;
+        letter-spacing: -1px;
+      }
+
+      /* ─── App Shell ─────────────────────────────────────────────────── */
+      .app {
+        max-width: 640px;
+        margin: 0 auto;
+        padding: 40px 24px 80px;
+      }
+
+      /* ─── Brand Logo ────────────────────────────────────────────────── */
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 32px;
+      }
+      .brand-icon {
+        width: 34px; height: 34px;
+        background: var(--purple);
+        border-radius: 8px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 14px; font-weight: 800;
+        color: white; letter-spacing: -0.5px;
+        flex-shrink: 0;
+      }
+      .brand-name { font-size: 17px; font-weight: 700; color: var(--text); }
+
+      /* ─── Step Header ───────────────────────────────────────────────── */
+      .step-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 28px;
+      }
+      .back-btn {
+        width: 36px; height: 36px;
+        border: 1.5px solid var(--border);
+        border-radius: 50%;
+        background: var(--bg-card);
+        display: flex; align-items: center; justify-content: center;
+        cursor: pointer;
+        font-size: 16px;
+        color: var(--text-muted);
+        transition: all 0.15s;
+        flex-shrink: 0;
+      }
+      .back-btn:hover { border-color: var(--purple); color: var(--purple); }
+      .step-title { font-size: 20px; font-weight: 700; color: var(--text); }
+
+      /* ─── Card Base ─────────────────────────────────────────────────── */
+      .card {
+        background: var(--bg-card);
+        border-radius: 16px;
+        border: 1px solid var(--border);
+        padding: 28px;
+        margin-bottom: 16px;
         box-shadow: 0 4px 24px rgba(108,99,255,0.08);
       }
-      .ats-panel.visible { display: block; }
+      .card-title {
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--text);
+        margin-bottom: 20px;
+      }
+      /* Purple left border on section cards */
+      .card.section { border-left: 4px solid var(--purple); }
+
+      /* ─── Form Elements ─────────────────────────────────────────────── */
+      .form-group { margin-bottom: 18px; }
+      .form-group:last-child { margin-bottom: 0; }
+
+      .form-label {
+        display: block;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text);
+        margin-bottom: 7px;
+      }
+      .form-label .opt {
+        font-weight: 400;
+        color: var(--text-subtle);
+        font-size: 11px;
+        margin-left: 4px;
+      }
+
+      input[type="text"],
+      input[type="email"],
+      input[type="url"],
+      select,
+      textarea {
+        width: 100%;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 11px 14px;
+        font-family: "Inter", sans-serif;
+        font-size: 14px;
+        color: var(--text);
+        background: var(--bg-subtle);
+        outline: none;
+        transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+        resize: vertical;
+        line-height: 1.5;
+      }
+      input:focus, select:focus, textarea:focus {
+        border-color: var(--purple);
+        box-shadow: 0 0 0 3px rgba(108,99,255,0.08);
+        background: var(--bg-card);
+      }
+      input::placeholder, textarea::placeholder { color: var(--text-subtle); }
+      select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2364748b' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px; cursor: pointer; }
+
+      /* Inline two-column grid */
+      .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+      /* Checkbox */
+      .check-row {
+        display: flex; align-items: center; gap: 10px;
+        margin-bottom: 18px;
+        cursor: pointer;
+      }
+      .check-row input[type="checkbox"] {
+        width: 18px; height: 18px;
+        border-radius: 5px;
+        cursor: pointer;
+        accent-color: var(--purple);
+        flex-shrink: 0;
+      }
+      .check-row span { font-size: 14px; color: var(--text); }
+
+      /* Word count */
+      .word-count {
+        font-size: 11px;
+        color: var(--text-subtle);
+        text-align: right;
+        margin-top: 5px;
+      }
+
+      /* Skill chips */
+      .skill-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 10px;
+      }
+      .chip {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 500;
+        background: var(--purple-light);
+        color: var(--purple);
+        border: 1px solid #c5c1ff;
+        cursor: pointer;
+        transition: all 0.15s;
+        user-select: none;
+      }
+      .chip:hover { background: var(--purple); color: white; }
+
+      /* Add role button */
+      .add-role-btn {
+        display: inline-flex; align-items: center; gap: 6px;
+        font-size: 13px; font-weight: 600;
+        color: var(--purple);
+        background: var(--purple-light);
+        border: 1.5px dashed #c5c1ff;
+        border-radius: 8px;
+        padding: 8px 14px;
+        cursor: pointer;
+        transition: all 0.15s;
+        margin-top: 8px;
+      }
+      .add-role-btn:hover { background: var(--purple); color: white; border-color: var(--purple); }
+
+      /* Divider */
+      .divider {
+        height: 1px;
+        background: var(--border);
+        margin: 20px 0;
+      }
+      .role-block { padding-bottom: 16px; margin-bottom: 16px; border-bottom: 1px dashed var(--border); }
+      .role-block:last-child { border-bottom: none; padding-bottom: 0; margin-bottom: 0; }
+
+      /* ─── Buttons ───────────────────────────────────────────────────── */
+      .btn-primary {
+        width: 100%;
+        padding: 14px;
+        background: var(--purple);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        font-size: 16px;
+        font-weight: 600;
+        font-family: "Inter", sans-serif;
+        cursor: pointer;
+        transition: background 0.15s, opacity 0.15s;
+        letter-spacing: -0.2px;
+      }
+      .btn-primary:hover:not(:disabled) { background: var(--purple-dark); }
+      .btn-primary:disabled { opacity: 0.45; cursor: not-allowed; }
+
+      .btn-outline {
+        width: 100%;
+        padding: 12px;
+        background: var(--bg-card);
+        color: var(--text-muted);
+        border: 1.5px solid var(--border);
+        border-radius: 12px;
+        font-size: 14px;
+        font-weight: 500;
+        font-family: "Inter", sans-serif;
+        cursor: pointer;
+        transition: all 0.15s;
+        margin-top: 10px;
+      }
+      .btn-outline:hover { border-color: var(--purple); color: var(--purple); }
+
+      /* ─── Error / Info Boxes ────────────────────────────────────────── */
+      .error-box {
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        border-radius: 8px;
+        padding: 11px 14px;
+        color: var(--error);
+        font-size: 13px;
+        margin-bottom: 14px;
+        display: none;
+        line-height: 1.5;
+      }
+      .error-box.visible { display: block; }
+
+      .info-box {
+        background: #fefce8;
+        border: 1px solid #fde68a;
+        border-radius: 8px;
+        padding: 11px 14px;
+        font-size: 13px;
+        color: #92400e;
+        line-height: 1.5;
+      }
+
+      /* ─── Welcome Back Banner ───────────────────────────────────────── */
+      .welcome-back-banner {
+        background: var(--purple-light);
+        border: 1.5px solid #c5c1ff;
+        border-radius: 12px;
+        padding: 16px 20px;
+        margin-bottom: 20px;
+        display: none;
+      }
+      .welcome-back-banner.visible { display: block; }
+      .wb-title { font-size: 15px; font-weight: 700; color: var(--purple); margin-bottom: 6px; }
+      .wb-sub { font-size: 13px; color: var(--text-muted); margin-bottom: 12px; }
+      .wb-btns { display: flex; gap: 10px; }
+      .wb-btn-yes {
+        padding: 8px 18px;
+        background: var(--purple); color: white;
+        border: none; border-radius: 8px;
+        font-size: 13px; font-weight: 600;
+        font-family: "Inter", sans-serif;
+        cursor: pointer; transition: background 0.15s;
+      }
+      .wb-btn-yes:hover { background: var(--purple-dark); }
+      .wb-btn-no {
+        padding: 8px 18px;
+        background: transparent; color: var(--text-muted);
+        border: 1.5px solid var(--border); border-radius: 8px;
+        font-size: 13px; font-weight: 500;
+        font-family: "Inter", sans-serif;
+        cursor: pointer; transition: all 0.15s;
+      }
+      .wb-btn-no:hover { border-color: var(--purple); color: var(--purple); }
+
+      /* ─── Step 0: Welcome ───────────────────────────────────────────── */
+      #step0 { display: none; }
+      .welcome-hero { text-align: center; margin-bottom: 40px; }
+      .welcome-hero h1 {
+        font-size: 32px; font-weight: 700; color: var(--text);
+        letter-spacing: -0.5px; line-height: 1.25; margin-bottom: 14px;
+      }
+      .welcome-hero p { font-size: 16px; color: var(--text-muted); line-height: 1.65; max-width: 480px; margin: 0 auto; }
+
+      .option-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 28px; }
+      .option-card {
+        background: var(--bg-card);
+        border: 2px solid var(--border);
+        border-radius: 16px;
+        padding: 28px 20px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      .option-card:hover { border-color: var(--purple); box-shadow: 0 8px 32px rgba(108,99,255,0.13); transform: translateY(-2px); }
+      .option-card .oc-icon { font-size: 36px; margin-bottom: 12px; display: block; }
+      .option-card .oc-title { font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+      .option-card .oc-sub { font-size: 13px; color: var(--text-muted); line-height: 1.5; }
+
+      .welcome-footer { text-align: center; font-size: 12px; color: var(--text-subtle); }
+      .welcome-footer span { margin: 0 6px; }
+
+      /* ─── Step 1: Profile Form ──────────────────────────────────────── */
+      #step1 { display: none; }
+
+      /* ─── Step 1b: Upload Confirm ───────────────────────────────────── */
+      #step1b { display: none; }
+      .extract-spinner {
+        display: flex; align-items: center; gap: 12px;
+        padding: 20px; font-size: 14px; color: var(--text-muted);
+      }
+      .spinner {
+        display: inline-block;
+        width: 20px; height: 20px;
+        border: 2.5px solid rgba(108,99,255,0.2);
+        border-top-color: var(--purple);
+        border-radius: 50%;
+        animation: spin 0.7s linear infinite;
+        flex-shrink: 0;
+      }
+      @keyframes spin { to { transform: rotate(360deg); } }
+
+      /* ─── Step 2: Profile Summary ───────────────────────────────────── */
+      #step2 { display: none; }
+      .profile-summary { padding: 4px 0; }
+      .ps-row {
+        display: flex; align-items: flex-start; gap: 12px;
+        margin-bottom: 14px; padding-bottom: 14px;
+        border-bottom: 1px solid var(--border);
+      }
+      .ps-row:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+      .ps-icon { font-size: 20px; flex-shrink: 0; margin-top: 1px; }
+      .ps-content {}
+      .ps-label { font-size: 11px; font-weight: 600; color: var(--text-subtle); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px; }
+      .ps-value { font-size: 14px; color: var(--text); font-weight: 500; }
+      .ps-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px; }
+      .ps-tag { padding: 3px 10px; background: var(--purple-light); color: var(--purple); border-radius: 20px; font-size: 12px; font-weight: 500; }
+      .fresher-badge { display: inline-block; padding: 3px 12px; background: #d1fae5; color: #065f46; border-radius: 20px; font-size: 12px; font-weight: 600; }
+      .edit-profile-link { display: block; text-align: center; margin-top: 14px; font-size: 13px; color: var(--purple); font-weight: 600; cursor: pointer; text-decoration: underline; }
+
+      /* ─── Step 3: Job Details ───────────────────────────────────────── */
+      #step3 { display: none; }
+
+      /* ATS toggle collapsible */
+      .ats-toggle-header {
+        display: flex; align-items: center; justify-content: space-between;
+        cursor: pointer; padding: 14px 20px;
+        background: var(--bg-subtle);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        margin-top: 16px;
+        transition: all 0.15s;
+      }
+      .ats-toggle-header:hover { border-color: var(--purple); background: var(--purple-light); }
+      .ats-toggle-title { font-size: 14px; font-weight: 600; color: var(--text); }
+      .ats-toggle-arrow { font-size: 12px; color: var(--text-muted); transition: transform 0.2s; }
+      .ats-toggle-arrow.open { transform: rotate(180deg); }
+      .ats-toggle-body { display: none; margin-top: 12px; }
+      .ats-toggle-body.visible { display: block; }
+
+      /* ─── ATS Score Panel (reused in Step 3 and Step 5) ─────────────── */
+      .ats-panel {
+        background: var(--bg-card);
+        border-radius: 16px;
+        border: 1px solid var(--border);
+        padding: 24px;
+        box-shadow: 0 4px 24px rgba(108,99,255,0.08);
+      }
       .ats-header { display: flex; align-items: center; gap: 20px; margin-bottom: 20px; }
       .ats-circle {
         width: 90px; height: 90px; border-radius: 50%; flex-shrink: 0;
         display: flex; flex-direction: column; align-items: center; justify-content: center;
-        font-weight: 700; position: relative;
+        font-weight: 700;
       }
       .ats-circle-score { font-size: 28px; line-height: 1; }
       .ats-circle-pct { font-size: 12px; opacity: 0.7; margin-top: 2px; }
@@ -38,8 +428,8 @@
       .ats-score-fair { background: #fef9c3; color: #a16207; border: 3px solid #eab308; }
       .ats-score-needswork { background: #fee2e2; color: #dc2626; border: 3px solid #f87171; }
       .ats-score-info { flex: 1; }
-      .ats-score-label { font-size: 20px; font-weight: 700; color: #1a1a2e; }
-      .ats-score-sub { font-size: 13px; color: #64748b; margin-top: 4px; }
+      .ats-score-label { font-size: 20px; font-weight: 700; color: var(--text); }
+      .ats-score-sub { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
       .ats-breakdown { margin-bottom: 18px; }
       .ats-breakdown-title { font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 10px; letter-spacing: 0.5px; text-transform: uppercase; }
       .ats-bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
@@ -56,839 +446,139 @@
       .ats-suggestions { background: #f8fafc; border-radius: 10px; padding: 14px; }
       .ats-suggestions-title { font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 8px; }
       .ats-suggestion-item { display: flex; gap: 8px; margin-bottom: 6px; font-size: 13px; color: #374151; }
-      .ats-suggestion-item::before { content: "→"; color: #6c63ff; font-weight: 700; flex-shrink: 0; }
+      .ats-suggestion-item::before { content: "→"; color: var(--purple); font-weight: 700; flex-shrink: 0; }
 
-      /* Welcome Screen */
-      #welcome-screen {
-        position: fixed;
-        top: 0; left: 0;
-        width: 100%; height: 100%;
-        background: #6c63ff;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 9999;
-        transition: opacity 0.8s ease;
-      }
-      #welcome-screen h1 {
-        color: white;
-        font-size: 42px;
-        font-weight: 700;
-        font-family: 'Inter', sans-serif;
-        letter-spacing: -1px;
-      }
-      :root {
-        --purple: #6c63ff;
-        --purple-dark: #5a52d5;
-        --purple-light: #f0efff;
-        --text: #1a1a1a;
-        --text-muted: #6b7280;
-        --text-subtle: #9ca3af;
-        --border: #e5e7eb;
-        --bg: #ffffff;
-        --bg-subtle: #f9fafb;
-        --success: #10b981;
-        --error: #ef4444;
-      }
-
-      /* Auth panel */
-      .auth-panel {
-        min-height: 100vh;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 24px;
-        background: var(--bg);
-      }
-      .auth-box {
-        width: 100%;
-        max-width: 400px;
-      }
-      .auth-brand {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        margin-bottom: 36px;
-        justify-content: center;
-      }
-      .auth-brand-icon {
-        width: 34px;
-        height: 34px;
-        background: var(--purple);
-        border-radius: 8px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 14px;
-        font-weight: 800;
-        color: white;
-        letter-spacing: -0.5px;
-      }
-      .auth-brand-name {
-        font-size: 17px;
-        font-weight: 700;
-        color: var(--text);
-      }
-      .auth-title {
-        font-size: 22px;
-        font-weight: 700;
-        color: var(--text);
-        margin-bottom: 6px;
-        letter-spacing: -0.3px;
-      }
-      .auth-subtitle {
-        font-size: 14px;
-        color: var(--text-muted);
-        margin-bottom: 28px;
-        line-height: 1.5;
-      }
-      .auth-card {
-        border: 1px solid var(--border);
+      /* ─── Step 4: Progress ──────────────────────────────────────────── */
+      #step4 { display: none; }
+      .progress-card {
+        background: var(--bg-card);
         border-radius: 16px;
-        padding: 28px;
-        background: var(--bg);
-      }
-      .auth-field {
-        margin-bottom: 16px;
-      }
-      .auth-field label {
-        display: block;
-        font-size: 13px;
-        font-weight: 600;
-        color: var(--text);
-        margin-bottom: 6px;
-      }
-      .auth-field input {
-        width: 100%;
         border: 1px solid var(--border);
-        border-radius: 10px;
-        padding: 11px 14px;
-        font-family: "Inter", sans-serif;
-        font-size: 14px;
-        color: var(--text);
-        background: var(--bg-subtle);
-        outline: none;
-        transition:
-          border-color 0.15s,
-          box-shadow 0.15s;
-      }
-      .auth-field input:focus {
-        border-color: var(--purple);
-        box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.08);
-        background: var(--bg);
-      }
-      .auth-btn {
-        width: 100%;
-        padding: 12px;
-        background: var(--purple);
-        color: white;
-        border: none;
-        border-radius: 10px;
-        font-size: 15px;
-        font-weight: 600;
-        font-family: "Inter", sans-serif;
-        cursor: pointer;
-        transition:
-          background 0.15s,
-          opacity 0.15s;
-        margin-top: 4px;
-      }
-      .auth-btn:hover:not(:disabled) {
-        background: var(--purple-dark);
-      }
-      .auth-btn:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-      }
-      .auth-toggle {
+        padding: 40px 32px;
         text-align: center;
-        font-size: 13px;
-        color: var(--text-muted);
-        margin-top: 20px;
+        box-shadow: 0 4px 24px rgba(108,99,255,0.08);
       }
-      .auth-toggle a {
-        color: var(--purple);
-        font-weight: 600;
-        cursor: pointer;
-        text-decoration: none;
-      }
-      .auth-toggle a:hover {
-        text-decoration: underline;
-      }
-      .auth-error {
-        background: #fef2f2;
-        border: 1px solid #fecaca;
-        border-radius: 8px;
-        padding: 10px 14px;
-        color: var(--error);
-        font-size: 13px;
-        margin-bottom: 14px;
-        display: none;
-        line-height: 1.5;
-      }
-      .auth-error.visible {
-        display: block;
-      }
-      .auth-success {
-        background: #f0fdf4;
-        border: 1px solid #bbf7d0;
-        border-radius: 8px;
-        padding: 10px 14px;
-        color: #166534;
-        font-size: 13px;
-        margin-bottom: 14px;
-        display: none;
-        line-height: 1.5;
-      }
-      .auth-success.visible {
-        display: block;
-      }
-
-      /* User header bar */
-      .user-bar {
-        display: none;
-        align-items: center;
-        justify-content: space-between;
-        padding: 10px 0;
-        margin-bottom: 20px;
-        border-bottom: 1px solid var(--border);
-      }
-      .user-bar.visible {
-        display: flex;
-      }
-      .user-bar-info {
-        font-size: 13px;
-        color: var(--text-muted);
-      }
-      .user-bar-info strong {
-        color: var(--text);
-        font-weight: 600;
-      }
-      .logout-btn {
-        font-size: 12px;
-        color: var(--text-muted);
-        background: none;
-        border: 1px solid var(--border);
-        border-radius: 6px;
-        padding: 5px 10px;
-        cursor: pointer;
-        font-family: "Inter", sans-serif;
-        transition:
-          color 0.15s,
-          border-color 0.15s;
-      }
-      .logout-btn:hover {
-        color: var(--error);
-        border-color: var(--error);
-      }
-
-      * {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-      }
-
-      body {
-        font-family:
-          "Inter",
-          -apple-system,
-          BlinkMacSystemFont,
-          sans-serif;
-        background: var(--bg);
-        color: var(--text);
-        min-height: 100vh;
-        -webkit-font-smoothing: antialiased;
-      }
-
-      .page {
-        max-width: 580px;
-        margin: 0 auto;
-        padding: 52px 24px 80px;
-      }
-
-      /* Brand */
-      .brand {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        margin-bottom: 52px;
-      }
-      .brand-icon {
-        width: 30px;
-        height: 30px;
-        background: var(--purple);
-        border-radius: 7px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 13px;
-        font-weight: 800;
-        color: white;
-        letter-spacing: -0.5px;
-        flex-shrink: 0;
-      }
-      .brand-name {
-        font-size: 15px;
-        font-weight: 700;
-        color: var(--text);
-      }
-      .brand-tag {
-        font-size: 13px;
-        color: var(--text-muted);
-        margin-left: 2px;
-      }
-
-      /* Hero */
-      .hero {
-        margin-bottom: 36px;
-      }
-      .hero h1 {
-        font-size: 30px;
-        font-weight: 700;
-        line-height: 1.25;
-        letter-spacing: -0.5px;
-        color: var(--text);
-        margin-bottom: 10px;
-      }
-      .hero h1 span {
-        color: var(--purple);
-      }
-      .hero p {
-        font-size: 15px;
-        color: var(--text-muted);
-        line-height: 1.6;
-      }
-
-      /* Setup banner */
-      .setup-banner {
-        background: #fffbeb;
-        border: 1px solid #fcd34d;
-        border-radius: 10px;
-        padding: 12px 16px;
-        margin-bottom: 20px;
-        display: none;
-      }
-      .setup-banner.visible {
-        display: block;
-      }
-      .setup-banner p {
-        font-size: 13px;
-        color: #92400e;
-        line-height: 1.5;
-      }
-
-      /* Form card */
-      .form-card {
-        border: 1px solid var(--border);
-        border-radius: 16px;
-        padding: 28px;
-        margin-bottom: 16px;
-      }
-
-      .form-group {
-        margin-bottom: 22px;
-      }
-
-      .form-label {
-        display: block;
-        font-size: 13px;
-        font-weight: 600;
-        color: var(--text);
-        margin-bottom: 8px;
-      }
-      .form-label .req {
-        font-size: 11px;
-        font-weight: 400;
-        color: var(--text-subtle);
-      }
-
-      textarea,
-      input[type="text"] {
-        width: 100%;
-        border: 1px solid var(--border);
-        border-radius: 10px;
-        padding: 12px 14px;
-        font-family: "Inter", sans-serif;
-        font-size: 14px;
-        color: var(--text);
-        background: var(--bg-subtle);
-        transition:
-          border-color 0.15s,
-          box-shadow 0.15s,
-          background 0.15s;
-        resize: vertical;
-        outline: none;
-        line-height: 1.5;
-      }
-      textarea:focus,
-      input[type="text"]:focus {
-        border-color: var(--purple);
-        box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.08);
-        background: var(--bg);
-      }
-      textarea::placeholder,
-      input::placeholder {
-        color: var(--text-subtle);
-      }
-
-      .word-count {
-        font-size: 11px;
-        color: var(--text-subtle);
-        text-align: right;
-        margin-top: 5px;
-      }
-      .word-count.ok {
-        color: var(--success);
-      }
-      .word-count.warn {
-        color: #f59e0b;
-      }
-
-      /* Upload zone */
-      .upload-zone {
-        border: 1.5px dashed var(--border);
-        border-radius: 10px;
-        padding: 16px;
-        text-align: center;
-        background: var(--bg-subtle);
-        transition:
-          border-color 0.15s,
-          background 0.15s;
-        cursor: pointer;
-        margin-bottom: 10px;
-      }
-      .upload-zone:hover,
-      .upload-zone.dragover {
-        border-color: var(--purple);
-        background: var(--purple-light);
-      }
-      .upload-zone.success {
-        border-style: solid;
-        border-color: var(--success);
-        background: #f0fdf4;
-      }
-      .upload-zone.uploading {
-        border-style: solid;
-        border-color: var(--purple);
-        background: var(--purple-light);
-        pointer-events: none;
-      }
-      .upload-zone.error-zone {
-        border-style: solid;
-        border-color: var(--error);
-        background: #fef2f2;
-      }
-      .upload-main {
-        font-size: 13px;
-        font-weight: 500;
-        color: var(--text);
-        margin-bottom: 2px;
-      }
-      .upload-sub {
-        font-size: 12px;
-        color: var(--text-muted);
-      }
-      .upload-sub b {
-        color: var(--purple);
-      }
-      .upload-success-msg {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        justify-content: center;
-        font-size: 13px;
-        font-weight: 500;
-        color: var(--success);
-      }
-      .clear-upload {
-        font-size: 11px;
-        font-weight: 400;
-        color: var(--text-muted);
-        cursor: pointer;
-        text-decoration: underline;
-        margin-left: 4px;
-      }
-      .upload-error-msg {
-        font-size: 12px;
-        color: var(--error);
-      }
-      .upload-spinner {
-        display: inline-block;
-        width: 14px;
-        height: 14px;
-        border: 2px solid rgba(108, 99, 255, 0.2);
-        border-top-color: var(--purple);
-        border-radius: 50%;
-        animation: spin 0.7s linear infinite;
-        vertical-align: middle;
-        margin-right: 6px;
-      }
-      .or-divider {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        margin: 8px 0;
-        color: var(--text-subtle);
-        font-size: 11px;
-      }
-      .or-divider::before,
-      .or-divider::after {
-        content: "";
-        flex: 1;
-        height: 1px;
-        background: var(--border);
-      }
-
-      /* LinkedIn Import */
-      .linkedin-import-box {
-        background: #f0f7ff;
-        border: 1px solid #c7dff7;
-        border-radius: 8px;
-        padding: 10px 12px;
-        margin-bottom: 8px;
-      }
-      .linkedin-import-header {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        font-size: 12px;
-        font-weight: 600;
-        color: #0a66c2;
-        margin-bottom: 8px;
-      }
-      .linkedin-import-row {
-        display: flex;
-        gap: 8px;
-      }
-      .linkedin-import-row input {
-        flex: 1;
-        padding: 7px 10px;
-        border: 1px solid #c7dff7;
-        border-radius: 6px;
-        font-size: 12px;
-        background: #fff;
-        color: var(--text-dark);
-        outline: none;
-      }
-      .linkedin-import-row input:focus {
-        border-color: #0a66c2;
-      }
-      .linkedin-import-btn {
-        padding: 7px 14px;
-        background: #0a66c2;
-        color: #fff;
-        border: none;
-        border-radius: 6px;
-        font-size: 12px;
-        font-weight: 600;
-        cursor: pointer;
-        white-space: nowrap;
-        transition: background 0.2s;
-      }
-      .linkedin-import-btn:hover {
-        background: #084e98;
-      }
-      .linkedin-import-btn:disabled {
-        background: #6fa8d8;
-        cursor: not-allowed;
-      }
-      .linkedin-status {
-        margin-top: 7px;
-        font-size: 11px;
-        padding: 5px 8px;
-        border-radius: 5px;
-      }
-      .linkedin-status.loading {
-        color: #0a66c2;
-        background: #deeeff;
-      }
-      .linkedin-status.success {
-        color: #166534;
-        background: #dcfce7;
-      }
-      .linkedin-status.error {
-        color: #991b1b;
-        background: #fee2e2;
-      }
-
-      /* Submit */
-      .submit-btn {
-        width: 100%;
-        padding: 13px;
-        background: var(--purple);
-        color: white;
-        border: none;
-        border-radius: 10px;
-        font-size: 15px;
-        font-weight: 600;
-        font-family: "Inter", sans-serif;
-        cursor: pointer;
-        transition:
-          background 0.15s,
-          opacity 0.15s;
-        letter-spacing: -0.2px;
-      }
-      .submit-btn:hover:not(:disabled) {
-        background: var(--purple-dark);
-      }
-      .submit-btn:disabled {
-        opacity: 0.45;
-        cursor: not-allowed;
-      }
-
-      /* Error */
-      .error-box {
-        background: #fef2f2;
-        border: 1px solid #fecaca;
-        border-radius: 8px;
-        padding: 11px 14px;
-        color: var(--error);
-        font-size: 13px;
-        margin-bottom: 14px;
-        display: none;
-        line-height: 1.5;
-      }
-      .error-box.visible {
-        display: block;
-      }
-
-      /* Progress */
-      .progress-panel {
-        display: none;
-        border: 1px solid var(--border);
-        border-radius: 16px;
-        padding: 32px 28px;
-        text-align: center;
-      }
-      .progress-panel.visible {
-        display: block;
-      }
-
       .progress-emoji {
-        font-size: 32px;
-        margin-bottom: 10px;
-        display: block;
+        font-size: 36px; margin-bottom: 12px; display: block;
         animation: pulse 1.5s ease-in-out infinite;
       }
-      @keyframes pulse {
-        0%,
-        100% {
-          transform: scale(1);
-        }
-        50% {
-          transform: scale(1.08);
-        }
-      }
-      @keyframes spin {
-        to {
-          transform: rotate(360deg);
-        }
-      }
-
-      .progress-title {
-        font-size: 16px;
-        font-weight: 700;
-        margin-bottom: 4px;
-      }
-      .progress-msg {
-        font-size: 13px;
-        color: var(--text-muted);
-        margin-bottom: 20px;
-        min-height: 18px;
-      }
-
-      .progress-bar-wrap {
-        background: var(--purple-light);
-        border-radius: 100px;
-        height: 5px;
-        overflow: hidden;
-        margin-bottom: 6px;
-      }
-      .progress-bar {
-        height: 100%;
-        background: var(--purple);
-        border-radius: 100px;
-        width: 0%;
-        transition: width 0.5s ease;
-      }
-      .progress-pct {
-        font-size: 12px;
-        font-weight: 600;
-        color: var(--purple);
-        margin-bottom: 20px;
-      }
-
-      .pipeline-steps {
-        display: flex;
-        gap: 6px;
-        justify-content: center;
-        flex-wrap: wrap;
-      }
+      @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+      .progress-title { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+      .progress-msg { font-size: 13px; color: var(--text-muted); margin-bottom: 24px; min-height: 18px; }
+      .progress-bar-wrap { background: var(--purple-light); border-radius: 100px; height: 6px; overflow: hidden; margin-bottom: 6px; }
+      .progress-bar { height: 100%; background: var(--purple); border-radius: 100px; width: 0%; transition: width 0.5s ease; }
+      .progress-pct { font-size: 13px; font-weight: 600; color: var(--purple); margin-bottom: 28px; }
+      .pipeline-steps { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; }
       .pipe-step {
-        display: flex;
-        align-items: center;
-        gap: 5px;
-        padding: 5px 12px;
-        border-radius: 100px;
-        font-size: 12px;
-        font-weight: 500;
-        background: var(--bg-subtle);
-        border: 1px solid var(--border);
-        color: var(--text-muted);
-        transition: all 0.2s;
+        display: flex; align-items: center; gap: 5px;
+        padding: 6px 14px; border-radius: 100px;
+        font-size: 12px; font-weight: 500;
+        background: var(--bg-subtle); border: 1px solid var(--border);
+        color: var(--text-muted); transition: all 0.2s;
       }
-      .pipe-step.active {
-        background: var(--purple-light);
-        border-color: var(--purple);
-        color: var(--purple);
-      }
-      .pipe-step.done {
-        background: #d1fae5;
-        border-color: var(--success);
-        color: var(--success);
-      }
-      .pipe-dot {
-        width: 5px;
-        height: 5px;
-        border-radius: 50%;
-        background: currentColor;
-      }
-      .pipe-dot.spinning {
-        animation: spin 1s linear infinite;
-      }
+      .pipe-step.active { background: var(--purple-light); border-color: var(--purple); color: var(--purple); }
+      .pipe-step.done { background: #d1fae5; border-color: var(--success); color: var(--success); }
+      .pipe-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+      .pipe-dot.spinning { animation: spin 1s linear infinite; }
 
-      /* Results */
-      .results-panel {
-        display: none;
-      }
-      .results-panel.visible {
-        display: block;
-      }
+      /* ─── Step 5: Results ───────────────────────────────────────────── */
+      #step5 { display: none; }
+      .results-header { text-align: center; margin-bottom: 28px; }
+      .results-header h2 { font-size: 24px; font-weight: 700; margin-bottom: 6px; letter-spacing: -0.3px; }
+      .results-header p { font-size: 14px; color: var(--text-muted); }
 
-      .results-header {
-        text-align: center;
-        margin-bottom: 24px;
-      }
-      .results-header h2 {
-        font-size: 22px;
-        font-weight: 700;
-        margin-bottom: 6px;
-        letter-spacing: -0.3px;
-      }
-      .results-header p {
-        font-size: 14px;
-        color: var(--text-muted);
-      }
-
-      .pdf-cards {
-        display: grid;
-        grid-template-columns: 1fr;
-        gap: 10px;
+      /* ATS highlight card in results */
+      .ats-highlight-card {
+        background: linear-gradient(135deg, #6c63ff08, #6c63ff18);
+        border: 2px solid #c5c1ff;
+        border-radius: 16px;
+        padding: 24px;
         margin-bottom: 16px;
+        box-shadow: 0 4px 24px rgba(108,99,255,0.1);
       }
+      .ats-highlight-title { font-size: 13px; font-weight: 700; color: var(--purple); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 16px; }
+      .ats-highlight-sub { font-size: 13px; color: var(--text-muted); margin-top: 10px; text-align: center; }
+
+      /* PDF download cards */
+      .pdf-cards { display: grid; gap: 10px; margin-bottom: 16px; }
       .pdf-card {
-        background: var(--bg);
+        background: var(--bg-card);
         border: 1px solid var(--border);
         border-radius: 12px;
         padding: 16px 20px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 16px;
-        transition: border-color 0.15s;
+        display: flex; align-items: center; justify-content: space-between;
+        gap: 16px; transition: border-color 0.15s;
       }
-      .pdf-card:hover {
-        border-color: #c7c4f8;
-      }
-      .pdf-card-left {
-        display: flex;
-        align-items: center;
-        gap: 14px;
-      }
-      .pdf-icon-sm {
-        font-size: 22px;
-        flex-shrink: 0;
-      }
-      .pdf-title {
-        font-size: 14px;
-        font-weight: 600;
-        color: var(--text);
-      }
-      .pdf-desc {
-        font-size: 12px;
-        color: var(--text-muted);
-        margin-top: 2px;
-        line-height: 1.4;
-      }
+      .pdf-card:hover { border-color: #c7c4f8; }
+      .pdf-card.highlight { border-color: #c5c1ff; background: var(--purple-light); }
+      .pdf-card-left { display: flex; align-items: center; gap: 14px; }
+      .pdf-icon-sm { font-size: 22px; flex-shrink: 0; }
+      .pdf-title { font-size: 14px; font-weight: 600; color: var(--text); }
+      .pdf-badge { display: inline-block; font-size: 10px; font-weight: 700; background: var(--purple); color: white; padding: 2px 8px; border-radius: 20px; margin-left: 6px; vertical-align: middle; }
+      .pdf-desc { font-size: 12px; color: var(--text-muted); margin-top: 2px; line-height: 1.4; }
       .download-btn {
-        display: inline-flex;
-        align-items: center;
-        gap: 5px;
-        background: var(--purple);
-        color: white;
-        padding: 8px 16px;
-        border-radius: 8px;
-        font-size: 13px;
-        font-weight: 600;
-        text-decoration: none;
-        white-space: nowrap;
-        transition: background 0.15s;
-        flex-shrink: 0;
+        display: inline-flex; align-items: center; gap: 5px;
+        background: var(--purple); color: white;
+        padding: 8px 16px; border-radius: 8px;
+        font-size: 13px; font-weight: 600;
+        text-decoration: none; white-space: nowrap;
+        transition: background 0.15s; flex-shrink: 0;
       }
-      .download-btn:hover {
-        background: var(--purple-dark);
-      }
+      .download-btn:hover { background: var(--purple-dark); }
 
-      .try-again-btn {
-        display: block;
-        width: 100%;
-        padding: 12px;
-        background: var(--bg);
-        color: var(--text-muted);
+      /* Feedback section */
+      .feedback-card {
+        background: var(--bg-card);
         border: 1px solid var(--border);
-        border-radius: 10px;
-        font-size: 14px;
-        font-weight: 500;
-        font-family: "Inter", sans-serif;
+        border-radius: 16px;
+        padding: 24px;
+        text-align: center;
+        margin-bottom: 16px;
+        box-shadow: 0 4px 24px rgba(108,99,255,0.08);
+      }
+      .feedback-title { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 16px; }
+      .feedback-btns { display: flex; gap: 12px; justify-content: center; }
+      .feedback-btn {
+        padding: 10px 22px;
+        border-radius: 12px;
+        font-size: 22px;
         cursor: pointer;
+        border: 2px solid var(--border);
+        background: var(--bg-card);
         transition: all 0.15s;
       }
-      .try-again-btn:hover {
-        border-color: var(--purple);
-        color: var(--purple);
+      .feedback-btn:hover { border-color: var(--purple); transform: scale(1.1); }
+      .feedback-btn.selected { border-color: var(--purple); background: var(--purple-light); }
+      .feedback-thanks { font-size: 14px; color: var(--success); font-weight: 600; display: none; margin-top: 12px; }
+      .feedback-thanks.visible { display: block; }
+
+      /* ─── Spinners & Loading ────────────────────────────────────────── */
+      .loading-row {
+        display: flex; align-items: center; gap: 10px;
+        padding: 16px 0;
+        font-size: 14px; color: var(--text-muted);
       }
 
-      /* Footer */
-      .footer {
-        text-align: center;
-        padding: 40px 0 0;
-        color: var(--text-subtle);
-        font-size: 12px;
-      }
+      /* ─── Footer ────────────────────────────────────────────────────── */
+      .footer { text-align: center; padding: 40px 0 0; color: var(--text-subtle); font-size: 12px; }
 
+      /* ─── Mobile ────────────────────────────────────────────────────── */
       @media (max-width: 600px) {
-        .page {
-          padding: 32px 16px 60px;
-        }
-        .hero h1 {
-          font-size: 24px;
-        }
-        .pdf-card {
-          flex-direction: column;
-          align-items: flex-start;
-        }
-        .download-btn {
-          width: 100%;
-          justify-content: center;
-        }
-        .form-card {
-          padding: 20px;
-        }
+        .app { padding: 28px 16px 60px; }
+        .option-cards { grid-template-columns: 1fr; }
+        .form-row { grid-template-columns: 1fr; }
+        .pdf-card { flex-direction: column; align-items: flex-start; }
+        .download-btn { width: 100%; justify-content: center; }
+        .card { padding: 20px; }
+        .welcome-hero h1 { font-size: 26px; }
+        .feedback-btns { gap: 8px; }
+        .ats-bar-label { width: 100px; font-size: 12px; }
       }
     </style>
   </head>
   <body>
-  <!-- Welcome Screen -->
+
+  <!-- ─── Welcome Splash (2 second fade) ──────────────────────────────────── -->
   <div id="welcome-screen">
     <h1>Hello Guys 👋</h1>
   </div>
@@ -899,334 +589,287 @@
       setTimeout(function() { ws.style.display = 'none'; }, 800);
     }, 2000);
   </script>
-    <!-- AUTH PANEL -->
-    <div class="auth-panel" id="authPanel">
-      <div class="auth-box">
-        <div class="auth-brand">
-          <div class="auth-brand-icon">9L</div>
-          <span class="auth-brand-name">Nine Lab</span>
-        </div>
 
-        <!-- Login form -->
-        <div id="loginForm">
-          <div class="auth-title">Welcome back</div>
-          <div class="auth-subtitle">
-            Log in to continue your placement prep.
-          </div>
-          <div class="auth-card">
-            <div class="auth-error" id="loginError"></div>
-            <div class="auth-success" id="loginSuccess"></div>
-            <form onsubmit="handleLogin(); return false;" autocomplete="on">
-              <div class="auth-field">
-                <label>Email</label>
-                <input
-                  type="email"
-                  id="loginEmail"
-                  placeholder="you@email.com"
-                  autocomplete="email"
-                />
-              </div>
-              <div class="auth-field">
-                <label>Password</label>
-                <input
-                  type="password"
-                  id="loginPassword"
-                  placeholder="Your password"
-                  autocomplete="current-password"
-                />
-              </div>
-              <button class="auth-btn" id="loginBtn" type="submit">
-                Log In →
-              </button>
-            </form>
-          </div>
-          <div class="auth-toggle">
-            Don't have an account? <a onclick="showRegister()">Sign up free</a>
-          </div>
-        </div>
+  <!-- ─── Main App ──────────────────────────────────────────────────────────── -->
+  <div class="app" id="app">
 
-        <!-- Register form -->
-        <div id="registerForm" style="display: none">
-          <div class="auth-title">Create your account</div>
-          <div class="auth-subtitle">Free forever. No credit card needed.</div>
-          <div class="auth-card">
-            <div class="auth-error" id="registerError"></div>
-            <div class="auth-success" id="registerSuccess"></div>
-            <form onsubmit="handleRegister(); return false;" autocomplete="on">
-              <div class="auth-field">
-                <label>Full Name</label>
-                <input
-                  type="text"
-                  id="registerName"
-                  placeholder="Your name"
-                  autocomplete="name"
-                />
-              </div>
-              <div class="auth-field">
-                <label>Email</label>
-                <input
-                  type="email"
-                  id="registerEmail"
-                  placeholder="you@email.com"
-                  autocomplete="email"
-                />
-              </div>
-              <div class="auth-field">
-                <label
-                  >Password
-                  <span style="font-weight: 400; color: var(--text-subtle)"
-                    >(min 6 characters)</span
-                  ></label
-                >
-                <input
-                  type="password"
-                  id="registerPassword"
-                  placeholder="Create a password"
-                  autocomplete="new-password"
-                />
-              </div>
-              <button class="auth-btn" id="registerBtn" type="submit">
-                Create Account →
-              </button>
-            </form>
-          </div>
-          <div class="auth-toggle">
-            Already have an account? <a onclick="showLogin()">Log in</a>
-          </div>
+    <!-- ═══════════════════════════════════════════════
+         STEP 0 — Welcome / Landing
+    ════════════════════════════════════════════════ -->
+    <div id="step0">
+      <!-- Brand -->
+      <div class="brand">
+        <div class="brand-icon">9L</div>
+        <span class="brand-name">Nine Lab</span>
+      </div>
+
+      <!-- Welcome back banner (shown if localStorage profile exists) -->
+      <div class="welcome-back-banner" id="welcomeBackBanner">
+        <div class="wb-title" id="wbTitle">Welcome back!</div>
+        <div class="wb-sub">You have a saved profile. Continue where you left off?</div>
+        <div class="wb-btns">
+          <button class="wb-btn-yes" onclick="useSavedProfile()">Yes, use it</button>
+          <button class="wb-btn-no" onclick="startFresh()">Start fresh</button>
         </div>
+      </div>
+
+      <!-- Hero -->
+      <div class="welcome-hero">
+        <h1>Let's build your placement kit</h1>
+        <p>Tell us about yourself and the job — we'll generate a tailored ATS resume, prep plan, and company report in minutes.</p>
+      </div>
+
+      <!-- Option cards -->
+      <div class="option-cards">
+        <div class="option-card" onclick="startUploadFlow()">
+          <span class="oc-icon">📄</span>
+          <div class="oc-title">Upload Resume PDF</div>
+          <div class="oc-sub">We'll extract your info automatically</div>
+          <input type="file" id="pdfUploadInput" accept=".pdf" style="display:none" onchange="handlePdfUpload(this.files[0])" />
+        </div>
+        <div class="option-card" onclick="goToStep1()">
+          <span class="oc-icon">✏️</span>
+          <div class="oc-title">Fill in 2 mins</div>
+          <div class="oc-sub">Answer a few quick questions</div>
+        </div>
+      </div>
+
+      <div class="welcome-footer">
+        No login required <span>·</span> Free to use <span>·</span> Your data stays in your browser
       </div>
     </div>
 
-    <!-- MAIN APP -->
-    <div class="page" id="mainApp" style="display: none">
+    <!-- ═══════════════════════════════════════════════
+         STEP 1 — Manual Profile Form
+    ════════════════════════════════════════════════ -->
+    <div id="step1">
+      <div class="step-header">
+        <button class="back-btn" onclick="goToStep(0)" title="Back">←</button>
+        <div class="step-title">Tell us about yourself</div>
+      </div>
+
+      <!-- Section 1: Basic Info -->
+      <div class="card section">
+        <div class="card-title">👤 Basic Info</div>
+        <div class="form-group">
+          <label class="form-label">Full Name <span style="color:var(--error);font-size:11px;">*</span></label>
+          <input type="text" id="f_name" placeholder="Your full name" />
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Email <span style="color:var(--error);font-size:11px;">*</span></label>
+            <input type="email" id="f_email" placeholder="you@example.com" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Phone <span class="opt">(optional)</span></label>
+            <input type="text" id="f_phone" placeholder="+91 98765 43210" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">LinkedIn URL <span class="opt">(optional)</span></label>
+            <input type="text" id="f_linkedin" placeholder="linkedin.com/in/yourprofile" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">City / Location <span class="opt">(optional)</span></label>
+            <input type="text" id="f_city" placeholder="Bengaluru, India" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 2: Education -->
+      <div class="card">
+        <div class="card-title">🎓 Education</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Degree <span style="color:var(--error);font-size:11px;">*</span></label>
+            <select id="f_degree">
+              <option value="">Select degree</option>
+              <option>B.Tech</option>
+              <option>MCA</option>
+              <option>MBA</option>
+              <option>B.Sc</option>
+              <option>B.Com</option>
+              <option>BCA</option>
+              <option>M.Tech</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Field of Study</label>
+            <input type="text" id="f_field" placeholder="Computer Science" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">College / University</label>
+          <input type="text" id="f_college" placeholder="XYZ University" />
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Graduation Year</label>
+            <select id="f_gradyear">
+              <option value="">Select year</option>
+              <option>2020</option><option>2021</option><option>2022</option>
+              <option>2023</option><option>2024</option><option>2025</option>
+              <option>2026</option><option>2027</option><option>2028</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">CGPA / Percentage <span class="opt">(optional)</span></label>
+            <input type="text" id="f_cgpa" placeholder="8.5 / 85%" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 3: Work Experience -->
+      <div class="card" id="expCard">
+        <div class="card-title">💼 Work Experience</div>
+        <label class="check-row">
+          <input type="checkbox" id="f_fresher" onchange="toggleFresher(this.checked)" />
+          <span>I'm a fresher (no work experience)</span>
+        </label>
+        <div id="expFields">
+          <!-- Roles get added here dynamically -->
+        </div>
+        <button class="add-role-btn" id="addRoleBtn" onclick="addRoleBlock()">+ Add another role</button>
+      </div>
+
+      <!-- Section 4: Skills & Projects -->
+      <div class="card">
+        <div class="card-title">🛠️ Skills &amp; Projects</div>
+        <div class="form-group">
+          <label class="form-label">Technical Skills</label>
+          <input type="text" id="f_skills" placeholder="Python, React, SQL, Git..." />
+          <div class="skill-chips" id="skillChips">
+            <!-- Chips rendered by JS -->
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Projects</label>
+          <textarea id="f_projects" rows="3" placeholder="Project name — brief description + tech used. e.g. Nine Lab — AI placement prep tool using FastAPI and React, deployed on Railway."></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Achievements / Certifications <span class="opt">(optional)</span></label>
+          <textarea id="f_achievements" rows="2" placeholder="AWS Certified Developer, Won state-level hackathon 2023..."></textarea>
+        </div>
+      </div>
+
+      <div class="error-box" id="step1Error"></div>
+
+      <button class="btn-primary" onclick="submitStep1()">Continue →</button>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════
+         STEP 1b — Upload + Confirm
+    ════════════════════════════════════════════════ -->
+    <div id="step1b">
+      <div class="step-header">
+        <button class="back-btn" onclick="goToStep(0)" title="Back">←</button>
+        <div class="step-title">Review your extracted resume</div>
+      </div>
+
+      <!-- Loading state -->
+      <div class="card" id="extractLoading" style="display:none;">
+        <div class="loading-row">
+          <div class="spinner"></div>
+          Extracting your resume...
+        </div>
+      </div>
+
+      <!-- Extracted text review -->
+      <div class="card" id="extractReview" style="display:none;">
+        <div class="card-title">📄 Extracted Resume Text</div>
+        <p style="font-size:13px; color:var(--text-muted); margin-bottom:12px;">We extracted this from your resume — review and edit if needed.</p>
+        <textarea id="extractedText" rows="14" placeholder="Extracted resume text will appear here..."></textarea>
+        <div class="error-box" id="step1bError" style="margin-top:12px;"></div>
+        <button class="btn-primary" style="margin-top:16px;" onclick="confirmExtract()">Looks good, continue →</button>
+        <button class="btn-outline" onclick="goToStep1()">Fill manually instead</button>
+      </div>
+
+      <!-- Extract error state -->
+      <div class="card" id="extractError" style="display:none;">
+        <p style="font-size:14px; color:var(--error); margin-bottom:12px;">Could not extract text from your PDF. The file may be scanned or protected.</p>
+        <button class="btn-primary" onclick="goToStep1()">Fill manually instead</button>
+        <button class="btn-outline" onclick="startUploadFlow()">Try another PDF</button>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════
+         STEP 2 — Profile Summary
+    ════════════════════════════════════════════════ -->
+    <div id="step2">
+      <div class="step-header">
+        <button class="back-btn" onclick="goToStep(1)" title="Back">←</button>
+        <div class="step-title">Here's your profile</div>
+      </div>
+
+      <div class="card">
+        <div class="profile-summary" id="profileSummaryContent">
+          <!-- Rendered by JS -->
+        </div>
+        <a class="edit-profile-link" onclick="goToStep(1)">Edit profile</a>
+      </div>
+
+      <button class="btn-primary" onclick="goToStep(3)">This looks right →</button>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════
+         STEP 3 — Job Details
+    ════════════════════════════════════════════════ -->
+    <div id="step3">
+      <div class="step-header">
+        <button class="back-btn" onclick="goToStep(2)" title="Back">←</button>
+        <div class="step-title">Which opportunity are you targeting?</div>
+      </div>
+
+      <div class="card">
+        <p style="font-size:14px; color:var(--text-muted); margin-bottom:16px; line-height:1.6;">Paste the full job description below — the more detail, the better your kit.</p>
+
+        <div class="form-group">
+          <label class="form-label">Job Description <span style="color:var(--error);font-size:11px;">*</span></label>
+          <textarea id="jdInput" rows="8" placeholder="Paste job description from LinkedIn, Naukri, Internshala, or any job posting..."></textarea>
+          <div class="word-count" id="jdWordCount">0 words</div>
+        </div>
+
+        <div class="info-box" style="margin-bottom:16px;">
+          💡 Don't have a JD yet? You can also paste the role title and key skills.
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="form-group">
+          <label class="form-label">Company Name <span class="opt">(recommended)</span></label>
+          <input type="text" id="companyInput" placeholder="e.g. Google, Infosys, Zomato..." maxlength="100" />
+          <p style="font-size:12px; color:var(--text-subtle); margin-top:6px;">We'll research this company for your prep report.</p>
+        </div>
+
+        <!-- ATS Score collapsible -->
+        <div class="ats-toggle-header" onclick="toggleATSSection()">
+          <span class="ats-toggle-title">🎯 Check your ATS match score first</span>
+          <span class="ats-toggle-arrow" id="atsArrow">▼</span>
+        </div>
+        <div class="ats-toggle-body" id="atsToggleBody">
+          <button class="btn-outline" style="margin-bottom:12px;" onclick="handleATSScore()">Check ATS Score</button>
+          <div id="atsPanelStep3" style="display:none;"></div>
+        </div>
+
+        <div class="error-box" id="step3Error" style="margin-top:16px;"></div>
+
+        <button class="btn-primary" style="margin-top:20px;" onclick="handleGenerate()">Generate My Kit →</button>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════
+         STEP 4 — Progress
+    ════════════════════════════════════════════════ -->
+    <div id="step4">
       <div class="brand">
         <div class="brand-icon">9L</div>
-        <div>
-          <span class="brand-name">Nine Lab</span>
-          <span class="brand-tag">· Placement prep, simplified</span>
-        </div>
+        <span class="brand-name">Nine Lab</span>
       </div>
 
-      <!-- User bar -->
-      <div class="user-bar" id="userBar">
-        <div class="user-bar-info">
-          Signed in as <strong id="userEmail"></strong>
-        </div>
-        <button class="logout-btn" onclick="handleLogout()">Log out</button>
-      </div>
-
-      <div class="hero">
-        <h1>Your placement kit,<br /><span>ready in minutes.</span></h1>
-        <p>
-          Paste your resume and job description. Our AI generates a personalized
-          Reality Report, Prep Plan, and revised resume — all as downloadable
-          PDFs.
-        </p>
-      </div>
-
-      <div class="setup-banner" id="setupBanner">
-        <p>
-          <strong>Setup required:</strong> GEMINI_API_KEY and/or TAVILY_API_KEY
-          are not configured as environment variables.
-        </p>
-      </div>
-
-      <div class="form-card" id="formCard">
-        <div class="form-group">
-          <label class="form-label">Resume</label>
-          <input
-            type="file"
-            id="resumePdfInput"
-            accept=".pdf"
-            style="display: none"
-            onchange="handlePdfFile(this.files[0])"
-          />
-          <div
-            class="upload-zone"
-            id="uploadZone"
-            onclick="document.getElementById('resumePdfInput').click()"
-            ondragover="handleDragOver(event)"
-            ondragleave="handleDragLeave(event)"
-            ondrop="handleDrop(event)"
-          >
-            <div id="uploadDefault">
-              <div class="upload-main">Upload PDF</div>
-              <div class="upload-sub">
-                Drag & drop or
-                <b
-                  onclick="event.stopPropagation(); document.getElementById('resumePdfInput').click()"
-                  >browse</b
-                >
-              </div>
-            </div>
-            <div id="uploadLoading" style="display: none">
-              <span class="upload-spinner"></span>
-              <span
-                style="font-size: 13px; color: var(--purple); font-weight: 500"
-                >Reading PDF...</span
-              >
-            </div>
-            <div id="uploadSuccess" style="display: none">
-              <div class="upload-success-msg">
-                <span>✓</span>
-                <span id="uploadSuccessText">Extracted</span>
-                <span
-                  class="clear-upload"
-                  onclick="event.stopPropagation(); clearUpload()"
-                  >Remove</span
-                >
-              </div>
-            </div>
-            <div id="uploadError" style="display: none">
-              <div class="upload-error-msg" id="uploadErrorText">
-                Could not read PDF
-              </div>
-              <span
-                style="
-                  font-size: 11px;
-                  color: var(--text-muted);
-                  cursor: pointer;
-                  display: block;
-                  margin-top: 4px;
-                "
-                onclick="event.stopPropagation(); document.getElementById('resumePdfInput').click()"
-                >Try another file</span
-              >
-            </div>
-          </div>
-          <div class="or-divider">or paste below</div>
-
-          <div class="linkedin-import-box">
-            <div class="linkedin-import-header">
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="#0A66C2"
-                style="flex-shrink: 0"
-              >
-                <path
-                  d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"
-                />
-              </svg>
-              <span>Import from LinkedIn</span>
-            </div>
-            <div class="linkedin-import-row">
-              <input
-                type="url"
-                id="linkedinUrl"
-                placeholder="https://linkedin.com/in/your-profile"
-                autocomplete="off"
-              />
-              <button
-                class="linkedin-import-btn"
-                id="linkedinImportBtn"
-                onclick="importLinkedIn()"
-              >
-                Import
-              </button>
-            </div>
-            <div
-              id="linkedinStatus"
-              class="linkedin-status"
-              style="display: none"
-            ></div>
-          </div>
-
-          <textarea
-            id="resumeInput"
-            rows="8"
-            placeholder="Paste your resume text here..."
-          ></textarea>
-          <div class="word-count" id="resumeCount">0 words</div>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">Job Description</label>
-          <textarea
-            id="jdInput"
-            rows="6"
-            placeholder="Paste the job description here..."
-          ></textarea>
-          <div class="word-count" id="jdCount">0 words</div>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">Company Name</label>
-          <input
-            type="text"
-            id="companyInput"
-            placeholder="e.g. Google, Infosys, Zomato..."
-            maxlength="100"
-          />
-        </div>
-
-        <div class="error-box" id="errorBox"></div>
-
-        <button class="submit-btn" id="submitBtn" onclick="handleSubmit()">
-          <span id="submitBtnText">Generate My Kit →</span>
-        </button>
-
-        <button class="ats-btn" id="atsBtn" onclick="handleATSScore()">
-          🎯 Check ATS Score First
-        </button>
-
-        <!-- ATS Score Results Panel -->
-        <div class="ats-panel" id="atsPanel">
-          <div class="ats-header">
-            <div class="ats-circle" id="atsCircle">
-              <div class="ats-circle-score" id="atsScoreNum">--</div>
-              <div class="ats-circle-pct">/ 100</div>
-            </div>
-            <div class="ats-score-info">
-              <div class="ats-score-label" id="atsScoreLabel">Checking...</div>
-              <div class="ats-score-sub" id="atsScoreSub">ATS compatibility score for your resume vs this job description</div>
-            </div>
-          </div>
-
-          <div class="ats-breakdown">
-            <div class="ats-breakdown-title">Score Breakdown</div>
-            <div class="ats-bar-row">
-              <div class="ats-bar-label">JD Keywords</div>
-              <div class="ats-bar-track"><div class="ats-bar-fill" id="barKeywords" style="width:0%;background:#6c63ff"></div></div>
-              <div class="ats-bar-val" id="valKeywords">0%</div>
-            </div>
-            <div class="ats-bar-row">
-              <div class="ats-bar-label">Technical Skills</div>
-              <div class="ats-bar-track"><div class="ats-bar-fill" id="barTech" style="width:0%;background:#3b82f6"></div></div>
-              <div class="ats-bar-val" id="valTech">0%</div>
-            </div>
-            <div class="ats-bar-row">
-              <div class="ats-bar-label">Soft Skills</div>
-              <div class="ats-bar-track"><div class="ats-bar-fill" id="barSoft" style="width:0%;background:#22c55e"></div></div>
-              <div class="ats-bar-val" id="valSoft">0%</div>
-            </div>
-            <div class="ats-bar-row">
-              <div class="ats-bar-label">Resume Format</div>
-              <div class="ats-bar-track"><div class="ats-bar-fill" id="barFormat" style="width:0%;background:#f59e0b"></div></div>
-              <div class="ats-bar-val" id="valFormat">0%</div>
-            </div>
-          </div>
-
-          <div class="ats-tags-section" id="atsMatchedSection">
-            <div class="ats-tags-title">✅ Matched Keywords</div>
-            <div class="ats-tags" id="atsMatchedTags"></div>
-          </div>
-
-          <div class="ats-tags-section" id="atsMissingSection">
-            <div class="ats-tags-title">❌ Missing Keywords</div>
-            <div class="ats-tags" id="atsMissingTags"></div>
-          </div>
-
-          <div class="ats-suggestions">
-            <div class="ats-suggestions-title">💡 How to Improve</div>
-            <div id="atsSuggestions"></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="progress-panel" id="progressPanel">
-        <div class="progress-emoji" id="progressEmoji">🤖</div>
+      <div class="progress-card">
+        <span class="progress-emoji" id="progressEmoji">🤖</span>
         <div class="progress-title">Generating your kit</div>
         <div class="progress-msg" id="progressMsg">Starting up...</div>
         <div class="progress-bar-wrap">
@@ -1234,813 +877,987 @@
         </div>
         <div class="progress-pct" id="progressPct">0%</div>
         <div class="pipeline-steps">
-          <div class="pipe-step" id="step-research">
-            <div class="pipe-dot"></div>
-            Research
-          </div>
-          <div class="pipe-step" id="step-analysis">
-            <div class="pipe-dot"></div>
-            Analysis
-          </div>
-          <div class="pipe-step" id="step-plan">
-            <div class="pipe-dot"></div>
-            Prep Plan
-          </div>
-          <div class="pipe-step" id="step-pdf">
-            <div class="pipe-dot"></div>
-            PDFs
-          </div>
+          <div class="pipe-step" id="ps-analyze"><div class="pipe-dot"></div>🔍 Analyzing</div>
+          <div class="pipe-step" id="ps-match"><div class="pipe-dot"></div>🧠 Matching</div>
+          <div class="pipe-step" id="ps-resume"><div class="pipe-dot"></div>✍️ ATS Resume</div>
+          <div class="pipe-step" id="ps-reports"><div class="pipe-dot"></div>📊 Reports</div>
+          <div class="pipe-step" id="ps-pdfs"><div class="pipe-dot"></div>📄 PDFs</div>
         </div>
       </div>
-
-      <div class="results-panel" id="resultsPanel">
-        <div class="results-header">
-          <h2>Your kit is ready</h2>
-          <p>Download your 4 personalized PDFs below</p>
-        </div>
-        <div class="pdf-cards">
-          <div class="pdf-card">
-            <div class="pdf-card-left">
-              <span class="pdf-icon-sm">📊</span>
-              <div>
-                <div class="pdf-title">Reality Report</div>
-                <div class="pdf-desc">
-                  Match score, gap analysis, and honest skill assessment
-                </div>
-              </div>
-            </div>
-            <a href="#" class="download-btn" id="downloadReality">↓ Download</a>
-          </div>
-          <div class="pdf-card">
-            <div class="pdf-card-left">
-              <span class="pdf-icon-sm">📅</span>
-              <div>
-                <div class="pdf-title">Prep Plan</div>
-                <div class="pdf-desc">
-                  Structured schedule, mock questions, and resources
-                </div>
-              </div>
-            </div>
-            <a href="#" class="download-btn" id="downloadPlan">↓ Download</a>
-          </div>
-          <div class="pdf-card">
-            <div class="pdf-card-left">
-              <span class="pdf-icon-sm">✨</span>
-              <div>
-                <div class="pdf-title">Revised Resume</div>
-                <div class="pdf-desc">
-                  ATS-optimized and tailored to this job description
-                </div>
-              </div>
-            </div>
-            <a href="#" class="download-btn" id="downloadResume">↓ Download</a>
-          </div>
-          <div class="pdf-card">
-            <div class="pdf-card-left">
-              <span class="pdf-icon-sm">🏢</span>
-              <div>
-                <div class="pdf-title">Company Report</div>
-                <div class="pdf-desc">
-                  Interview process, culture, salary, and insider tips
-                </div>
-              </div>
-            </div>
-            <a href="#" class="download-btn" id="downloadCompany">↓ Download</a>
-          </div>
-        </div>
-        <button class="try-again-btn" onclick="resetApp()">Start over</button>
-      </div>
-
-      <footer class="footer">Nine Lab · Built for Indian students</footer>
     </div>
-    <script>
-      const BASE = "/ninelab";
-      let currentJobId = null;
-      let pollInterval = null;
 
-      // ── Auth State ───────────────────────────────────────────────────────────
-      let authToken = null;
-      let authUser = null;
+    <!-- ═══════════════════════════════════════════════
+         STEP 5 — Results
+    ════════════════════════════════════════════════ -->
+    <div id="step5">
+      <div class="brand">
+        <div class="brand-icon">9L</div>
+        <span class="brand-name">Nine Lab</span>
+      </div>
 
-      function saveSession(token, refreshToken, user) {
-        authToken = token;
-        authUser = user;
-        localStorage.setItem("nl_token", token);
-        localStorage.setItem("nl_refresh", refreshToken || "");
-        localStorage.setItem("nl_user", JSON.stringify(user));
+      <div class="results-header">
+        <h2>Your placement kit is ready! 🎉</h2>
+        <p>Download your 4 personalized PDFs below</p>
+      </div>
+
+      <!-- ATS Score Highlight (top, most prominent) -->
+      <div class="ats-highlight-card">
+        <div class="ats-highlight-title">🎯 ATS Match Score</div>
+        <div id="atsResultStep5">
+          <!-- Rendered by JS after generate completes -->
+          <div class="loading-row" id="atsStep5Loading">
+            <div class="spinner"></div>
+            Calculating your ATS score...
+          </div>
+        </div>
+        <div class="ats-highlight-sub">Your resume has been optimized for this role</div>
+      </div>
+
+      <!-- PDF Cards -->
+      <div class="pdf-cards">
+        <div class="pdf-card">
+          <div class="pdf-card-left">
+            <span class="pdf-icon-sm">📊</span>
+            <div>
+              <div class="pdf-title">Reality Report</div>
+              <div class="pdf-desc">Match score, gap analysis, and honest skill assessment</div>
+            </div>
+          </div>
+          <a href="#" class="download-btn" id="dlReality">↓ Download</a>
+        </div>
+        <div class="pdf-card">
+          <div class="pdf-card-left">
+            <span class="pdf-icon-sm">📅</span>
+            <div>
+              <div class="pdf-title">Prep Plan</div>
+              <div class="pdf-desc">Structured schedule, mock questions, and resources</div>
+            </div>
+          </div>
+          <a href="#" class="download-btn" id="dlPlan">↓ Download</a>
+        </div>
+        <div class="pdf-card highlight">
+          <div class="pdf-card-left">
+            <span class="pdf-icon-sm">✨</span>
+            <div>
+              <div class="pdf-title">ATS Resume <span class="pdf-badge">⭐ Optimized</span></div>
+              <div class="pdf-desc">ATS-optimized and tailored to this job description</div>
+            </div>
+          </div>
+          <a href="#" class="download-btn" id="dlResume">↓ Download</a>
+        </div>
+        <div class="pdf-card">
+          <div class="pdf-card-left">
+            <span class="pdf-icon-sm">🏢</span>
+            <div>
+              <div class="pdf-title">Company Report</div>
+              <div class="pdf-desc">Interview process, culture, salary, and insider tips</div>
+            </div>
+          </div>
+          <a href="#" class="download-btn" id="dlCompany">↓ Download</a>
+        </div>
+      </div>
+
+      <!-- Feedback -->
+      <div class="feedback-card">
+        <div class="feedback-title">How was your experience?</div>
+        <div class="feedback-btns">
+          <button class="feedback-btn" onclick="submitFeedback('okay', this)" title="Okay">😐</button>
+          <button class="feedback-btn" onclick="submitFeedback('good', this)" title="Good">😊</button>
+          <button class="feedback-btn" onclick="submitFeedback('amazing', this)" title="Amazing">🤩</button>
+        </div>
+        <div class="feedback-thanks" id="feedbackThanks">Thanks for the feedback! ❤️</div>
+      </div>
+
+      <button class="btn-outline" onclick="resetApp()">Start Over</button>
+    </div>
+
+    <footer class="footer">Nine Lab · Built for Indian students</footer>
+  </div>
+
+  <script>
+    /* ─────────────────────────────────────────────────────────────────────────
+       CONSTANTS & STATE
+    ───────────────────────────────────────────────────────────────────────── */
+    const BASE = "/ninelab";
+
+    // App state
+    let currentStep = 0;         // which step is showing
+    let currentJobId = null;     // polling job id
+    let pollInterval = null;     // setInterval handle
+    let assembledResume = "";    // the built resume text passed to /generate
+    let lastATSResult = null;    // cached ATS result from step 3
+    let roleCount = 0;           // how many role blocks have been added
+
+    // Profile data (mirrors form fields)
+    let profileData = {};
+
+    /* ─────────────────────────────────────────────────────────────────────────
+       STEP NAVIGATION
+    ───────────────────────────────────────────────────────────────────────── */
+    const STEPS = ['step0','step1','step1b','step2','step3','step4','step5'];
+
+    function showStep(id) {
+      STEPS.forEach(s => document.getElementById(s).style.display = 'none');
+      document.getElementById(id).style.display = 'block';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // goToStep uses numeric mapping: 0=step0, 1=step1, 1.5=step1b, 2=step2, 3=step3, 4=step4, 5=step5
+    function goToStep(n) {
+      const map = { 0: 'step0', 1: 'step1', 1.5: 'step1b', 2: 'step2', 3: 'step3', 4: 'step4', 5: 'step5' };
+      if (map[n]) {
+        currentStep = n;
+        showStep(map[n]);
+      }
+    }
+
+    /* ─────────────────────────────────────────────────────────────────────────
+       LOCAL STORAGE — Profile persistence
+    ───────────────────────────────────────────────────────────────────────── */
+    const PROFILE_KEY = 'nl_profile';
+
+    function saveProfile(data) {
+      localStorage.setItem(PROFILE_KEY, JSON.stringify(data));
+    }
+
+    function loadProfile() {
+      try {
+        const raw = localStorage.getItem(PROFILE_KEY);
+        return raw ? JSON.parse(raw) : null;
+      } catch(e) { return null; }
+    }
+
+    function clearProfile() {
+      localStorage.removeItem(PROFILE_KEY);
+    }
+
+    /* ─────────────────────────────────────────────────────────────────────────
+       WELCOME BACK BANNER
+    ───────────────────────────────────────────────────────────────────────── */
+    function checkWelcomeBack() {
+      const saved = loadProfile();
+      if (saved && saved.name) {
+        const banner = document.getElementById('welcomeBackBanner');
+        document.getElementById('wbTitle').textContent = `Welcome back, ${saved.name}!`;
+        banner.classList.add('visible');
+      }
+    }
+
+    function useSavedProfile() {
+      const saved = loadProfile();
+      if (saved) {
+        profileData = saved;
+        fillFormFromProfile(saved);
+        // Skip to step 2 (profile summary)
+        renderProfileSummary();
+        goToStep(2);
+      }
+      document.getElementById('welcomeBackBanner').classList.remove('visible');
+    }
+
+    function startFresh() {
+      clearProfile();
+      profileData = {};
+      document.getElementById('welcomeBackBanner').classList.remove('visible');
+    }
+
+    /* ─────────────────────────────────────────────────────────────────────────
+       STEP 0 — Upload flow trigger
+    ───────────────────────────────────────────────────────────────────────── */
+    function startUploadFlow() {
+      document.getElementById('pdfUploadInput').click();
+    }
+
+    async function handlePdfUpload(file) {
+      if (!file) return;
+      if (!file.name.toLowerCase().endsWith('.pdf')) {
+        alert('Please upload a PDF file.');
+        return;
+      }
+      if (file.size > 10 * 1024 * 1024) {
+        alert('File too large — max 10MB.');
+        return;
       }
 
-      function clearSession() {
-        authToken = null;
-        authUser = null;
-        localStorage.removeItem("nl_token");
-        localStorage.removeItem("nl_refresh");
-        localStorage.removeItem("nl_user");
+      // Show step1b loading
+      goToStep(1.5);
+      document.getElementById('extractLoading').style.display = 'block';
+      document.getElementById('extractReview').style.display = 'none';
+      document.getElementById('extractError').style.display = 'none';
+
+      const formData = new FormData();
+      formData.append('file', file);
+
+      try {
+        const resp = await fetch(`${BASE}/extract-resume`, {
+          method: 'POST',
+          body: formData
+        });
+        const data = await resp.json();
+        document.getElementById('extractLoading').style.display = 'none';
+
+        if (!resp.ok || !data.text) {
+          document.getElementById('extractError').style.display = 'block';
+          return;
+        }
+
+        document.getElementById('extractedText').value = data.text;
+        document.getElementById('extractReview').style.display = 'block';
+      } catch(e) {
+        document.getElementById('extractLoading').style.display = 'none';
+        document.getElementById('extractError').style.display = 'block';
+      }
+    }
+
+    function confirmExtract() {
+      const text = document.getElementById('extractedText').value.trim();
+      if (!text) {
+        showStepError('step1bError', 'Extracted text is empty. Please fill manually.');
+        return;
+      }
+      // Use extracted text as resume
+      assembledResume = text;
+      // For profile summary, just show raw text mode
+      profileData = { _rawResume: text };
+      renderProfileSummary();
+      goToStep(2);
+    }
+
+    /* ─────────────────────────────────────────────────────────────────────────
+       STEP 1 — Manual form
+    ───────────────────────────────────────────────────────────────────────── */
+    function goToStep1() {
+      initExpFields();
+      initSkillChips();
+      goToStep(1);
+    }
+
+    // Initialize one default role block if none exist
+    function initExpFields() {
+      const container = document.getElementById('expFields');
+      if (container.children.length === 0) {
+        roleCount = 0;
+        addRoleBlock();
+      }
+    }
+
+    // Skill chip helpers
+    const COMMON_SKILLS = ['Python','Java','JavaScript','React','Node.js','SQL','Git','Docker','AWS','Machine Learning'];
+
+    function initSkillChips() {
+      const wrap = document.getElementById('skillChips');
+      if (wrap.children.length > 0) return; // already initialized
+      COMMON_SKILLS.forEach(skill => {
+        const chip = document.createElement('span');
+        chip.className = 'chip';
+        chip.textContent = skill;
+        chip.onclick = () => appendSkill(skill);
+        wrap.appendChild(chip);
+      });
+    }
+
+    function appendSkill(skill) {
+      const input = document.getElementById('f_skills');
+      const current = input.value.trim();
+      // Don't duplicate
+      const existing = current.split(',').map(s => s.trim().toLowerCase());
+      if (existing.includes(skill.toLowerCase())) return;
+      input.value = current ? current + ', ' + skill : skill;
+    }
+
+    function addRoleBlock() {
+      const container = document.getElementById('expFields');
+      const idx = roleCount++;
+      const block = document.createElement('div');
+      block.className = 'role-block';
+      block.id = `role_${idx}`;
+      block.innerHTML = `
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Job Title</label>
+            <input type="text" id="r_title_${idx}" placeholder="Software Engineer" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Company Name</label>
+            <input type="text" id="r_company_${idx}" placeholder="TCS, Infosys..." />
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Duration</label>
+          <input type="text" id="r_duration_${idx}" placeholder="Jun 2023 – Present" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Key Responsibilities</label>
+          <textarea id="r_resp_${idx}" rows="3" placeholder="What did you do? e.g. Built REST APIs using Python, Reduced load time by 40%..."></textarea>
+        </div>
+      `;
+      container.appendChild(block);
+    }
+
+    function toggleFresher(isFresher) {
+      const expFields = document.getElementById('expFields');
+      const addBtn = document.getElementById('addRoleBtn');
+      expFields.style.display = isFresher ? 'none' : 'block';
+      addBtn.style.display = isFresher ? 'none' : 'inline-flex';
+    }
+
+    function submitStep1() {
+      const name = document.getElementById('f_name').value.trim();
+      const email = document.getElementById('f_email').value.trim();
+      const degree = document.getElementById('f_degree').value;
+
+      if (!name) { showStepError('step1Error', 'Full Name is required.'); return; }
+      if (!email) { showStepError('step1Error', 'Email is required.'); return; }
+      if (!degree) { showStepError('step1Error', 'Please select your degree.'); return; }
+
+      clearStepError('step1Error');
+
+      // Collect experience roles
+      const isFresher = document.getElementById('f_fresher').checked;
+      const roles = [];
+      if (!isFresher) {
+        for (let i = 0; i < roleCount; i++) {
+          const el = document.getElementById(`role_${i}`);
+          if (!el) continue;
+          const title = (document.getElementById(`r_title_${i}`)?.value || '').trim();
+          const comp = (document.getElementById(`r_company_${i}`)?.value || '').trim();
+          const dur = (document.getElementById(`r_duration_${i}`)?.value || '').trim();
+          const resp = (document.getElementById(`r_resp_${i}`)?.value || '').trim();
+          if (title || comp) roles.push({ title, company: comp, duration: dur, responsibilities: resp });
+        }
       }
 
-      function showAuthPanel() {
-        document.getElementById("authPanel").style.display = "flex";
-        document.getElementById("mainApp").style.display = "none";
+      // Build profile data object
+      profileData = {
+        name,
+        email,
+        phone: document.getElementById('f_phone').value.trim(),
+        linkedin: document.getElementById('f_linkedin').value.trim(),
+        city: document.getElementById('f_city').value.trim(),
+        degree,
+        field: document.getElementById('f_field').value.trim(),
+        college: document.getElementById('f_college').value.trim(),
+        gradYear: document.getElementById('f_gradyear').value,
+        cgpa: document.getElementById('f_cgpa').value.trim(),
+        isFresher,
+        roles,
+        skills: document.getElementById('f_skills').value.trim(),
+        projects: document.getElementById('f_projects').value.trim(),
+        achievements: document.getElementById('f_achievements').value.trim()
+      };
+
+      // Save to localStorage
+      saveProfile(profileData);
+
+      // Assemble resume text
+      assembledResume = buildResumeText(profileData);
+
+      // Render summary and go to step 2
+      renderProfileSummary();
+      goToStep(2);
+    }
+
+    /* ─────────────────────────────────────────────────────────────────────────
+       RESUME TEXT ASSEMBLY
+    ───────────────────────────────────────────────────────────────────────── */
+    function buildResumeText(p) {
+      if (p._rawResume) return p._rawResume;
+
+      let lines = [];
+
+      // Header
+      lines.push(p.name.toUpperCase());
+      const contactParts = [];
+      if (p.email) contactParts.push('Email: ' + p.email);
+      if (p.phone) contactParts.push('Phone: ' + p.phone);
+      if (p.linkedin) contactParts.push('LinkedIn: ' + p.linkedin);
+      if (p.city) contactParts.push('Location: ' + p.city);
+      if (contactParts.length) lines.push(contactParts.join(' | '));
+      lines.push('');
+
+      // Education
+      lines.push('EDUCATION');
+      let eduLine = p.degree;
+      if (p.field) eduLine += ' in ' + p.field;
+      if (p.college) eduLine += ' — ' + p.college;
+      if (p.gradYear) eduLine += ' | ' + p.gradYear;
+      if (p.cgpa) eduLine += ' | CGPA: ' + p.cgpa;
+      lines.push(eduLine);
+      lines.push('');
+
+      // Experience
+      if (!p.isFresher && p.roles && p.roles.length > 0) {
+        lines.push('EXPERIENCE');
+        p.roles.forEach(r => {
+          let roleLine = '';
+          if (r.title) roleLine += r.title;
+          if (r.company) roleLine += (roleLine ? ' at ' : '') + r.company;
+          if (r.duration) roleLine += ' | ' + r.duration;
+          if (roleLine) lines.push(roleLine);
+          if (r.responsibilities) lines.push(r.responsibilities);
+        });
+        lines.push('');
       }
 
-      function showMainApp() {
-        document.getElementById("authPanel").style.display = "none";
-        document.getElementById("mainApp").style.display = "block";
-        document.getElementById("userBar").classList.add("visible");
-        document.getElementById("userEmail").textContent =
-          authUser?.email || "";
+      // Skills
+      if (p.skills) {
+        lines.push('SKILLS');
+        lines.push(p.skills);
+        lines.push('');
       }
 
-      function showLogin() {
-        document.getElementById("loginForm").style.display = "block";
-        document.getElementById("registerForm").style.display = "none";
-        clearAuthMessages();
+      // Projects
+      if (p.projects) {
+        lines.push('PROJECTS');
+        lines.push(p.projects);
+        lines.push('');
       }
 
-      function showRegister() {
-        document.getElementById("loginForm").style.display = "none";
-        document.getElementById("registerForm").style.display = "block";
-        clearAuthMessages();
+      // Achievements
+      if (p.achievements) {
+        lines.push('ACHIEVEMENTS');
+        lines.push(p.achievements);
       }
 
-      function clearAuthMessages() {
-        [
-          "loginError",
-          "loginSuccess",
-          "registerError",
-          "registerSuccess",
-        ].forEach((id) => {
-          const el = document.getElementById(id);
-          el.textContent = "";
-          el.classList.remove("visible");
+      return lines.join('\n');
+    }
+
+    /* ─────────────────────────────────────────────────────────────────────────
+       FILL FORM FROM SAVED PROFILE
+    ───────────────────────────────────────────────────────────────────────── */
+    function fillFormFromProfile(p) {
+      // Make sure form is initialized
+      initExpFields();
+      initSkillChips();
+
+      setVal('f_name', p.name);
+      setVal('f_email', p.email);
+      setVal('f_phone', p.phone);
+      setVal('f_linkedin', p.linkedin);
+      setVal('f_city', p.city);
+      setVal('f_degree', p.degree);
+      setVal('f_field', p.field);
+      setVal('f_college', p.college);
+      setVal('f_gradyear', p.gradYear);
+      setVal('f_cgpa', p.cgpa);
+      setVal('f_skills', p.skills);
+      setVal('f_projects', p.projects);
+      setVal('f_achievements', p.achievements);
+
+      if (p.isFresher) {
+        document.getElementById('f_fresher').checked = true;
+        toggleFresher(true);
+      }
+
+      // Roles — clear and re-add
+      if (!p.isFresher && p.roles && p.roles.length > 0) {
+        const container = document.getElementById('expFields');
+        container.innerHTML = '';
+        roleCount = 0;
+        p.roles.forEach((r, idx) => {
+          addRoleBlock();
+          setVal(`r_title_${idx}`, r.title);
+          setVal(`r_company_${idx}`, r.company);
+          setVal(`r_duration_${idx}`, r.duration);
+          setVal(`r_resp_${idx}`, r.responsibilities);
         });
       }
 
-      function setAuthError(id, msg) {
+      assembledResume = buildResumeText(p);
+    }
+
+    function setVal(id, val) {
+      const el = document.getElementById(id);
+      if (el && val !== undefined && val !== null) el.value = val;
+    }
+
+    /* ─────────────────────────────────────────────────────────────────────────
+       STEP 2 — Profile Summary Rendering
+    ───────────────────────────────────────────────────────────────────────── */
+    function renderProfileSummary() {
+      const container = document.getElementById('profileSummaryContent');
+      container.innerHTML = '';
+      const p = profileData;
+
+      if (p._rawResume) {
+        // Raw extract mode: just show a preview
+        container.innerHTML = `
+          <div class="ps-row">
+            <span class="ps-icon">📄</span>
+            <div class="ps-content">
+              <div class="ps-label">Extracted Resume</div>
+              <div class="ps-value" style="font-size:13px; color:var(--text-muted); white-space:pre-wrap;">${escHtml(p._rawResume.substring(0, 300))}${p._rawResume.length > 300 ? '...' : ''}</div>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      const rows = [];
+
+      // Name & contact
+      rows.push(`
+        <div class="ps-row">
+          <span class="ps-icon">👤</span>
+          <div class="ps-content">
+            <div class="ps-label">Contact</div>
+            <div class="ps-value">${escHtml(p.name || '—')}</div>
+            <div style="font-size:13px;color:var(--text-muted);margin-top:2px;">
+              ${escHtml(p.email || '')}${p.phone ? ' · ' + escHtml(p.phone) : ''}
+            </div>
+          </div>
+        </div>
+      `);
+
+      // Education
+      let eduStr = '';
+      if (p.degree) eduStr += p.degree;
+      if (p.field) eduStr += ' in ' + p.field;
+      if (p.college) eduStr += '\n' + p.college;
+      if (p.gradYear) eduStr += ' · ' + p.gradYear;
+      rows.push(`
+        <div class="ps-row">
+          <span class="ps-icon">🎓</span>
+          <div class="ps-content">
+            <div class="ps-label">Education</div>
+            <div class="ps-value" style="white-space:pre-line;">${escHtml(eduStr || '—')}</div>
+          </div>
+        </div>
+      `);
+
+      // Experience
+      let expContent = '';
+      if (p.isFresher) {
+        expContent = '<span class="fresher-badge">Fresher</span>';
+      } else if (p.roles && p.roles.length > 0) {
+        expContent = p.roles.map(r => `<div style="font-size:13px;margin-bottom:4px;">${escHtml(r.title || '')}${r.company ? ' at ' + escHtml(r.company) : ''}${r.duration ? ' <span style="color:var(--text-subtle);">· ' + escHtml(r.duration) + '</span>' : ''}</div>`).join('');
+      } else {
+        expContent = '<span style="color:var(--text-subtle);font-size:13px;">Not provided</span>';
+      }
+      rows.push(`
+        <div class="ps-row">
+          <span class="ps-icon">💼</span>
+          <div class="ps-content">
+            <div class="ps-label">Experience</div>
+            <div class="ps-value">${expContent}</div>
+          </div>
+        </div>
+      `);
+
+      // Skills
+      if (p.skills) {
+        const tags = p.skills.split(',').map(s => s.trim()).filter(Boolean).slice(0, 12);
+        rows.push(`
+          <div class="ps-row">
+            <span class="ps-icon">🛠️</span>
+            <div class="ps-content">
+              <div class="ps-label">Skills</div>
+              <div class="ps-tags">${tags.map(t => `<span class="ps-tag">${escHtml(t)}</span>`).join('')}</div>
+            </div>
+          </div>
+        `);
+      }
+
+      // Projects preview
+      if (p.projects) {
+        rows.push(`
+          <div class="ps-row">
+            <span class="ps-icon">📁</span>
+            <div class="ps-content">
+              <div class="ps-label">Projects</div>
+              <div class="ps-value" style="font-size:13px;color:var(--text-muted);">${escHtml(p.projects.substring(0, 100))}${p.projects.length > 100 ? '...' : ''}</div>
+            </div>
+          </div>
+        `);
+      }
+
+      container.innerHTML = rows.join('');
+    }
+
+    /* ─────────────────────────────────────────────────────────────────────────
+       STEP 3 — Job Details & ATS toggle
+    ───────────────────────────────────────────────────────────────────────── */
+    // Word count on JD input
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('jdInput').addEventListener('input', function() {
+        const wc = countWords(this.value);
+        document.getElementById('jdWordCount').textContent = wc + ' words';
+      });
+    });
+
+    function countWords(text) {
+      return text.trim().split(/\s+/).filter(w => w.length > 0).length;
+    }
+
+    function toggleATSSection() {
+      const body = document.getElementById('atsToggleBody');
+      const arrow = document.getElementById('atsArrow');
+      const isOpen = body.classList.contains('visible');
+      if (isOpen) {
+        body.classList.remove('visible');
+        arrow.classList.remove('open');
+      } else {
+        body.classList.add('visible');
+        arrow.classList.add('open');
+      }
+    }
+
+    async function handleATSScore() {
+      const jd = document.getElementById('jdInput').value.trim();
+      if (!jd) { showStepError('step3Error', 'Please paste the job description first.'); return; }
+      if (!assembledResume) { showStepError('step3Error', 'Profile not assembled yet.'); return; }
+
+      clearStepError('step3Error');
+
+      const container = document.getElementById('atsPanelStep3');
+      container.style.display = 'block';
+      container.innerHTML = `<div class="loading-row"><div class="spinner"></div>Analyzing ATS match...</div>`;
+
+      try {
+        const resp = await fetch(`${BASE}/ats-score`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ resume: assembledResume, jd })
+        });
+        const data = await resp.json();
+
+        if (!resp.ok) {
+          container.innerHTML = `<div class="error-box visible">${escHtml(data.detail || 'ATS check failed.')}</div>`;
+          return;
+        }
+
+        lastATSResult = data;
+        container.innerHTML = buildATSPanelHTML(data);
+      } catch(e) {
+        container.innerHTML = `<div class="error-box visible">Network error. Please try again.</div>`;
+      }
+    }
+
+    /* ─────────────────────────────────────────────────────────────────────────
+       STEP 4 — Generate & Poll
+    ───────────────────────────────────────────────────────────────────────── */
+    async function handleGenerate() {
+      const jd = document.getElementById('jdInput').value.trim();
+      const company = document.getElementById('companyInput').value.trim();
+
+      if (!jd) { showStepError('step3Error', 'Please paste the job description.'); return; }
+      clearStepError('step3Error');
+
+      goToStep(4);
+
+      try {
+        const resp = await fetch(`${BASE}/generate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ resume: assembledResume, jd, company })
+        });
+        const data = await resp.json();
+
+        if (!resp.ok) {
+          goToStep(3);
+          showStepError('step3Error', data.detail || 'Something went wrong. Please try again.');
+          return;
+        }
+
+        currentJobId = data.job_id;
+        startPolling(jd, company);
+      } catch(e) {
+        goToStep(3);
+        showStepError('step3Error', 'Network error. Please try again.');
+      }
+    }
+
+    // Map backend stage values to pipeline step IDs
+    const STAGE_STEPS = {
+      queued:   [],
+      research: ['ps-analyze'],
+      analysis: ['ps-analyze','ps-match','ps-resume'],
+      pdf:      ['ps-analyze','ps-match','ps-resume','ps-reports','ps-pdfs'],
+      done:     ['ps-analyze','ps-match','ps-resume','ps-reports','ps-pdfs'],
+      error:    []
+    };
+
+    const STAGE_EMOJIS = {
+      queued: '⏳', research: '🔍', analysis: '🧠', pdf: '📄', done: '🎉', error: '❌'
+    };
+
+    function updatePipeline(stage) {
+      const all = ['ps-analyze','ps-match','ps-resume','ps-reports','ps-pdfs'];
+      const active = STAGE_STEPS[stage] || [];
+      all.forEach(id => {
         const el = document.getElementById(id);
-        el.textContent = msg;
-        el.classList.add("visible");
-        document
-          .getElementById(id.replace("Error", "Success"))
-          .classList.remove("visible");
+        el.className = 'pipe-step';
+        el.querySelector('.pipe-dot').className = 'pipe-dot';
+      });
+      if (stage === 'done') {
+        active.forEach(id => document.getElementById(id).classList.add('done'));
+        return;
       }
-
-      function setAuthSuccess(id, msg) {
+      active.forEach((id, i) => {
         const el = document.getElementById(id);
-        el.textContent = msg;
-        el.classList.add("visible");
-        document
-          .getElementById(id.replace("Success", "Error"))
-          .classList.remove("visible");
-      }
-
-      async function handleLogin() {
-        const email = document.getElementById("loginEmail").value.trim();
-        const password = document.getElementById("loginPassword").value;
-        clearAuthMessages();
-        if (!email) {
-          setAuthError("loginError", "Please enter your email.");
-          return;
-        }
-        if (!password) {
-          setAuthError("loginError", "Please enter your password.");
-          return;
-        }
-
-        const btn = document.getElementById("loginBtn");
-        btn.disabled = true;
-        btn.textContent = "Logging in...";
-
-        try {
-          const resp = await fetch(`${BASE}/auth/login`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email, password }),
-          });
-          const data = await resp.json();
-          if (!resp.ok) {
-            setAuthError(
-              "loginError",
-              data.detail || "Login failed. Please try again.",
-            );
-            return;
-          }
-          saveSession(data.access_token, data.refresh_token, data.user);
-          showMainApp();
-        } catch (e) {
-          setAuthError("loginError", "Network error. Please try again.");
-        } finally {
-          btn.disabled = false;
-          btn.textContent = "Log In →";
-        }
-      }
-
-      async function handleRegister() {
-        const name = document.getElementById("registerName").value.trim();
-        const email = document.getElementById("registerEmail").value.trim();
-        const password = document.getElementById("registerPassword").value;
-        clearAuthMessages();
-        if (!name) {
-          setAuthError("registerError", "Please enter your full name.");
-          return;
-        }
-        if (!email) {
-          setAuthError("registerError", "Please enter your email.");
-          return;
-        }
-        if (password.length < 6) {
-          setAuthError(
-            "registerError",
-            "Password must be at least 6 characters.",
-          );
-          return;
-        }
-
-        const btn = document.getElementById("registerBtn");
-        btn.disabled = true;
-        btn.textContent = "Creating account...";
-
-        try {
-          const resp = await fetch(`${BASE}/auth/register`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email, password, full_name: name }),
-          });
-          const data = await resp.json();
-          if (!resp.ok) {
-            setAuthError(
-              "registerError",
-              data.detail || "Registration failed. Please try again.",
-            );
-            return;
-          }
-          if (data.access_token) {
-            saveSession(data.access_token, data.refresh_token, data.user);
-            showMainApp();
-          } else {
-            setAuthSuccess(
-              "registerSuccess",
-              data.message ||
-                "Account created! Please check your email to confirm, then log in.",
-            );
-            setTimeout(showLogin, 3000);
-          }
-        } catch (e) {
-          setAuthError("registerError", "Network error. Please try again.");
-        } finally {
-          btn.disabled = false;
-          btn.textContent = "Create Account →";
-        }
-      }
-
-      async function handleLogout() {
-        if (authToken) {
-          fetch(`${BASE}/auth/logout`, {
-            method: "POST",
-            headers: { Authorization: `Bearer ${authToken}` },
-          }).catch(() => {});
-        }
-        clearSession();
-        showAuthPanel();
-        showLogin();
-      }
-
-      async function tryRefreshToken() {
-        const refreshToken = localStorage.getItem("nl_refresh");
-        if (!refreshToken) return false;
-        try {
-          const resp = await fetch(`${BASE}/auth/refresh`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ refresh_token: refreshToken }),
-          });
-          if (!resp.ok) return false;
-          const data = await resp.json();
-          saveSession(data.access_token, data.refresh_token, data.user);
-          return true;
-        } catch (e) {
-          return false;
-        }
-      }
-
-      async function initAuth() {
-        const storedToken = localStorage.getItem("nl_token");
-        const storedUser = localStorage.getItem("nl_user");
-        if (!storedToken) {
-          showAuthPanel();
-          return;
-        }
-
-        try {
-          const resp = await fetch(`${BASE}/auth/me`, {
-            headers: { Authorization: `Bearer ${storedToken}` },
-          });
-          if (resp.ok) {
-            const user = await resp.json();
-            authToken = storedToken;
-            authUser = user;
-            showMainApp();
-            checkHealth();
-          } else {
-            const refreshed = await tryRefreshToken();
-            if (refreshed) {
-              showMainApp();
-              checkHealth();
-            } else {
-              clearSession();
-              showAuthPanel();
-            }
-          }
-        } catch (e) {
-          const storedUserData = storedUser ? JSON.parse(storedUser) : null;
-          if (storedToken && storedUserData) {
-            authToken = storedToken;
-            authUser = storedUserData;
-            showMainApp();
-            checkHealth();
-          } else {
-            showAuthPanel();
-          }
-        }
-      }
-
-      // Keyboard shortcuts for auth forms
-      document.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") {
-          if (document.getElementById("authPanel").style.display !== "none") {
-            const loginVisible =
-              document.getElementById("loginForm").style.display !== "none";
-            if (loginVisible) handleLogin();
-            else handleRegister();
-          }
+        if (i < active.length - 1) {
+          el.classList.add('done');
+        } else {
+          el.classList.add('active');
+          el.querySelector('.pipe-dot').classList.add('spinning');
         }
       });
+    }
 
-      function wordCount(text) {
-        return text
-          .trim()
-          .split(/\s+/)
-          .filter((w) => w.length > 0).length;
-      }
-
-      function updateWordCount(inputId, countId, min) {
-        const input = document.getElementById(inputId);
-        const counter = document.getElementById(countId);
-        const count = wordCount(input.value);
-        counter.textContent = `${count} words`;
-        counter.className =
-          "word-count " + (count >= min ? "ok" : count > 0 ? "warn" : "");
-      }
-
-      document
-        .getElementById("resumeInput")
-        .addEventListener("input", () =>
-          updateWordCount("resumeInput", "resumeCount", 0),
-        );
-      document
-        .getElementById("jdInput")
-        .addEventListener("input", () =>
-          updateWordCount("jdInput", "jdCount", 0),
-        );
-
-      async function checkHealth() {
+    function startPolling(jd, company) {
+      if (pollInterval) clearInterval(pollInterval);
+      pollInterval = setInterval(async () => {
         try {
-          const r = await fetch(`${BASE}/health`);
-          const data = await r.json();
-          if (!data.keys.gemini || !data.keys.tavily) {
-            document.getElementById("setupBanner").classList.add("visible");
-          }
-        } catch (e) {}
-      }
-      const stageMap = {
-        queued: [],
-        research: ["step-research"],
-        analysis: ["step-research", "step-analysis", "step-plan"],
-        pdf: ["step-research", "step-analysis", "step-plan", "step-pdf"],
-        done: ["step-research", "step-analysis", "step-plan", "step-pdf"],
-        error: [],
-      };
-
-      function updatePipelineSteps(stage, progress) {
-        const allSteps = [
-          "step-research",
-          "step-analysis",
-          "step-plan",
-          "step-pdf",
-        ];
-        const activeSteps = stageMap[stage] || [];
-        allSteps.forEach((s) => {
-          const el = document.getElementById(s);
-          el.className = "pipe-step";
-          el.querySelector(".pipe-dot").className = "pipe-dot";
-        });
-        if (stage === "done") {
-          activeSteps.forEach((s) =>
-            document.getElementById(s).classList.add("done"),
-          );
-          return;
-        }
-        for (let i = 0; i < activeSteps.length; i++) {
-          const el = document.getElementById(activeSteps[i]);
-          if (i < activeSteps.length - 1) {
-            el.classList.add("done");
-          } else {
-            el.classList.add("active");
-            el.querySelector(".pipe-dot").classList.add("spinning");
-          }
-        }
-      }
-
-      const stageEmojis = {
-        queued: "⏳",
-        research: "🔍",
-        analysis: "🧠",
-        pdf: "📄",
-        done: "🎉",
-        error: "❌",
-      };
-
-      async function handleSubmit() {
-        const resume = document.getElementById("resumeInput").value.trim();
-        const jd = document.getElementById("jdInput").value.trim();
-        const company = document.getElementById("companyInput").value.trim();
-        document.getElementById("errorBox").classList.remove("visible");
-        const btn = document.getElementById("submitBtn");
-
-        if (!resume) {
-          showError("Please enter your resume.");
-          return;
-        }
-        if (!jd) {
-          showError("Please paste the job description.");
-          return;
-        }
-        if (company.length < 2) {
-          showError("Please enter the company name.");
-          return;
-        }
-
-        btn.disabled = true;
-        document.getElementById("submitBtnText").textContent = "Generating...";
-
-        try {
-          const headers = { "Content-Type": "application/json" };
-          if (authToken) headers["Authorization"] = `Bearer ${authToken}`;
-          const resp = await fetch(`${BASE}/generate`, {
-            method: "POST",
-            headers,
-            body: JSON.stringify({ resume, jd, company }),
-          });
+          const resp = await fetch(`${BASE}/status/${currentJobId}`);
           const data = await resp.json();
+
           if (!resp.ok) {
-            let errMsg =
-              data.detail || "Something went wrong. Please try again.";
-            if (resp.status === 429)
-              errMsg =
-                data.detail ||
-                "Daily limit reached. Please log in for unlimited access.";
-            showError(errMsg);
-            btn.disabled = false;
-            document.getElementById("submitBtnText").textContent =
-              "Generate My Kit →";
+            clearInterval(pollInterval);
+            goToStep(3);
+            showStepError('step3Error', 'Job not found. Please try again.');
             return;
           }
-          currentJobId = data.job_id;
-          startPolling(company);
-        } catch (e) {
-          showError("Network error. Please refresh and try again.");
-          btn.disabled = false;
-          document.getElementById("submitBtnText").textContent =
-            "Generate My Kit →";
-        }
-      }
 
-      function startPolling(company) {
-        document.getElementById("formCard").style.display = "none";
-        document.getElementById("progressPanel").classList.add("visible");
-        pollInterval = setInterval(async () => {
-          try {
-            const resp = await fetch(`${BASE}/status/${currentJobId}`);
-            const data = await resp.json();
-            if (!resp.ok) {
-              clearInterval(pollInterval);
-              showProgressError("Job not found. Please try again.");
-              return;
-            }
-            const pct = data.progress || 0;
-            document.getElementById("progressBar").style.width = pct + "%";
-            document.getElementById("progressPct").textContent = pct + "%";
-            document.getElementById("progressMsg").textContent =
-              data.message || "";
-            document.getElementById("progressEmoji").textContent =
-              stageEmojis[data.stage] || "🤖";
-            updatePipelineSteps(data.stage, pct);
-            if (data.stage === "done") {
-              clearInterval(pollInterval);
-              showResults(data.files, company);
-            } else if (data.stage === "error") {
-              clearInterval(pollInterval);
-              showProgressError(data.message || "Something went wrong");
-            }
-          } catch (e) {}
-        }, 1500);
-      }
+          const pct = data.progress || 0;
+          document.getElementById('progressBar').style.width = pct + '%';
+          document.getElementById('progressPct').textContent = pct + '%';
+          document.getElementById('progressMsg').textContent = data.message || '';
+          document.getElementById('progressEmoji').textContent = STAGE_EMOJIS[data.stage] || '🤖';
+          updatePipeline(data.stage);
 
-      function showResults(files, company) {
-        document.getElementById("progressPanel").classList.remove("visible");
-        document.getElementById("resultsPanel").classList.add("visible");
-        document.getElementById("downloadReality").href =
-          `${BASE}/pdf/${files.reality}`;
-        document.getElementById("downloadPlan").href =
-          `${BASE}/pdf/${files.plan}`;
-        document.getElementById("downloadResume").href =
-          `${BASE}/pdf/${files.resume}`;
-        document.getElementById("downloadCompany").href =
-          `${BASE}/pdf/${files.company}`;
-        ["downloadReality", "downloadPlan", "downloadResume", "downloadCompany"].forEach((id) =>
-          document.getElementById(id).setAttribute("download", ""),
-        );
-        document.getElementById("submitBtn").disabled = false;
-        document.getElementById("submitBtnText").textContent =
-          "Generate My Kit →";
-      }
-
-      function showProgressError(msg) {
-        document.getElementById("progressPanel").classList.remove("visible");
-        document.getElementById("formCard").style.display = "block";
-        showError(msg);
-        document.getElementById("submitBtn").disabled = false;
-        document.getElementById("submitBtnText").textContent =
-          "Generate My Kit →";
-      }
-
-      function showError(msg) {
-        const box = document.getElementById("errorBox");
-        box.textContent = msg;
-        box.classList.add("visible");
-        box.scrollIntoView({ behavior: "smooth", block: "nearest" });
-      }
-
-      async function importLinkedIn() {
-        const url = document.getElementById("linkedinUrl").value.trim();
-        const statusEl = document.getElementById("linkedinStatus");
-        const btn = document.getElementById("linkedinImportBtn");
-        if (!url || !url.includes("linkedin.com/in/")) {
-          statusEl.textContent = "Please enter a valid LinkedIn profile URL.";
-          statusEl.style.display = "block";
-          statusEl.style.color = "#EF4444";
-          return;
-        }
-        btn.disabled = true;
-        btn.textContent = "Importing...";
-        statusEl.textContent = "Extracting profile data...";
-        statusEl.style.display = "block";
-        statusEl.style.color = "#6C63FF";
-        try {
-          const headers = { "Content-Type": "application/json" };
-          if (authToken) headers["Authorization"] = `Bearer ${authToken}`;
-          const resp = await fetch(`${BASE}/import-linkedin`, {
-            method: "POST",
-            headers,
-            body: JSON.stringify({ url }),
-          });
-          const data = await resp.json();
-          if (resp.ok && data.text) {
-            document.getElementById("resumeInput").value = data.text;
-            statusEl.textContent = "Profile imported successfully!";
-            statusEl.style.color = "#22C55E";
-          } else {
-            statusEl.textContent = data.detail || "Could not extract profile data.";
-            statusEl.style.color = "#EF4444";
+          if (data.stage === 'done') {
+            clearInterval(pollInterval);
+            showResults(data.files, jd, company);
+          } else if (data.stage === 'error') {
+            clearInterval(pollInterval);
+            goToStep(3);
+            showStepError('step3Error', data.message || 'Something went wrong.');
           }
-        } catch (e) {
-          statusEl.textContent = "Network error. Please try again.";
-          statusEl.style.color = "#EF4444";
-        } finally {
-          btn.disabled = false;
-          btn.textContent = "Import";
-        }
-      }
+        } catch(e) { /* keep polling on network hiccup */ }
+      }, 1500);
+    }
 
-      async function handleATSScore() {
-        const resume = document.getElementById("resumeInput").value.trim();
-        const jd = document.getElementById("jdInput").value.trim();
-        if (!resume) { showError("Please paste your resume to check ATS score."); return; }
-        if (!jd) { showError("Please paste the job description to check ATS score."); return; }
-        document.getElementById("errorBox").classList.remove("visible");
+    /* ─────────────────────────────────────────────────────────────────────────
+       STEP 5 — Show Results
+    ───────────────────────────────────────────────────────────────────────── */
+    async function showResults(files, jd, company) {
+      // Set download links
+      document.getElementById('dlReality').href = `${BASE}/pdf/${files.reality}`;
+      document.getElementById('dlPlan').href = `${BASE}/pdf/${files.plan}`;
+      document.getElementById('dlResume').href = `${BASE}/pdf/${files.resume}`;
+      document.getElementById('dlCompany').href = `${BASE}/pdf/${files.company}`;
+      ['dlReality','dlPlan','dlResume','dlCompany'].forEach(id =>
+        document.getElementById(id).setAttribute('download', '')
+      );
 
-        const btn = document.getElementById("atsBtn");
-        btn.disabled = true;
-        btn.textContent = "⏳ Analyzing...";
+      goToStep(5);
 
-        // Show panel in loading state
-        const panel = document.getElementById("atsPanel");
-        panel.classList.add("visible");
-        document.getElementById("atsScoreNum").textContent = "--";
-        document.getElementById("atsScoreLabel").textContent = "Analyzing...";
-        document.getElementById("atsSuggestions").innerHTML = "";
-        document.getElementById("atsMatchedTags").innerHTML = "";
-        document.getElementById("atsMissingTags").innerHTML = "";
-
+      // ATS score: reuse if already computed, else fetch now
+      const atsContainer = document.getElementById('atsResultStep5');
+      if (lastATSResult) {
+        document.getElementById('atsStep5Loading').style.display = 'none';
+        atsContainer.innerHTML = buildATSCircleHTML(lastATSResult);
+      } else {
+        // Auto-calculate
+        document.getElementById('atsStep5Loading').style.display = 'flex';
         try {
           const resp = await fetch(`${BASE}/ats-score`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ resume, jd }),
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ resume: assembledResume, jd })
           });
           const data = await resp.json();
-          if (!resp.ok) {
-            showError(data.detail || "ATS check failed. Please try again.");
-            panel.classList.remove("visible");
-            return;
-          }
-
-          // Score circle
-          const score = data.score;
-          const circle = document.getElementById("atsCircle");
-          circle.className = "ats-circle";
-          if (score >= 85) circle.classList.add("ats-score-excellent");
-          else if (score >= 70) circle.classList.add("ats-score-good");
-          else if (score >= 55) circle.classList.add("ats-score-fair");
-          else circle.classList.add("ats-score-needswork");
-
-          document.getElementById("atsScoreNum").textContent = score;
-          document.getElementById("atsScoreLabel").textContent = `${data.label} Match — ${score}/100`;
-          document.getElementById("atsScoreSub").textContent =
-            `Keywords: ${data.stats.resume_keywords_matched}/${data.stats.jd_keywords_checked} matched · Tech Skills: ${data.stats.resume_tech_matched}/${data.stats.jd_tech_skills_found} matched`;
-
-          // Breakdown bars
-          const bd = data.breakdown;
-          const bars = [
-            ["barKeywords", "valKeywords", bd.keywords],
-            ["barTech", "valTech", bd.technical_skills],
-            ["barSoft", "valSoft", bd.soft_skills],
-            ["barFormat", "valFormat", bd.format],
-          ];
-          bars.forEach(([barId, valId, val]) => {
-            document.getElementById(barId).style.width = val + "%";
-            document.getElementById(valId).textContent = Math.round(val) + "%";
-          });
-
-          // Matched keywords
-          const matchedEl = document.getElementById("atsMatchedTags");
-          matchedEl.innerHTML = "";
-          if (data.matched_keywords && data.matched_keywords.length > 0) {
-            data.matched_keywords.slice(0, 15).forEach(kw => {
-              const tag = document.createElement("span");
-              tag.className = "ats-tag matched";
-              tag.textContent = kw;
-              matchedEl.appendChild(tag);
-            });
-            document.getElementById("atsMatchedSection").style.display = "block";
+          document.getElementById('atsStep5Loading').style.display = 'none';
+          if (resp.ok) {
+            lastATSResult = data;
+            atsContainer.innerHTML = buildATSCircleHTML(data);
           } else {
-            document.getElementById("atsMatchedSection").style.display = "none";
+            atsContainer.innerHTML = '<p style="font-size:13px;color:var(--text-muted);text-align:center;">ATS score unavailable</p>';
           }
-
-          // Missing keywords
-          const missingEl = document.getElementById("atsMissingTags");
-          missingEl.innerHTML = "";
-          if (data.missing_keywords && data.missing_keywords.length > 0) {
-            data.missing_keywords.slice(0, 12).forEach(kw => {
-              const tag = document.createElement("span");
-              tag.className = "ats-tag missing";
-              tag.textContent = kw;
-              missingEl.appendChild(tag);
-            });
-            document.getElementById("atsMissingSection").style.display = "block";
-          } else {
-            document.getElementById("atsMissingSection").style.display = "none";
-          }
-
-          // Suggestions
-          const sugEl = document.getElementById("atsSuggestions");
-          sugEl.innerHTML = "";
-          (data.suggestions || []).forEach(s => {
-            const div = document.createElement("div");
-            div.className = "ats-suggestion-item";
-            div.textContent = s;
-            sugEl.appendChild(div);
-          });
-
-          panel.scrollIntoView({ behavior: "smooth", block: "nearest" });
-        } catch (e) {
-          showError("Network error during ATS check. Please try again.");
-          panel.classList.remove("visible");
-        } finally {
-          btn.disabled = false;
-          btn.textContent = "🎯 Check ATS Score Again";
+        } catch(e) {
+          document.getElementById('atsStep5Loading').style.display = 'none';
+          atsContainer.innerHTML = '<p style="font-size:13px;color:var(--text-muted);text-align:center;">ATS score unavailable</p>';
         }
       }
+    }
 
-      function resetApp() {
-        clearInterval(pollInterval);
-        currentJobId = null;
-        document.getElementById("formCard").style.display = "block";
-        document.getElementById("progressPanel").classList.remove("visible");
-        document.getElementById("resultsPanel").classList.remove("visible");
-        document.getElementById("errorBox").classList.remove("visible");
-        document.getElementById("atsPanel").classList.remove("visible");
-        document.getElementById("atsBtn").textContent = "🎯 Check ATS Score First";
-        document.getElementById("progressBar").style.width = "0%";
-        document.getElementById("progressPct").textContent = "0%";
-        document.getElementById("progressMsg").textContent = "Starting up...";
-        document.getElementById("submitBtn").disabled = false;
-        document.getElementById("submitBtnText").textContent =
-          "Generate My Kit →";
-        window.scrollTo({ top: 0, behavior: "smooth" });
-      }
+    /* ─────────────────────────────────────────────────────────────────────────
+       ATS PANEL BUILDERS (shared HTML templates)
+    ───────────────────────────────────────────────────────────────────────── */
+    function getATSCircleClass(score) {
+      if (score >= 85) return 'ats-score-excellent';
+      if (score >= 70) return 'ats-score-good';
+      if (score >= 55) return 'ats-score-fair';
+      return 'ats-score-needswork';
+    }
 
-      document.addEventListener("keydown", (e) => {
-        if ((e.ctrlKey || e.metaKey) && e.key === "Enter") handleSubmit();
-      });
+    // Compact circle used in Step 5 hero card
+    function buildATSCircleHTML(data) {
+      const cls = getATSCircleClass(data.score);
+      return `
+        <div style="display:flex;align-items:center;gap:20px;justify-content:center;">
+          <div class="ats-circle ${cls}" style="width:100px;height:100px;">
+            <div class="ats-circle-score" style="font-size:32px;">${data.score}</div>
+            <div class="ats-circle-pct">/ 100</div>
+          </div>
+          <div>
+            <div class="ats-score-label">${escHtml(data.label)} Match</div>
+            <div class="ats-score-sub">${data.score}/100 ATS compatibility</div>
+          </div>
+        </div>
+      `;
+    }
 
-      function setUploadState(state, msg) {
-        const zone = document.getElementById("uploadZone");
-        zone.className = "upload-zone";
-        [
-          "uploadDefault",
-          "uploadLoading",
-          "uploadSuccess",
-          "uploadError",
-        ].forEach((id) => {
-          document.getElementById(id).style.display = "none";
-        });
-        if (state === "default") {
-          document.getElementById("uploadDefault").style.display = "block";
-        } else if (state === "loading") {
-          zone.classList.add("uploading");
-          document.getElementById("uploadLoading").style.display = "block";
-        } else if (state === "success") {
-          zone.classList.add("success");
-          document.getElementById("uploadSuccessText").textContent =
-            msg || "Extracted";
-          document.getElementById("uploadSuccess").style.display = "block";
-        } else if (state === "error") {
-          zone.classList.add("error-zone");
-          document.getElementById("uploadErrorText").textContent =
-            msg || "Could not read PDF";
-          document.getElementById("uploadError").style.display = "block";
-        }
-      }
+    // Full panel used in Step 3 collapsible
+    function buildATSPanelHTML(data) {
+      const cls = getATSCircleClass(data.score);
+      const bd = data.breakdown || {};
+      const bars = [
+        { label: 'JD Keywords', val: bd.keywords || 0, color: '#6c63ff' },
+        { label: 'Technical Skills', val: bd.technical_skills || 0, color: '#3b82f6' },
+        { label: 'Soft Skills', val: bd.soft_skills || 0, color: '#22c55e' },
+        { label: 'Resume Format', val: bd.format || 0, color: '#f59e0b' }
+      ];
 
-      function handleDragOver(e) {
-        e.preventDefault();
-        document.getElementById("uploadZone").classList.add("dragover");
-      }
-      function handleDragLeave(e) {
-        document.getElementById("uploadZone").classList.remove("dragover");
-      }
-      function handleDrop(e) {
-        e.preventDefault();
-        document.getElementById("uploadZone").classList.remove("dragover");
-        const file = e.dataTransfer.files[0];
-        if (file) handlePdfFile(file);
-      }
+      const barsHTML = bars.map(b => `
+        <div class="ats-bar-row">
+          <div class="ats-bar-label">${escHtml(b.label)}</div>
+          <div class="ats-bar-track"><div class="ats-bar-fill" style="width:${b.val}%;background:${b.color};"></div></div>
+          <div class="ats-bar-val">${Math.round(b.val)}%</div>
+        </div>
+      `).join('');
 
-      function clearUpload() {
-        document.getElementById("resumePdfInput").value = "";
-        document.getElementById("resumeInput").value = "";
-        document.getElementById("resumeCount").textContent = "0 words";
-        document.getElementById("resumeCount").className = "word-count";
-        setUploadState("default");
-      }
+      const matchedTags = (data.matched_keywords || []).slice(0, 15).map(kw =>
+        `<span class="ats-tag matched">${escHtml(kw)}</span>`
+      ).join('');
 
-      async function handlePdfFile(file) {
-        if (!file) return;
-        if (!file.name.toLowerCase().endsWith(".pdf")) {
-          setUploadState("error", "Only .pdf files are supported.");
-          return;
-        }
-        if (file.size > 10 * 1024 * 1024) {
-          setUploadState("error", "File too large — max 10MB.");
-          return;
-        }
-        setUploadState("loading");
-        const formData = new FormData();
-        formData.append("file", file);
-        try {
-          const resp = await fetch(`${BASE}/extract-resume`, {
-            method: "POST",
-            body: formData,
-          });
-          const data = await resp.json();
-          if (!resp.ok) {
-            setUploadState("error", data.detail || "Could not read PDF.");
-            return;
-          }
-          document.getElementById("resumeInput").value = data.text;
-          updateWordCount("resumeInput", "resumeCount", 0);
-          setUploadState(
-            "success",
-            `${data.pages} page${data.pages !== 1 ? "s" : ""} · ${data.words} words`,
-          );
-        } catch (e) {
-          setUploadState("error", "Network error. Please try again.");
-        }
-      }
+      const missingTags = (data.missing_keywords || []).slice(0, 12).map(kw =>
+        `<span class="ats-tag missing">${escHtml(kw)}</span>`
+      ).join('');
 
-      setUploadState("default");
-      initAuth();
-    </script>
+      const suggestions = (data.suggestions || []).map(s =>
+        `<div class="ats-suggestion-item">${escHtml(s)}</div>`
+      ).join('');
+
+      const statsText = data.stats
+        ? `Keywords: ${data.stats.resume_keywords_matched}/${data.stats.jd_keywords_checked} matched · Tech Skills: ${data.stats.resume_tech_matched}/${data.stats.jd_tech_skills_found} matched`
+        : '';
+
+      return `
+        <div class="ats-panel">
+          <div class="ats-header">
+            <div class="ats-circle ${cls}">
+              <div class="ats-circle-score">${data.score}</div>
+              <div class="ats-circle-pct">/ 100</div>
+            </div>
+            <div class="ats-score-info">
+              <div class="ats-score-label">${escHtml(data.label)} Match — ${data.score}/100</div>
+              <div class="ats-score-sub">${escHtml(statsText)}</div>
+            </div>
+          </div>
+
+          <div class="ats-breakdown">
+            <div class="ats-breakdown-title">Score Breakdown</div>
+            ${barsHTML}
+          </div>
+
+          ${matchedTags ? `<div class="ats-tags-section"><div class="ats-tags-title">✅ Matched Keywords</div><div class="ats-tags">${matchedTags}</div></div>` : ''}
+          ${missingTags ? `<div class="ats-tags-section"><div class="ats-tags-title">❌ Missing Keywords</div><div class="ats-tags">${missingTags}</div></div>` : ''}
+
+          ${suggestions ? `<div class="ats-suggestions"><div class="ats-suggestions-title">💡 How to Improve</div>${suggestions}</div>` : ''}
+        </div>
+      `;
+    }
+
+    /* ─────────────────────────────────────────────────────────────────────────
+       FEEDBACK
+    ───────────────────────────────────────────────────────────────────────── */
+    function submitFeedback(type, btn) {
+      // Save to localStorage
+      localStorage.setItem('nl_feedback', JSON.stringify({ type, ts: Date.now() }));
+      // Highlight selected
+      document.querySelectorAll('.feedback-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      // Show thanks
+      document.getElementById('feedbackThanks').classList.add('visible');
+    }
+
+    /* ─────────────────────────────────────────────────────────────────────────
+       RESET
+    ───────────────────────────────────────────────────────────────────────── */
+    function resetApp() {
+      if (pollInterval) clearInterval(pollInterval);
+      currentJobId = null;
+      pollInterval = null;
+      lastATSResult = null;
+      // Reset progress bar
+      document.getElementById('progressBar').style.width = '0%';
+      document.getElementById('progressPct').textContent = '0%';
+      document.getElementById('progressMsg').textContent = 'Starting up...';
+      document.getElementById('progressEmoji').textContent = '🤖';
+      // Reset feedback
+      document.querySelectorAll('.feedback-btn').forEach(b => b.classList.remove('selected'));
+      document.getElementById('feedbackThanks').classList.remove('visible');
+      // Reset ATS step5
+      document.getElementById('atsResultStep5').innerHTML =
+        '<div class="loading-row" id="atsStep5Loading"><div class="spinner"></div>Calculating your ATS score...</div>';
+      // Reset JD/company
+      document.getElementById('jdInput').value = '';
+      document.getElementById('jdWordCount').textContent = '0 words';
+      document.getElementById('companyInput').value = '';
+      document.getElementById('atsPanelStep3').style.display = 'none';
+      document.getElementById('atsPanelStep3').innerHTML = '';
+      document.getElementById('atsToggleBody').classList.remove('visible');
+      document.getElementById('atsArrow').classList.remove('open');
+      // Go back to step 0 and check welcome back
+      goToStep(0);
+      checkWelcomeBack();
+    }
+
+    /* ─────────────────────────────────────────────────────────────────────────
+       ERROR HELPERS
+    ───────────────────────────────────────────────────────────────────────── */
+    function showStepError(id, msg) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.textContent = msg;
+      el.classList.add('visible');
+      el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function clearStepError(id) {
+      const el = document.getElementById(id);
+      if (el) { el.textContent = ''; el.classList.remove('visible'); }
+    }
+
+    function escHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    /* ─────────────────────────────────────────────────────────────────────────
+       INIT
+    ───────────────────────────────────────────────────────────────────────── */
+    function init() {
+      // Initialize default role block in step 1
+      initExpFields();
+      initSkillChips();
+      // Show step 0
+      goToStep(0);
+      // Show welcome-back banner if saved profile exists
+      checkWelcomeBack();
+    }
+
+    // Run after DOM is ready
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+    } else {
+      init();
+    }
+  </script>
   </body>
 </html>
