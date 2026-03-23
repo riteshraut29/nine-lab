@@ -66,9 +66,9 @@ def get_user_from_token(token: str) -> Optional[dict]:
 # ── Supabase usage tracking ─────────────────────────────────────────────────
 
 def check_usage_limit(ip: str) -> bool:
-    """Return True if the IP is allowed to generate (under limit), False if blocked."""
+    """Return True if the IP is allowed to generate (under limit), False if blocked.
+    Beta mode: limit raised to 20/day per IP for open testing."""
     if not SUPABASE_URL or not SUPABASE_KEY:
-        # No Supabase configured → no rate limiting (open for self-hosted deployments)
         return True
     try:
         import httpx
@@ -82,12 +82,10 @@ def check_usage_limit(ip: str) -> bool:
         params = {"ip_address": f"eq.{ip}", "created_at": f"gte.{today}T00:00:00"}
         r = httpx.get(url, headers=headers, params=params, timeout=5)
         if r.status_code != 200:
-            # Supabase error — fail-closed to protect against quota abuse when configured
-            return False
-        return len(r.json()) < 1
+            return True  # Beta: fail-open so users aren't blocked
+        return len(r.json()) < 20  # Beta: 20 generations/day per IP
     except Exception:
-        # Network/connection error — fail-closed when Supabase is explicitly configured
-        return False
+        return True  # Beta: fail-open
 
 
 def record_usage(ip: str):
@@ -1507,8 +1505,8 @@ async def ats_score(req: ATSScoreRequest):
     # Technical skills library
     TECH_SKILLS = [
         # Languages
-        "python","java","javascript","typescript","c++","c#","go","rust","kotlin","swift",
-        "php","ruby","scala","r","matlab","perl","bash","shell","sql","nosql",
+        "python","java","javascript","typescript","c++","c#","golang","rust","kotlin","swift",
+        "php","ruby","scala","r programming","matlab","perl","bash","shell","sql","nosql",
         # Web/Frontend
         "react","angular","vue","html","css","sass","webpack","nextjs","nuxt","gatsby",
         "jquery","bootstrap","tailwind","redux","graphql","rest api","restful",
@@ -1557,11 +1555,13 @@ async def ats_score(req: ATSScoreRequest):
                  "preferred","plus","bonus","nice","have","will","across","within"}
 
     def extract_keywords(text: str) -> list[str]:
-        words = re.findall(r'\b[a-z][a-z0-9+#.\-]*[a-z0-9]\b|\b[a-z]{3,}\b', text.lower())
-        # Also extract bigrams (two-word phrases)
-        bigrams = [f"{words[i]} {words[i+1]}" for i in range(len(words)-1)]
+        # Only match words of 4+ characters (avoids "r", "go", "ai" false matches)
+        words = re.findall(r'\b[a-z][a-z0-9]{3,}\b', text.lower())
+        # Bigrams — only meaningful pairs (both words 4+ chars)
+        bigrams = [f"{words[i]} {words[i+1]}" for i in range(len(words)-1)
+                   if len(words[i]) >= 4 and len(words[i+1]) >= 4]
         all_terms = words + bigrams
-        return [t for t in all_terms if t not in STOPWORDS and len(t) >= 3]
+        return [t for t in all_terms if t not in STOPWORDS]
 
     jd_keywords = extract_keywords(jd_text)
     resume_keywords = extract_keywords(resume_text)
@@ -1669,8 +1669,8 @@ async def ats_score(req: ATSScoreRequest):
             "soft_skills": round(soft_score, 1),
             "format": round(format_score, 1),
         },
-        "matched_keywords": list(set(matched_keywords + resume_tech + resume_soft))[:20],
-        "missing_keywords": list(set(missing_keywords[:5] + missing_tech[:5] + missing_soft[:3])),
+        "matched_keywords": [k for k in list(set(matched_keywords + resume_tech + resume_soft)) if len(k) > 2][:20],
+        "missing_keywords": [k for k in list(set(missing_keywords[:5] + missing_tech[:5] + missing_soft[:3])) if len(k) > 2],
         "suggestions": suggestions[:6],
         "stats": {
             "jd_tech_skills_found": len(jd_tech),
