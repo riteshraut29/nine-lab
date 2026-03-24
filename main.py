@@ -301,6 +301,7 @@ MATCH SCORE: [0-100]
 VERDICT: [one honest sentence]
 YOUR TOP 3 STRENGTHS
 YOUR TOP 3 PRIORITY GAPS
+MISSING FROM YOUR RESUME
 DETAILED STRENGTHS ANALYSIS
 GAPS WITH PRIORITY AND SPECIFIC FIX
 RESUME RED FLAGS WITH EXACT FIXES
@@ -310,7 +311,17 @@ THEIR INTERVIEW PROCESS
 SALARY RANGE
 YOUR PRIORITY ACTION LIST
 NEXT STEPS CHECKLIST
-CLOSING MESSAGE"""
+CLOSING MESSAGE
+
+For MISSING FROM YOUR RESUME section — check which of these are absent from the resume and list each with its ATS score impact:
+- Work Experience (internship/job): HIGH impact — adds 15-20 points to ATS score
+- LinkedIn Profile URL: MEDIUM impact — required by most ATS systems
+- GitHub Profile URL: MEDIUM impact — critical for tech roles
+- Achievements/Awards: MEDIUM impact — differentiates from other candidates
+- Certifications: LOW-MEDIUM impact — adds keyword matches
+- CGPA/Percentage: LOW impact — needed for eligibility filters
+Format each as: "• [Missing Item] — [Why it matters] — [How to fix it quickly]"
+If nothing is missing, write: "Your resume has all key sections covered." """
 
     user_prompt = f"""Analyze this candidate's fit for the role. Think through each step carefully before writing.
 
@@ -440,55 +451,55 @@ OUTPUT FORMAT — follow this EXACTLY with no deviations:
 <</NAME>>
 
 <<CONTACT>>
-[City, State] | [email] | [phone] | [LinkedIn URL if available] | [GitHub URL if available]
+[Use ONLY what is in the original resume. Format: City | email | phone | LinkedIn | GitHub]
+[If LinkedIn or GitHub is missing from original — do NOT write placeholder, just omit it]
 <</CONTACT>>
 
 <<SUMMARY>>
-[2-3 sentence professional summary. Include job title from JD, top 2 skills, one achievement, and company name.]
+[2-3 sentence professional summary using job title from JD, candidate's real skills, and company name.]
+[Use ONLY real info — never write "X years of experience" if not stated in resume]
 <</SUMMARY>>
 
 <<TECHNICAL SKILLS>>
-Languages: [list]
-Frameworks & Libraries: [list]
-Databases: [list]
-Tools & Platforms: [list]
-[Add or remove categories as appropriate — only include what candidate actually has]
+[Only include categories the candidate actually has. Do NOT create empty categories.]
+[Example — Languages: Python, Java | Frameworks: React, FastAPI | Tools: Git, Docker]
 <</TECHNICAL SKILLS>>
 
 <<WORK EXPERIENCE>>
-[ONLY include if candidate has work experience. Skip entire section if fresher.]
-[Job Title] | [Company Name] | [Duration]
-• [bullet: action verb + what + quantified result]
-• [bullet]
+[ONLY include if original resume has actual work/internship experience.]
+[If NO work experience exists — completely OMIT this entire section including the tags.]
+[Job Title] | [Company Name] | [Month Year – Month Year]
+• [action verb + specific task + measurable result]
 <</WORK EXPERIENCE>>
 
 <<PROJECTS>>
-[Project Name] | [Year]
-Tech: [comma-separated tech stack]
-• [bullet: action verb + what + quantified result]
-• [bullet]
-• [bullet]
-
-[Repeat for each project — include ALL projects from original resume]
+[Include ALL real projects from original resume. If no projects — omit this section.]
+[Project Name] | [Year if known, otherwise omit year]
+Tech: [tech stack from original resume only]
+• [action verb + what was built + measurable result]
+• [action verb + specific feature/outcome]
 <</PROJECTS>>
 
 <<EDUCATION>>
-[University/College Name] | [City, State]
-[Degree], [Field of Study] | [Start Year] – [End Year] | CGPA: [X.XX] or Percentage: XX%
-
-[If polytechnic/diploma, add it as second entry in same format]
+[Include ONLY if education info exists in original resume.]
+[University Name] | [City]
+[Degree], [Field] | [Year] | CGPA: [X.XX]
+[If college name unknown — write "Details to be added" rather than a placeholder]
 <</EDUCATION>>
 
 <<ACHIEVEMENTS>>
-• [Award/Achievement — include competition name, organizer, date, and what project won]
-[Only include if candidate has achievements. Skip if none.]
+[ONLY include if original resume has awards, competitions, or recognitions.]
+[If NO achievements exist — completely OMIT this section including the tags.]
+• [Award name | Event | Year]
 <</ACHIEVEMENTS>>
 
-RULES:
-- Use ONLY information from the original resume — do NOT invent facts, numbers, or experiences
-- You MAY rephrase bullet points to be stronger and more quantified IF the data supports it
-- ZERO Nine Lab or AI mentions anywhere
-- Output must look like a human expert wrote it"""
+CRITICAL RULES — VIOLATIONS WILL BREAK THE RESUME:
+1. NEVER write placeholder text like [Your LinkedIn], [Duration], [Year], [X.XX] — if info missing, SKIP that field
+2. NEVER invent dates, GPAs, company names, or metrics not in original resume
+3. NEVER include a section if the candidate has no data for it — empty sections hurt ATS score
+4. NEVER write "N/A" or "Not provided" — just omit the field
+5. You MAY rephrase bullets to be stronger using data already present
+6. ZERO Nine Lab or AI mentions anywhere in output"""
 
     user_prompt = f"""Rewrite this resume for maximum ATS score and recruiter impact for this specific role.
 
