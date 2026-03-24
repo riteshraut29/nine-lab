@@ -1627,7 +1627,7 @@
 
           if (data.stage === 'done') {
             clearInterval(pollInterval);
-            showResults(data.files, jd, company);
+            showResults(data.files, jd, company, data.ats_before, data.ats_after);
           } else if (data.stage === 'error') {
             clearInterval(pollInterval);
             goToStep(3);
@@ -1640,7 +1640,7 @@
     /* ─────────────────────────────────────────────────────────────────────────
        STEP 5 — Show Results
     ───────────────────────────────────────────────────────────────────────── */
-    async function showResults(files, jd, company) {
+    async function showResults(files, jd, company, atsBefore, atsAfter) {
       // Set download links
       document.getElementById('dlReality').href = `${BASE}/pdf/${files.reality}`;
       document.getElementById('dlPlan').href = `${BASE}/pdf/${files.plan}`;
@@ -1652,14 +1652,36 @@
 
       goToStep(5);
 
-      // ATS score: reuse if already computed, else fetch now
+      // Show before/after ATS score if available from pipeline
       const atsContainer = document.getElementById('atsResultStep5');
-      if (lastATSResult) {
-        document.getElementById('atsStep5Loading').style.display = 'none';
+      document.getElementById('atsStep5Loading').style.display = 'none';
+      if (atsBefore !== undefined && atsAfter !== undefined) {
+        const diff = atsAfter - atsBefore;
+        const beforeColor = atsBefore >= 70 ? '#22c55e' : atsBefore >= 50 ? '#f59e0b' : '#ef4444';
+        const afterColor = atsAfter >= 70 ? '#22c55e' : atsAfter >= 50 ? '#f59e0b' : '#ef4444';
+        atsContainer.innerHTML = `
+          <div style="display:flex;align-items:center;justify-content:center;gap:18px;flex-wrap:wrap;padding:8px 0;">
+            <div style="text-align:center;">
+              <div style="font-size:11px;color:#888;margin-bottom:4px;font-weight:600;">BEFORE</div>
+              <div style="font-size:42px;font-weight:800;color:${beforeColor};line-height:1;">${atsBefore}%</div>
+              <div style="font-size:10px;color:#aaa;margin-top:2px;">Original Resume</div>
+            </div>
+            <div style="font-size:28px;color:#ccc;font-weight:300;">→</div>
+            <div style="text-align:center;">
+              <div style="font-size:11px;color:#888;margin-bottom:4px;font-weight:600;">AFTER</div>
+              <div style="font-size:42px;font-weight:800;color:${afterColor};line-height:1;">${atsAfter}%</div>
+              <div style="font-size:10px;color:#aaa;margin-top:2px;">Optimized Resume</div>
+            </div>
+            <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:10px 16px;text-align:center;">
+              <div style="font-size:22px;font-weight:800;color:#16a34a;">+${diff}</div>
+              <div style="font-size:10px;color:#16a34a;font-weight:600;">POINTS</div>
+              <div style="font-size:9px;color:#888;margin-top:2px;">improvement</div>
+            </div>
+          </div>`;
+      } else if (lastATSResult) {
         atsContainer.innerHTML = buildATSCircleHTML(lastATSResult);
       } else {
-        // Auto-calculate
-        document.getElementById('atsStep5Loading').style.display = 'flex';
+        // Auto-calculate fallback
         try {
           const resp = await fetch(`${BASE}/ats-score`, {
             method: 'POST',
@@ -1667,7 +1689,6 @@
             body: JSON.stringify({ resume: assembledResume, jd })
           });
           const data = await resp.json();
-          document.getElementById('atsStep5Loading').style.display = 'none';
           if (resp.ok) {
             lastATSResult = data;
             atsContainer.innerHTML = buildATSCircleHTML(data);
@@ -1675,7 +1696,6 @@
             atsContainer.innerHTML = '<p style="font-size:13px;color:var(--text-muted);text-align:center;">ATS score unavailable</p>';
           }
         } catch(e) {
-          document.getElementById('atsStep5Loading').style.display = 'none';
           atsContainer.innerHTML = '<p style="font-size:13px;color:var(--text-muted);text-align:center;">ATS score unavailable</p>';
         }
       }
