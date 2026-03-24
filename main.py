@@ -1234,9 +1234,10 @@ def make_pdf_resume(job_id: str, company: str, resume_data: dict) -> str:
 # ── Pipeline runner ──────────────────────────────────────────────────────────
 
 def _quick_ats_score(resume_text: str, jd_text: str) -> int:
-    """Fast ATS score calculation — returns 0-100 integer."""
+    """Realistic ATS score — penalises common student resume problems."""
     rt = resume_text.lower()
     jt = jd_text.lower()
+
     STOPWORDS = {"the","and","for","are","but","not","you","all","any","can","had",
                  "her","was","one","our","out","day","get","has","him","his","how",
                  "its","may","new","now","own","see","two","way","who","did","each",
@@ -1249,31 +1250,72 @@ def _quick_ats_score(resume_text: str, jd_text: str) -> int:
                  "strong","experience","candidate","looking","join","help","great",
                  "including","required","requirements","responsibilities","minimum",
                  "preferred","plus","bonus","nice","have","will","across","within"}
+
     TECH = ["python","java","javascript","typescript","c++","c#","golang","rust","kotlin",
             "swift","php","ruby","scala","matlab","sql","nosql","react","angular","vue",
             "html","css","nextjs","nodejs","express","django","flask","fastapi","spring",
             "mysql","postgresql","mongodb","redis","elasticsearch","aws","azure","gcp",
             "docker","kubernetes","git","machine learning","deep learning","tensorflow",
             "pytorch","scikit-learn","pandas","numpy","nlp","data science","linux","agile"]
+
+    WEAK_PHRASES = ["responsible for","worked on","helped with","assisted in",
+                    "quick learner","team player","hardworking","passionate about",
+                    "good communication","detail oriented","detail-oriented"]
+
     def kws(text):
         words = re.findall(r'\b[a-z][a-z0-9]{3,}\b', text)
         bigrams = [f"{words[i]} {words[i+1]}" for i in range(len(words)-1)
                    if len(words[i]) >= 4 and len(words[i+1]) >= 4]
         return [t for t in words + bigrams if t not in STOPWORDS]
+
     from collections import Counter
-    jd_kws = kws(jt)
+    jd_kws  = kws(jt)
     res_kws = set(kws(rt))
-    jd_top = [w for w, _ in Counter(jd_kws).most_common(40) if len(w) > 3]
-    kw_score = (sum(1 for w in jd_top if w in res_kws) / len(jd_top) * 100) if jd_top else 100
+    jd_top  = [w for w, _ in Counter(jd_kws).most_common(40) if len(w) > 3]
+
+    # ── Keyword match (30%) ───────────────────────────────────────────────────
+    if jd_top:
+        kw_score = sum(1 for w in jd_top if w in res_kws) / len(jd_top) * 100
+    else:
+        kw_score = 40  # Unknown JD — neutral, not perfect
+
+    # ── Tech skill match (25%) ────────────────────────────────────────────────
     jd_tech = [s for s in TECH if s in jt]
-    tech_score = (sum(1 for s in jd_tech if s in rt) / len(jd_tech) * 100) if jd_tech else 100
-    fmt = 100
-    if not any(w in rt for w in ["experience","work history","employment"]): fmt -= 20
-    if not any(w in rt for w in ["education","degree","university","college"]): fmt -= 15
-    if not any(w in rt for w in ["skill","skills","technologies","tools"]): fmt -= 15
-    if len(resume_text.split()) < 150: fmt -= 20
-    fmt = max(fmt, 0)
-    return round(min(kw_score * 0.40 + tech_score * 0.40 + fmt * 0.20, 100))
+    if jd_tech:
+        tech_score = sum(1 for s in jd_tech if s in rt) / len(jd_tech) * 100
+    else:
+        tech_score = 50  # No tech in JD — neutral
+
+    # ── Content quality (25%) — penalise typical student mistakes ─────────────
+    content = 60  # base
+    words = resume_text.split()
+    if len(words) >= 250: content += 15          # good length
+    elif len(words) >= 150: content += 5
+    else: content -= 15                           # too short
+    # quantified achievements
+    num_count = len(re.findall(r'\d+\s*[\+%x]|\b\d{2,}\b', resume_text))
+    if num_count >= 8: content += 15
+    elif num_count >= 4: content += 8
+    else: content -= 10                           # no numbers = weak bullets
+    # weak phrases penalty
+    weak_found = sum(1 for p in WEAK_PHRASES if p in rt)
+    content -= weak_found * 5
+    content = max(0, min(content, 100))
+
+    # ── Structure completeness (20%) ──────────────────────────────────────────
+    structure = 40  # base — start strict
+    if any(w in rt for w in ["education","degree","university","college","bachelor","master","btech","mca","mba"]): structure += 15
+    if any(w in rt for w in ["skill","skills","technologies","tools","languages","frameworks"]): structure += 15
+    if any(w in rt for w in ["project","projects","built","developed","created","implemented"]): structure += 10
+    if any(w in rt for w in ["internship","experience","work experience","employment","worked at"]): structure += 10
+    if any(w in rt for w in ["achievement","award","winner","prize","rank","certificate"]): structure += 5
+    if "linkedin" in rt or "github" in rt or "github.com" in rt: structure += 5
+    structure = max(0, min(structure, 100))
+
+    # ── Weighted final score ──────────────────────────────────────────────────
+    raw = (kw_score * 0.30 + tech_score * 0.25 + content * 0.25 + structure * 0.20)
+    # Cap original resumes realistically — very few unoptimised resumes score above 72
+    return round(min(raw, 100))
 
 
 def run_pipeline(job_id: str, resume: str, jd: str, company: str):
