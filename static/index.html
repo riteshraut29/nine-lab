@@ -34,89 +34,96 @@
       }
 
       /* ─── Landing Page ───────────────────────────────────────────────── */
-      #step0 { background: linear-gradient(160deg, #f4f6fb 0%, #ede9ff 100%); overflow: hidden; }
-
+      #step0 { background: #f7f8fc; overflow: hidden; }
       .lp-inner { position: relative; z-index: 1; }
 
       /* Nav */
-      .lp-nav {
-        display: flex; align-items: center; justify-content: space-between;
-        margin-bottom: 16px;
-      }
-      .lp-badge {
-        display: inline-flex; align-items: center; gap: 5px;
-        background: #fff8e6; border: 1px solid #fcd34d;
-        color: #92400e; font-size: 11px; font-weight: 600;
-        padding: 4px 10px; border-radius: 20px;
-      }
-
-      /* Hero */
-      .lp-hero-headline { font-size: 38px; font-weight: 800; color: var(--text); line-height: 1.15; margin-bottom: 10px; }
-      .lp-hero-sub { font-size: 15px; color: var(--text-muted); line-height: 1.5; margin-bottom: 4px; }
-      .lp-trust-line { font-size: 11px; color: var(--text-subtle); text-align: center; margin-top: 12px; }
-      .lp-hero-tag { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
-      .lp-tag-item { font-size: 11px; font-weight: 700; color: var(--purple); display: flex; align-items: center; gap: 4px; }
-
-      /* CTA Buttons */
-      .lp-cta-btn {
-        width: 100%; padding: 16px; border-radius: 14px;
-        background: var(--purple); color: white;
-        font-size: 16px; font-weight: 700; border: none;
-        cursor: pointer; margin: 16px 0 0 0;
-        transition: transform 0.15s, background 0.15s;
-      }
-      .lp-cta-btn:active { transform: scale(0.97); }
-      .lp-cta-btn.outline {
-        background: white; color: var(--purple);
-        border: 2px solid var(--purple); margin-top: 10px;
-      }
-
-      /* Section labels */
-      .lp-section-label { font-size: 11px; font-weight: 700; color: var(--text-muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 12px; }
+      .lp-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+      .lp-badge { display: inline-flex; align-items: center; gap: 5px; background: #fff8e6; border: 1px solid #fcd34d; color: #92400e; font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 20px; }
 
       /* Section spacing */
-      .lp-section { margin-bottom: 28px; }
+      .lp-section { margin-bottom: 36px; }
 
-      /* Stat cards */
-      .lp-stat-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin: 16px 0; }
-      .lp-stat-card { background: white; border-radius: 14px; padding: 14px 8px; text-align: center; }
-      .lp-stat-icon { font-size: 20px; margin-bottom: 4px; }
-      .lp-stat-big { font-size: 26px; font-weight: 800; color: var(--purple); line-height: 1; }
-      .lp-stat-small { font-size: 10px; color: var(--text-muted); margin-top: 3px; line-height: 1.3; }
+      /* Section heading — soft, not aggressive */
+      .lp-section-label { font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 14px; }
 
-      /* Kit cards */
-      .lp-kit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 16px 0; }
-      .lp-kit-card { background: white; border-radius: 14px; padding: 16px 12px; }
-      .lp-kit-icon { font-size: 24px; margin-bottom: 8px; }
-      .lp-kit-name { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+      /* Hero */
+      .lp-hero-tag { display: flex; gap: 14px; margin-bottom: 18px; flex-wrap: wrap; }
+      .lp-tag-item { font-size: 11px; font-weight: 700; color: var(--purple); display: flex; align-items: center; gap: 4px; }
+      .lp-hero-headline { font-size: 34px; font-weight: 800; color: var(--text); line-height: 1.2; margin-bottom: 10px; }
+      .lp-hero-sub { font-size: 15px; color: var(--text-muted); line-height: 1.55; margin-bottom: 20px; }
+      .lp-trust-line { font-size: 11px; color: var(--text-subtle); text-align: center; margin-top: 10px; }
+
+      /* Primary CTA — only 2 of these on the page */
+      .lp-cta-btn {
+        width: 100%; padding: 15px; border-radius: 13px;
+        background: var(--purple); color: white;
+        font-size: 15px; font-weight: 700; border: none;
+        cursor: pointer; display: block;
+        transition: transform 0.15s, box-shadow 0.15s;
+        box-shadow: 0 4px 16px rgba(108,99,255,0.25);
+      }
+      .lp-cta-btn:active { transform: scale(0.98); }
+      .lp-cta-btn.outline {
+        background: white; color: var(--purple);
+        border: 2px solid #e0ddff; box-shadow: none;
+        margin-top: 10px;
+      }
+
+      /* Subtle mid-page CTA — text link style, not a button */
+      .lp-link-cta {
+        display: block; text-align: center;
+        font-size: 13px; font-weight: 600; color: var(--purple);
+        margin-top: 14px; cursor: pointer;
+        padding: 8px; border-radius: 8px;
+        transition: background 0.15s;
+      }
+      .lp-link-cta:hover { background: var(--purple-light); }
+
+      /* Stat section — floating numbers, no boxes */
+      .lp-stat-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 0; margin: 4px 0 4px; }
+      .lp-stat-card { text-align: center; padding: 16px 6px; }
+      .lp-stat-icon-circle { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; margin: 0 auto 8px; }
+      .lp-stat-big { font-size: 28px; font-weight: 800; color: var(--text); line-height: 1; }
+      .lp-stat-small { font-size: 10.5px; color: var(--text-muted); margin-top: 4px; line-height: 1.3; }
+
+      /* Kit cards — colored icon circles */
+      .lp-kit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 4px 0; }
+      .lp-kit-card { background: white; border-radius: 16px; padding: 16px 14px; border: 1px solid #f0f0f0; }
+      .lp-kit-icon-wrap { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; margin-bottom: 10px; }
+      .lp-kit-name { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 3px; line-height: 1.3; }
       .lp-kit-sub { font-size: 11px; color: var(--text-muted); line-height: 1.4; }
 
       /* How it works */
-      .lp-steps { display: flex; align-items: flex-start; gap: 0; margin: 16px 0; }
+      .lp-steps { display: flex; align-items: flex-start; gap: 0; margin: 4px 0; }
       .lp-step { flex: 1; text-align: center; position: relative; }
-      .lp-step-icon { width: 52px; height: 52px; border-radius: 50%; background: var(--purple-light); display: flex; align-items: center; justify-content: center; font-size: 22px; margin: 0 auto 8px; }
-      .lp-step-num { font-size: 9px; font-weight: 700; color: var(--purple); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+      .lp-step-icon { width: 50px; height: 50px; border-radius: 50%; background: white; border: 2px solid #ede9ff; display: flex; align-items: center; justify-content: center; font-size: 20px; margin: 0 auto 8px; }
+      .lp-step-num { font-size: 9px; font-weight: 700; color: var(--purple); letter-spacing: 0.5px; margin-bottom: 3px; }
       .lp-step-label { font-size: 12px; font-weight: 600; color: var(--text); }
-      .lp-step-arrow { position: absolute; top: 24px; right: -8px; font-size: 16px; color: var(--text-muted); z-index: 1; }
+      .lp-step-arrow { position: absolute; top: 23px; right: -6px; font-size: 14px; color: #c4c4d4; z-index: 1; }
 
-      /* Before/After bars */
+      /* Before/After */
+      .lp-demo-card { background: white; border-radius: 16px; padding: 18px; border: 1px solid #f0f0f0; }
+      .lp-demo-label { font-size: 11px; font-weight: 600; color: var(--text-muted); margin-bottom: 12px; }
       .lp-bar-wrap { margin: 10px 0; }
-      .lp-bar-label { display: flex; justify-content: space-between; font-size: 12px; font-weight: 600; margin-bottom: 5px; }
-      .lp-bar-track { height: 10px; background: #f0f0f0; border-radius: 99px; overflow: hidden; }
+      .lp-bar-row { display: flex; justify-content: space-between; font-size: 12px; font-weight: 600; margin-bottom: 5px; color: var(--text); }
+      .lp-bar-track { height: 8px; background: #f0f0f0; border-radius: 99px; overflow: hidden; }
       .lp-bar-fill { height: 100%; border-radius: 99px; }
       .lp-bar-fill.bad { background: #ef4444; width: 38%; }
       .lp-bar-fill.good { background: #22c55e; width: 82%; }
+      .lp-demo-arrow { text-align: center; font-size: 11px; color: var(--text-subtle); margin: 10px 0; }
+      .lp-demo-note { text-align: center; font-size: 10.5px; color: var(--text-subtle); margin-top: 12px; }
 
-      /* Award card */
+      /* Award */
       .lp-award { background: #1E2761; border-radius: 16px; padding: 18px; color: white; }
-      .lp-award-tag { font-size: 10px; font-weight: 700; color: #fbbf24; letter-spacing: 1px; margin-bottom: 8px; }
-      .lp-award-title { font-size: 15px; font-weight: 700; line-height: 1.4; margin-bottom: 6px; }
-      .lp-award-sub { font-size: 11px; color: rgba(255,255,255,0.65); line-height: 1.5; }
+      .lp-award-tag { font-size: 10px; font-weight: 700; color: #fbbf24; letter-spacing: 0.8px; margin-bottom: 7px; }
+      .lp-award-title { font-size: 15px; font-weight: 700; line-height: 1.4; margin-bottom: 5px; }
+      .lp-award-sub { font-size: 11px; color: rgba(255,255,255,0.6); line-height: 1.5; }
 
       /* Final CTA */
-      .lp-final-cta { text-align: center; margin-bottom: 28px; }
-      .lp-final-title { font-size: 24px; font-weight: 800; margin-bottom: 6px; }
-      .lp-final-sub { font-size: 13px; color: var(--text-muted); margin-bottom: 16px; }
+      .lp-final-cta { text-align: center; margin-bottom: 32px; }
+      .lp-final-title { font-size: 22px; font-weight: 800; margin-bottom: 5px; }
+      .lp-final-sub { font-size: 13px; color: var(--text-muted); margin-bottom: 18px; }
 
       /* Footer */
       .lp-footer { text-align: center; font-size: 11px; color: var(--text-subtle); padding: 16px 0 8px; }
@@ -676,147 +683,137 @@
 
         <!-- SECTION 1: HERO -->
         <div class="lp-section">
-          <!-- Nav -->
           <div class="lp-nav">
             <div class="brand">
               <div class="brand-icon">9L</div>
               <span class="brand-name">Nine Lab</span>
             </div>
-            <div class="lp-badge">🏆 Best Research Paper 2026</div>
+            <div class="lp-badge">🏆 Best Paper 2026</div>
           </div>
 
-          <!-- Tag pill -->
           <div class="lp-hero-tag">
-            <span class="lp-tag-item">✓ NO LOGIN</span>
-            <span class="lp-tag-item">✓ FREE</span>
-            <span class="lp-tag-item">✓ FOR INDIAN STUDENTS</span>
+            <span class="lp-tag-item">✓ No login</span>
+            <span class="lp-tag-item">✓ Free</span>
+            <span class="lp-tag-item">✓ For Indian students</span>
           </div>
 
-          <!-- Headline -->
-          <div class="lp-hero-headline">Get shortlisted.</div>
-          <div class="lp-hero-sub">Nine Lab rewrites your resume for ATS — in 60 seconds.</div>
+          <div class="lp-hero-headline">Get shortlisted<br>before others apply.</div>
+          <div class="lp-hero-sub">Nine Lab rewrites your resume using a 15-step ATS framework — and delivers your complete placement kit in 60 seconds.</div>
 
-          <!-- CTA 1 -->
           <button class="lp-cta-btn" onclick="goToStep1()">Get My Free Kit →</button>
-
-          <!-- Trust line -->
-          <div class="lp-trust-line">4 PDFs · No account needed · 20+ students improved</div>
+          <div class="lp-trust-line">4 PDFs · No account · 20+ students tested</div>
         </div>
 
-        <!-- SECTION 2: PROBLEM -->
+        <!-- SECTION 2: PROBLEM — floating stats, no boxes -->
         <div class="lp-section">
-          <div class="lp-section-label">WHY MOST RESUMES FAIL</div>
+          <div class="lp-section-label">Why most resumes never get read</div>
           <div class="lp-stat-grid">
             <div class="lp-stat-card">
-              <div class="lp-stat-icon">🤖</div>
-              <div class="lp-stat-big">75%</div>
-              <div class="lp-stat-small">filtered by ATS</div>
+              <div class="lp-stat-icon-circle" style="background:#fef2f2;">🤖</div>
+              <div class="lp-stat-big" style="color:#ef4444;">75%</div>
+              <div class="lp-stat-small">filtered by ATS<br>before any human</div>
             </div>
             <div class="lp-stat-card">
-              <div class="lp-stat-icon">📄</div>
-              <div class="lp-stat-big">6 sec</div>
-              <div class="lp-stat-small">recruiter reads</div>
+              <div class="lp-stat-icon-circle" style="background:#fffbeb;">⏱️</div>
+              <div class="lp-stat-big" style="color:#f59e0b;">6 sec</div>
+              <div class="lp-stat-small">a recruiter spends<br>on your resume</div>
             </div>
             <div class="lp-stat-card">
-              <div class="lp-stat-icon">😔</div>
-              <div class="lp-stat-big">2 col</div>
-              <div class="lp-stat-small">layout breaks ATS</div>
+              <div class="lp-stat-icon-circle" style="background:#f0fdf4;">✅</div>
+              <div class="lp-stat-big" style="color:#22c55e;">82%</div>
+              <div class="lp-stat-small">avg ATS score<br>after Nine Lab</div>
             </div>
           </div>
-          <!-- CTA 2 -->
-          <button class="lp-cta-btn" onclick="goToStep1()">Fix My Resume Free →</button>
+          <div class="lp-link-cta" onclick="goToStep1()">Fix my resume free →</div>
         </div>
 
-        <!-- SECTION 3: WHAT YOU GET -->
+        <!-- SECTION 3: WHAT YOU GET — colored kit cards -->
         <div class="lp-section">
-          <div class="lp-section-label">WHAT YOU DOWNLOAD — FREE</div>
+          <div class="lp-section-label">What you download — completely free</div>
           <div class="lp-kit-grid">
             <div class="lp-kit-card">
-              <div class="lp-kit-icon">📄</div>
+              <div class="lp-kit-icon-wrap" style="background:#f0efff;">📄</div>
               <div class="lp-kit-name">Job-Ready Resume</div>
               <div class="lp-kit-sub">ATS keywords injected, format fixed</div>
             </div>
             <div class="lp-kit-card">
-              <div class="lp-kit-icon">📊</div>
+              <div class="lp-kit-icon-wrap" style="background:#f0fdf4;">📊</div>
               <div class="lp-kit-name">Resume Scorecard</div>
               <div class="lp-kit-sub">Your match % vs the JD</div>
             </div>
             <div class="lp-kit-card">
-              <div class="lp-kit-icon">🗺️</div>
+              <div class="lp-kit-icon-wrap" style="background:#eff6ff;">🗺️</div>
               <div class="lp-kit-name">Interview Prep Guide</div>
               <div class="lp-kit-sub">Study plan + likely questions</div>
             </div>
             <div class="lp-kit-card">
-              <div class="lp-kit-icon">🏢</div>
+              <div class="lp-kit-icon-wrap" style="background:#fffbeb;">🏢</div>
               <div class="lp-kit-name">Company Cheat Sheet</div>
-              <div class="lp-kit-sub">Culture, salary, interview process</div>
+              <div class="lp-kit-sub">Culture, salary, interview tips</div>
             </div>
           </div>
-          <!-- CTA 3 -->
-          <button class="lp-cta-btn" onclick="goToStep1()">Try It Free — No Login →</button>
+          <div class="lp-link-cta" onclick="goToStep1()">Try it free — no login needed →</div>
         </div>
 
         <!-- SECTION 4: HOW IT WORKS -->
         <div class="lp-section">
-          <div class="lp-section-label">HOW IT WORKS — 3 STEPS</div>
+          <div class="lp-section-label">How it works</div>
           <div class="lp-steps">
             <div class="lp-step">
               <div class="lp-step-icon">📋</div>
-              <div class="lp-step-num">STEP 1</div>
-              <div class="lp-step-label">Add Resume</div>
-              <div class="lp-step-arrow">→</div>
+              <div class="lp-step-num">Step 1</div>
+              <div class="lp-step-label">Add your resume</div>
+              <div class="lp-step-arrow">›</div>
             </div>
             <div class="lp-step">
               <div class="lp-step-icon">🎯</div>
-              <div class="lp-step-num">STEP 2</div>
-              <div class="lp-step-label">Paste JD</div>
-              <div class="lp-step-arrow">→</div>
+              <div class="lp-step-num">Step 2</div>
+              <div class="lp-step-label">Paste the JD</div>
+              <div class="lp-step-arrow">›</div>
             </div>
             <div class="lp-step">
               <div class="lp-step-icon">📥</div>
-              <div class="lp-step-num">STEP 3</div>
-              <div class="lp-step-label">Download Kit</div>
+              <div class="lp-step-num">Step 3</div>
+              <div class="lp-step-label">Download your kit</div>
             </div>
           </div>
         </div>
 
-        <!-- SECTION 5: BEFORE/AFTER -->
+        <!-- SECTION 5: BEFORE/AFTER — clean card -->
         <div class="lp-section">
-          <div class="lp-section-label">REAL RESULT — MCA STUDENT → TCS SDE</div>
-          <div class="lp-bar-wrap">
-            <div class="lp-bar-label"><span>Before</span><span style="color:#ef4444">38%</span></div>
-            <div class="lp-bar-track"><div class="lp-bar-fill bad"></div></div>
+          <div class="lp-section-label">Real result — MCA student applying to TCS</div>
+          <div class="lp-demo-card">
+            <div class="lp-bar-wrap">
+              <div class="lp-bar-row"><span>Original resume</span><span style="color:#ef4444;font-weight:700;">38%</span></div>
+              <div class="lp-bar-track"><div class="lp-bar-fill bad"></div></div>
+            </div>
+            <div class="lp-demo-arrow">↓ &nbsp;Nine Lab applied 15-step framework</div>
+            <div class="lp-bar-wrap">
+              <div class="lp-bar-row"><span>After Nine Lab</span><span style="color:#22c55e;font-weight:700;">82%</span></div>
+              <div class="lp-bar-track"><div class="lp-bar-fill good"></div></div>
+            </div>
+            <div class="lp-demo-note">Verified on Jobscan.co · Pune, 2024</div>
           </div>
-          <div style="text-align:center;font-size:11px;color:var(--text-muted);margin:8px 0;">↓ Nine Lab applied 15-step framework</div>
-          <div class="lp-bar-wrap">
-            <div class="lp-bar-label"><span>After</span><span style="color:#22c55e">82%</span></div>
-            <div class="lp-bar-track"><div class="lp-bar-fill good"></div></div>
-          </div>
-          <div style="text-align:center;font-size:11px;color:var(--text-subtle);margin-top:8px;">Verified on Jobscan.co · Pune, 2024</div>
-          <!-- CTA 4 -->
-          <button class="lp-cta-btn" onclick="goToStep1()">See My Score →</button>
+          <div class="lp-link-cta" onclick="goToStep1()">See my score →</div>
         </div>
 
         <!-- SECTION 6: AWARD -->
         <div class="lp-section">
           <div class="lp-award">
-            <div class="lp-award-tag">🏆 AWARD-WINNING RESEARCH</div>
-            <div class="lp-award-title">Best Research Paper — Kaveri ThinkFest 2026</div>
-            <div class="lp-award-sub">IEEE-adjacent · Peer-reviewed · GHRCE Pune</div>
+            <div class="lp-award-tag">🏆 &nbsp;AWARD-WINNING RESEARCH</div>
+            <div class="lp-award-title">Best Research Paper<br>Kaveri ThinkFest 2026</div>
+            <div class="lp-award-sub">IEEE-adjacent multidisciplinary conference · Peer-reviewed · G.H. Raisoni College of Engineering, Pune</div>
           </div>
         </div>
 
         <!-- SECTION 7: FINAL CTA -->
         <div class="lp-final-cta">
           <div class="lp-final-title">Ready to get shortlisted?</div>
-          <div class="lp-final-sub">No account. No login. Free.</div>
-          <!-- CTA 5a -->
-          <button class="lp-cta-btn" onclick="goToStep1()">📄 Upload Resume</button>
-          <!-- CTA 5b -->
-          <button class="lp-cta-btn outline" onclick="goToStep1()">✏️ Fill in 2 mins</button>
+          <div class="lp-final-sub">No account. No login. Completely free.</div>
+          <button class="lp-cta-btn" onclick="goToStep1()">📄 &nbsp;Upload My Resume</button>
+          <button class="lp-cta-btn outline" onclick="goToStep1()">✏️ &nbsp;Fill in 2 mins</button>
         </div>
 
-        <!-- Footer -->
         <div class="lp-footer">Nine Lab · Built for Indian students · ninelab.in</div>
 
         <!-- Hidden file input for JS compatibility -->
