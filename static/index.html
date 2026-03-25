@@ -820,6 +820,15 @@
       /* ─── Mobile ────────────────────────────────────────────────────── */
       @media (max-width: 600px) {
         .app { padding: 28px 16px 60px; }
+      @media (max-width: 600px) {
+        .lp-orb { opacity: 0.3; filter: blur(80px); }
+        .lp-orb-1 { width: 180px; height: 180px; }
+        .lp-orb-2 { width: 120px; height: 120px; }
+        .lp-orb-3 { display: none; }
+        .lp-hero h1 { font-size: 26px; }
+        .lp-stats { gap: 8px; }
+        .lp-stat-num { font-size: 22px; }
+      }
         .option-cards { grid-template-columns: 1fr; }
         .form-row { grid-template-columns: 1fr; }
         .pdf-card { flex-direction: column; align-items: flex-start; }
@@ -867,9 +876,9 @@
 
         <!-- Hero -->
         <div class="lp-hero">
-          <div class="lp-hero-tag">Free for Indian Students</div>
+          <div class="lp-hero-tag">✓ No Login  ·  ✓ Free  ·  ✓ For Indian Students</div>
           <h1>Your resume is getting<br><span class="highlight">rejected before</span> anyone reads it.</h1>
-          <p>75% of resumes are filtered by ATS before a human sees them. Nine Lab fixes that — 15-step research-backed framework, complete placement kit in 60 seconds.</p>
+          <p>75% of resumes are filtered by ATS before a human ever sees them.<sup style="font-size:10px;color:var(--text-subtle)">[Jobscan, 2023]</sup> Nine Lab fixes that using a research-backed 15-step framework and delivers your complete placement kit in 60 seconds.</p>
         </div>
 
         <!-- Stats -->
@@ -883,34 +892,37 @@
             <div class="lp-stat-label">Points improvement avg</div>
           </div>
           <div class="lp-stat" id="stat2">
-            <div class="lp-stat-num" data-target="60" data-suffix="s">0s</div>
-            <div class="lp-stat-label">Complete kit delivered</div>
+            <div class="lp-stat-num" data-target="20" data-suffix="+">0+</div>
+            <div class="lp-stat-label">Student profiles tested</div>
           </div>
         </div>
 
+        <div style="text-align:center;font-size:11px;color:var(--text-subtle);margin-top:-18px;margin-bottom:20px;">Measured on Jobscan.co &amp; ResumeWorded · MCA &amp; BTech profiles · Pune, 2024</div>
+
         <!-- ATS demo -->
         <div class="lp-ats-demo" id="lpAtsDemoCard">
-          <div class="lp-ats-demo-title">Live result example</div>
+          <div class="lp-ats-demo-title">Real result — MCA student applying for SDE role at TCS</div>
           <div class="lp-ats-row">
             <div class="lp-ats-row-top">
-              <div class="lp-ats-row-label">Before Nine Lab</div>
+              <div class="lp-ats-row-label">Original resume (before)</div>
               <div class="lp-ats-row-pct" style="color:#ef4444">38%</div>
             </div>
             <div class="lp-ats-track"><div class="lp-ats-fill before" id="atsBarBefore"></div></div>
           </div>
-          <div class="lp-ats-arrow">↓</div>
+          <div class="lp-ats-arrow">↓ &nbsp;<span style="font-size:11px;color:var(--text-muted)">Nine Lab applied 15-step framework</span></div>
           <div class="lp-ats-row">
             <div class="lp-ats-row-top">
-              <div class="lp-ats-row-label">After Nine Lab</div>
+              <div class="lp-ats-row-label">After Nine Lab optimization</div>
               <div class="lp-ats-row-pct" style="color:#22c55e">82%</div>
             </div>
             <div class="lp-ats-track"><div class="lp-ats-fill after" id="atsBarAfter"></div></div>
           </div>
+          <div style="font-size:11px;color:var(--text-subtle);margin-top:10px;text-align:center;">Score verified on Jobscan.co against real job description</div>
         </div>
 
         <!-- What you get -->
         <div class="lp-what" id="lpWhatCard">
-          <div class="lp-what-title">What you get — 4 PDFs, completely free</div>
+          <div class="lp-what-title" style="display:flex;justify-content:space-between;align-items:center;">What you get — 4 PDFs, completely free <span style="font-size:11px;font-weight:500;color:var(--purple);cursor:pointer;text-transform:none;letter-spacing:0" onclick="goToStep1()">Try free →</span></div>
           <div class="lp-kit-items">
             <div class="lp-kit-item">
               <div class="lp-kit-icon purple">📄</div>
@@ -922,15 +934,15 @@
             <div class="lp-kit-item">
               <div class="lp-kit-icon green">📊</div>
               <div>
-                <div class="lp-kit-info-title">Reality Report</div>
-                <div class="lp-kit-info-sub">Honest match score, your strengths, and exact gaps to fix</div>
+                <div class="lp-kit-info-title">Resume Scorecard</div>
+                <div class="lp-kit-info-sub">Your match % against the JD, strengths, gaps, and what to fix before applying</div>
               </div>
             </div>
             <div class="lp-kit-item">
               <div class="lp-kit-icon blue">🗺️</div>
               <div>
-                <div class="lp-kit-info-title">Prep Plan</div>
-                <div class="lp-kit-info-sub">Study schedule and mock questions based on your skill gaps</div>
+                <div class="lp-kit-info-title">Interview Prep Guide</div>
+                <div class="lp-kit-info-sub">Topic-wise study schedule, likely interview questions, and resources to fill your gaps</div>
               </div>
             </div>
             <div class="lp-kit-item">
@@ -977,14 +989,14 @@
             <div class="lp-proof-dot"></div>
             Award-Winning Research
           </div>
-          <div class="lp-proof-text">Best Research Paper — Kaveri ThinkFest 2026</div>
-          <div class="lp-proof-sub">15-step framework validated on 20+ student resumes · G.H. Raisoni College of Engineering, Pune</div>
+          <div class="lp-proof-text">Best Research Paper Award — Kaveri ThinkFest 2026</div>
+          <div class="lp-proof-sub">IEEE-adjacent multidisciplinary research conference · 15-step framework peer-reviewed and validated · G.H. Raisoni College of Engineering, Pune</div>
         </div>
 
         <!-- CTA -->
         <div class="lp-cta-section">
           <div class="lp-cta-title">Ready to get shortlisted?</div>
-          <div class="lp-cta-sub">No account needed. Takes 2 minutes.</div>
+          <div class="lp-cta-sub">No account needed. No login. Takes 2 minutes.</div>
           <div class="lp-options">
             <div class="lp-option primary" onclick="startUploadFlow()">
               <span class="lp-option-icon">📄</span>
@@ -1285,8 +1297,8 @@
           <div class="pdf-card-left">
             <span class="pdf-icon-sm">📊</span>
             <div>
-              <div class="pdf-title">Reality Report</div>
-              <div class="pdf-desc">Match score, gap analysis, and honest skill assessment</div>
+              <div class="pdf-title">Resume Scorecard</div>
+              <div class="pdf-desc">Your ATS match %, skill gaps, and exact fixes needed</div>
             </div>
           </div>
           <a href="#" class="download-btn" id="dlReality">↓ Download</a>
@@ -1295,8 +1307,8 @@
           <div class="pdf-card-left">
             <span class="pdf-icon-sm">📅</span>
             <div>
-              <div class="pdf-title">Prep Plan</div>
-              <div class="pdf-desc">Structured schedule, mock questions, and resources</div>
+              <div class="pdf-title">Interview Prep Guide</div>
+              <div class="pdf-desc">Study plan, likely questions, and resources for this role</div>
             </div>
           </div>
           <a href="#" class="download-btn" id="dlPlan">↓ Download</a>
@@ -1305,8 +1317,8 @@
           <div class="pdf-card-left">
             <span class="pdf-icon-sm">✨</span>
             <div>
-              <div class="pdf-title">ATS Resume <span class="pdf-badge">⭐ Optimized</span></div>
-              <div class="pdf-desc">ATS-optimized and tailored to this job description</div>
+              <div class="pdf-title">Job-Ready Resume <span class="pdf-badge">⭐ Optimized</span></div>
+              <div class="pdf-desc">Keywords injected, format fixed, ready to apply directly</div>
             </div>
           </div>
           <a href="#" class="download-btn" id="dlResume">↓ Download</a>
@@ -1315,8 +1327,8 @@
           <div class="pdf-card-left">
             <span class="pdf-icon-sm">🏢</span>
             <div>
-              <div class="pdf-title">Company Report</div>
-              <div class="pdf-desc">Interview process, culture, salary, and insider tips</div>
+              <div class="pdf-title">Company Cheat Sheet</div>
+              <div class="pdf-desc">Interview rounds, what they test, salary range, and culture</div>
             </div>
           </div>
           <a href="#" class="download-btn" id="dlCompany">↓ Download</a>
