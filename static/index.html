@@ -735,6 +735,119 @@
         .feedback-btns { gap: 8px; }
         .ats-bar-label { width: 100px; font-size: 12px; }
       }
+      /* ─── Glassmorphism & Visual Polish ────────────────────────────── */
+
+      /* Hero background blobs */
+      #step0 { position: relative; overflow: hidden; }
+      #step0::before {
+        content: ''; position: absolute; pointer-events: none;
+        width: 360px; height: 360px; border-radius: 50%;
+        background: radial-gradient(circle, rgba(108,99,255,0.13) 0%, transparent 70%);
+        top: -80px; right: -100px; z-index: 0;
+      }
+      #step0::after {
+        content: ''; position: absolute; pointer-events: none;
+        width: 260px; height: 260px; border-radius: 50%;
+        background: radial-gradient(circle, rgba(52,211,153,0.09) 0%, transparent 70%);
+        bottom: 160px; left: -80px; z-index: 0;
+      }
+
+      /* CTA button shimmer sweep */
+      .lp-cta-btn { position: relative; overflow: hidden; }
+      .lp-cta-btn::after {
+        content: ''; position: absolute;
+        top: 0; left: -100%; width: 55%; height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.22), transparent);
+        transform: skewX(-18deg);
+        animation: btnShimmer 3.5s ease-in-out infinite;
+      }
+      .lp-cta-btn.outline::after { display: none; }
+      @keyframes btnShimmer {
+        0% { left: -100%; } 40%, 100% { left: 160%; }
+      }
+
+      /* Kit cards — lift on hover */
+      .lp-kit-card {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        cursor: pointer;
+      }
+      .lp-kit-card:hover {
+        transform: translateY(-4px) scale(1.01);
+        box-shadow: 0 14px 36px rgba(108,99,255,0.14);
+      }
+
+      /* Testimonial cards — lift on hover */
+      .t-card { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+      .t-card:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(0,0,0,0.09); }
+
+      /* Progress card — soft gradient */
+      .progress-card {
+        background: linear-gradient(140deg, #f8f7ff 0%, #eef2ff 100%);
+      }
+      body.dark-mode .progress-card {
+        background: linear-gradient(140deg, #1c1a3d 0%, #252360 100%);
+      }
+
+      /* Results header — gradient band */
+      .results-header {
+        background: linear-gradient(135deg, #f0efff 0%, #e8f5fd 100%);
+        border-radius: 16px; padding: 20px 16px; margin-bottom: 16px;
+      }
+      body.dark-mode .results-header {
+        background: linear-gradient(135deg, #1c1a3d 0%, #0f2240 100%);
+      }
+
+      /* ATS highlight card — glass */
+      .ats-highlight-card {
+        background: linear-gradient(135deg, #f0efff 0%, #fafffe 100%);
+        border: 1px solid rgba(108,99,255,0.15);
+        box-shadow: 0 4px 20px rgba(108,99,255,0.08);
+      }
+      body.dark-mode .ats-highlight-card {
+        background: linear-gradient(135deg, #1c1a3d, #0f1f35);
+        border-color: rgba(108,99,255,0.25);
+      }
+
+      /* Step cards — subtle elevation */
+      .card { transition: box-shadow 0.2s; }
+      .card:hover { box-shadow: 0 8px 32px rgba(108,99,255,0.11); }
+
+      /* Stat cards — add subtle card bg */
+      .lp-stat-card {
+        background: white;
+        border-radius: 16px;
+        border: 1px solid var(--border);
+        transition: transform 0.2s, box-shadow 0.2s;
+      }
+      .lp-stat-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.07); }
+      body.dark-mode .lp-stat-card { background: #1e293b; border-color: #2d3748; }
+
+      /* Logo badges — hover glow */
+      .lp-logo-badge { transition: transform 0.15s, box-shadow 0.15s; cursor: default; }
+      .lp-logo-badge:hover { transform: scale(1.04); box-shadow: 0 4px 12px rgba(108,99,255,0.12); }
+
+      /* LinkedIn import overlay */
+      .linkedin-overlay {
+        display: none; position: fixed; inset: 0;
+        background: rgba(0,0,0,0.45); z-index: 9999;
+        align-items: flex-end; justify-content: center;
+      }
+      .linkedin-overlay.open { display: flex; animation: fadeIn 0.2s ease; }
+      .linkedin-sheet {
+        background: var(--bg-card); border-radius: 24px 24px 0 0;
+        padding: 28px 20px 36px; width: 100%; max-width: 640px;
+        animation: slideUp 0.25s cubic-bezier(0.34,1.2,0.64,1);
+      }
+      .linkedin-input {
+        width: 100%; padding: 13px 14px; border-radius: 12px;
+        border: 1.5px solid var(--border); font-size: 14px;
+        font-family: inherit; color: var(--text);
+        background: var(--bg-subtle); margin: 14px 0 12px;
+        transition: border-color 0.2s;
+        outline: none;
+      }
+      .linkedin-input:focus { border-color: var(--purple); }
+
       /* ─── Dark Mode ─────────────────────────────────────────────────── */
       body.dark-mode {
         --text: #e2e8f0; --text-muted: #94a3b8; --text-subtle: #64748b;
@@ -1201,10 +1314,46 @@
               </div>
             </div>
 
+            <div class="start-option" onclick="startFromLinkedIn()">
+              <div class="start-option-icon">🔗</div>
+              <div>
+                <div class="start-option-title">Import from LinkedIn</div>
+                <div class="start-option-sub">Paste your LinkedIn URL — we'll build your resume</div>
+              </div>
+            </div>
+
             <div class="start-cancel" onclick="closeStartOptions()">Cancel</div>
           </div>
         </div>
       </div>
+
+      <!-- LinkedIn Import Overlay -->
+      <div class="linkedin-overlay" id="linkedinOverlay" onclick="closeLinkedInImport(event)">
+        <div class="linkedin-sheet">
+          <div class="start-sheet-title">🔗 Import from LinkedIn</div>
+          <div class="start-sheet-sub">Paste your public LinkedIn profile URL below</div>
+
+          <div id="linkedinImportForm">
+            <input class="linkedin-input" type="url" id="linkedinUrlInput"
+              placeholder="https://linkedin.com/in/yourname" />
+            <button class="btn-primary" onclick="handleLinkedInImport()">Import Profile →</button>
+          </div>
+
+          <div id="linkedinImportLoading" style="display:none; margin-top:16px;">
+            <div class="skeleton-loader">
+              <div class="skeleton-line w-70"></div>
+              <div class="skeleton-line w-80"></div>
+              <div class="skeleton-line w-60"></div>
+              <div class="skeleton-line w-75" style="width:75%"></div>
+            </div>
+            <div class="skeleton-label">Fetching your LinkedIn profile...</div>
+          </div>
+
+          <div class="error-box" id="linkedinImportError" style="display:none; margin-top:12px;"></div>
+          <div class="start-cancel" onclick="closeLinkedInImport()">Cancel</div>
+        </div>
+      </div>
+
     </div>
     <!-- ═══════════════════════════════════════════════
          STEP 1 — Manual Profile Form
@@ -3013,6 +3162,67 @@
     // Init counter on page load
     document.addEventListener('DOMContentLoaded', initKitsCounter);
     initKitsCounter();
+
+    /* ─────────────────────────────────────────────────────────────────────────
+       LINKEDIN IMPORT
+    ───────────────────────────────────────────────────────────────────────── */
+    function startFromLinkedIn() {
+      closeStartOptions();
+      // Reset form state
+      document.getElementById('linkedinUrlInput').value = '';
+      document.getElementById('linkedinImportForm').style.display = 'block';
+      document.getElementById('linkedinImportLoading').style.display = 'none';
+      document.getElementById('linkedinImportError').style.display = 'none';
+      document.getElementById('linkedinOverlay').classList.add('open');
+      setTimeout(() => document.getElementById('linkedinUrlInput').focus(), 300);
+    }
+
+    function closeLinkedInImport(e) {
+      if (!e || e.target === document.getElementById('linkedinOverlay')) {
+        document.getElementById('linkedinOverlay').classList.remove('open');
+      }
+    }
+
+    async function handleLinkedInImport() {
+      const url = document.getElementById('linkedinUrlInput').value.trim();
+      if (!url) { _liError('Please paste your LinkedIn URL first.'); return; }
+      if (!url.includes('linkedin.com')) { _liError('Enter a valid LinkedIn URL (linkedin.com/in/...).'); return; }
+
+      document.getElementById('linkedinImportForm').style.display = 'none';
+      document.getElementById('linkedinImportLoading').style.display = 'block';
+      document.getElementById('linkedinImportError').style.display = 'none';
+
+      try {
+        const resp = await fetch(`${BASE}/import-linkedin`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url })
+        });
+        const data = await resp.json();
+        if (!resp.ok) { _liError(data.detail || 'Could not fetch LinkedIn profile. Make sure it\'s public.'); return; }
+
+        const text = data.text || '';
+        if (!text || text.length < 50) { _liError('Profile seems empty or private. Make sure your profile is public.'); return; }
+
+        // Route to step1b extract review with LinkedIn content
+        closeLinkedInImport();
+        goToStep(1.5);
+        document.getElementById('extractLoading').style.display = 'none';
+        document.getElementById('extractReview').style.display = 'block';
+        document.getElementById('extractError').style.display = 'none';
+        document.getElementById('extractedText').value = text;
+      } catch(e) {
+        _liError('Network error. Check your connection and try again.');
+      }
+    }
+
+    function _liError(msg) {
+      document.getElementById('linkedinImportForm').style.display = 'block';
+      document.getElementById('linkedinImportLoading').style.display = 'none';
+      const err = document.getElementById('linkedinImportError');
+      err.textContent = msg;
+      err.style.display = 'block';
+    }
   </script>
   <!-- Dark Mode Toggle -->
   <div class="dark-toggle" id="darkToggle" onclick="toggleDarkMode()" title="Toggle dark mode">🌙</div>
