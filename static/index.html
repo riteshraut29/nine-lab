@@ -33,24 +33,146 @@
         -webkit-font-smoothing: antialiased;
       }
 
-      /* ─── Welcome Splash Screen ─────────────────────────────────────── */
-      #welcome-screen {
-        position: fixed;
-        top: 0; left: 0;
-        width: 100%; height: 100%;
-        background: var(--purple);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 9999;
-        transition: opacity 0.8s ease;
+      /* ─── Landing Page ───────────────────────────────────────────────── */
+      .lp-nav {
+        display: flex; align-items: center; justify-content: space-between;
+        margin-bottom: 28px;
       }
-      #welcome-screen h1 {
+      .lp-badge {
+        display: inline-flex; align-items: center; gap: 5px;
+        background: #fff8e6; border: 1px solid #fcd34d;
+        color: #92400e; font-size: 11px; font-weight: 600;
+        padding: 4px 10px; border-radius: 20px; letter-spacing: 0.2px;
+      }
+      .lp-hero { margin-bottom: 28px; }
+      .lp-hero-tag {
+        display: inline-block;
+        background: var(--purple-light); color: var(--purple);
+        font-size: 11px; font-weight: 700; letter-spacing: 0.5px;
+        text-transform: uppercase; padding: 4px 10px; border-radius: 20px;
+        margin-bottom: 14px;
+      }
+      .lp-hero h1 {
+        font-size: 30px; font-weight: 800; color: var(--text);
+        line-height: 1.2; letter-spacing: -0.8px; margin-bottom: 12px;
+      }
+      .lp-hero h1 span { color: var(--purple); }
+      .lp-hero p {
+        font-size: 15px; color: var(--text-muted); line-height: 1.6;
+      }
+      .lp-stats {
+        display: grid; grid-template-columns: repeat(3, 1fr);
+        gap: 10px; margin-bottom: 28px;
+      }
+      .lp-stat {
+        background: white; border: 1px solid var(--border);
+        border-radius: 12px; padding: 14px 10px; text-align: center;
+      }
+      .lp-stat-num {
+        font-size: 24px; font-weight: 800; color: var(--purple);
+        letter-spacing: -0.5px; line-height: 1;
+      }
+      .lp-stat-label {
+        font-size: 10.5px; color: var(--text-muted); margin-top: 4px;
+        line-height: 1.4;
+      }
+      .lp-what {
+        background: white; border: 1px solid var(--border);
+        border-radius: 16px; padding: 20px; margin-bottom: 22px;
+      }
+      .lp-what-title {
+        font-size: 13px; font-weight: 700; color: var(--text);
+        margin-bottom: 14px; text-transform: uppercase; letter-spacing: 0.4px;
+      }
+      .lp-kit-items { display: flex; flex-direction: column; gap: 10px; }
+      .lp-kit-item {
+        display: flex; align-items: flex-start; gap: 12px;
+        padding: 12px; background: var(--bg); border-radius: 10px;
+      }
+      .lp-kit-icon {
+        width: 36px; height: 36px; border-radius: 10px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 17px; flex-shrink: 0;
+      }
+      .lp-kit-icon.purple { background: var(--purple-light); }
+      .lp-kit-icon.green  { background: #dcfce7; }
+      .lp-kit-icon.blue   { background: #dbeafe; }
+      .lp-kit-icon.orange { background: #ffedd5; }
+      .lp-kit-info-title {
+        font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 2px;
+      }
+      .lp-kit-info-sub { font-size: 12px; color: var(--text-muted); line-height: 1.4; }
+      .lp-how {
+        margin-bottom: 24px;
+      }
+      .lp-how-title {
+        font-size: 13px; font-weight: 700; color: var(--text);
+        text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 14px;
+      }
+      .lp-steps { display: flex; flex-direction: column; gap: 0; }
+      .lp-step {
+        display: flex; gap: 14px; align-items: flex-start;
+        position: relative;
+      }
+      .lp-step:not(:last-child)::before {
+        content: ''; position: absolute;
+        left: 15px; top: 32px; bottom: -8px;
+        width: 2px; background: var(--border);
+      }
+      .lp-step-num {
+        width: 32px; height: 32px; border-radius: 50%;
+        background: var(--purple); color: white;
+        font-size: 13px; font-weight: 700;
+        display: flex; align-items: center; justify-content: center;
+        flex-shrink: 0; position: relative; z-index: 1;
+      }
+      .lp-step-body { padding-bottom: 20px; }
+      .lp-step-title { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
+      .lp-step-sub { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+      .lp-proof {
+        background: linear-gradient(135deg, #1e2761 0%, #3730a3 100%);
+        border-radius: 16px; padding: 18px 20px; margin-bottom: 24px;
         color: white;
-        font-size: 42px;
-        font-weight: 700;
-        letter-spacing: -1px;
       }
+      .lp-proof-tag {
+        font-size: 10px; font-weight: 700; letter-spacing: 1px;
+        text-transform: uppercase; color: #a5b4fc; margin-bottom: 6px;
+      }
+      .lp-proof-text { font-size: 14px; font-weight: 600; line-height: 1.4; margin-bottom: 4px; }
+      .lp-proof-sub { font-size: 12px; color: #c7d2fe; }
+      .lp-cta-section { margin-bottom: 8px; }
+      .lp-cta-title {
+        font-size: 18px; font-weight: 800; color: var(--text);
+        text-align: center; margin-bottom: 6px; letter-spacing: -0.3px;
+      }
+      .lp-cta-sub {
+        font-size: 13px; color: var(--text-muted);
+        text-align: center; margin-bottom: 20px;
+      }
+      .lp-options { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+      .lp-option {
+        background: white; border: 1.5px solid var(--border);
+        border-radius: 14px; padding: 18px 14px; text-align: center;
+        cursor: pointer; transition: all 0.2s;
+      }
+      .lp-option:hover, .lp-option:active {
+        border-color: var(--purple); transform: translateY(-2px);
+        box-shadow: 0 4px 20px rgba(108,99,255,0.15);
+      }
+      .lp-option.primary {
+        background: var(--purple); border-color: var(--purple);
+      }
+      .lp-option-icon { font-size: 26px; margin-bottom: 8px; }
+      .lp-option-title {
+        font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 3px;
+      }
+      .lp-option.primary .lp-option-title { color: white; }
+      .lp-option-sub { font-size: 11px; color: var(--text-muted); }
+      .lp-option.primary .lp-option-sub { color: rgba(255,255,255,0.8); }
+      .lp-footer-note {
+        text-align: center; font-size: 11.5px; color: var(--text-subtle);
+      }
+      .lp-footer-note span { margin: 0 5px; }
 
       /* ─── App Shell ─────────────────────────────────────────────────── */
       .app {
@@ -578,32 +700,15 @@
   </head>
   <body>
 
-  <!-- ─── Welcome Splash (2 second fade) ──────────────────────────────────── -->
-  <div id="welcome-screen">
-    <h1>Hello Guys 👋</h1>
-  </div>
-  <script>
-    setTimeout(function() {
-      var ws = document.getElementById('welcome-screen');
-      ws.style.opacity = '0';
-      setTimeout(function() { ws.style.display = 'none'; }, 800);
-    }, 2000);
-  </script>
-
   <!-- ─── Main App ──────────────────────────────────────────────────────────── -->
   <div class="app" id="app">
 
     <!-- ═══════════════════════════════════════════════
-         STEP 0 — Welcome / Landing
+         STEP 0 — Landing Page
     ════════════════════════════════════════════════ -->
     <div id="step0">
-      <!-- Brand -->
-      <div class="brand">
-        <div class="brand-icon">9L</div>
-        <span class="brand-name">Nine Lab</span>
-      </div>
 
-      <!-- Welcome back banner (shown if localStorage profile exists) -->
+      <!-- Welcome back banner -->
       <div class="welcome-back-banner" id="welcomeBackBanner">
         <div class="wb-title" id="wbTitle">Welcome back!</div>
         <div class="wb-sub">You have a saved profile. Continue where you left off?</div>
@@ -613,30 +718,130 @@
         </div>
       </div>
 
+      <!-- Nav -->
+      <div class="lp-nav">
+        <div class="brand">
+          <div class="brand-icon">9L</div>
+          <span class="brand-name">Nine Lab</span>
+        </div>
+        <div class="lp-badge">🏆 Best Research Paper 2026</div>
+      </div>
+
       <!-- Hero -->
-      <div class="welcome-hero">
-        <h1>Let's build your placement kit</h1>
-        <p>Tell us about yourself and the job — we'll generate a tailored ATS resume, prep plan, and company report in minutes.</p>
+      <div class="lp-hero">
+        <div class="lp-hero-tag">Free for Indian Students</div>
+        <h1>Your resume is getting<br><span>rejected before</span> anyone reads it.</h1>
+        <p>75% of resumes are filtered out by ATS software before a human ever sees them. Nine Lab fixes that — using a research-backed 15-step framework to optimize your resume and generate your complete placement kit in 60 seconds.</p>
       </div>
 
-      <!-- Option cards -->
-      <div class="option-cards">
-        <div class="option-card" onclick="startUploadFlow()">
-          <span class="oc-icon">📄</span>
-          <div class="oc-title">Upload Resume PDF</div>
-          <div class="oc-sub">We'll extract your info automatically</div>
-          <input type="file" id="pdfUploadInput" accept=".pdf" style="display:none" onchange="handlePdfUpload(this.files[0])" />
+      <!-- Stats -->
+      <div class="lp-stats">
+        <div class="lp-stat">
+          <div class="lp-stat-num">82%</div>
+          <div class="lp-stat-label">Avg ATS score after optimization</div>
         </div>
-        <div class="option-card" onclick="goToStep1()">
-          <span class="oc-icon">✏️</span>
-          <div class="oc-title">Fill in 2 mins</div>
-          <div class="oc-sub">Answer a few quick questions</div>
+        <div class="lp-stat">
+          <div class="lp-stat-num">+44</div>
+          <div class="lp-stat-label">Points improvement on average</div>
+        </div>
+        <div class="lp-stat">
+          <div class="lp-stat-num">60s</div>
+          <div class="lp-stat-label">Complete kit delivered</div>
         </div>
       </div>
 
-      <div class="welcome-footer">
-        No login required <span>·</span> Free to use <span>·</span> Your data stays in your browser
+      <!-- What you get -->
+      <div class="lp-what">
+        <div class="lp-what-title">What you get — 4 PDFs, free</div>
+        <div class="lp-kit-items">
+          <div class="lp-kit-item">
+            <div class="lp-kit-icon purple">📄</div>
+            <div>
+              <div class="lp-kit-info-title">ATS-Optimized Resume</div>
+              <div class="lp-kit-info-sub">Tailored to the exact job description with keywords injected — ready to apply directly</div>
+            </div>
+          </div>
+          <div class="lp-kit-item">
+            <div class="lp-kit-icon green">📊</div>
+            <div>
+              <div class="lp-kit-info-title">Reality Report</div>
+              <div class="lp-kit-info-sub">Honest match score, your strengths, and exact gaps to fix before applying</div>
+            </div>
+          </div>
+          <div class="lp-kit-item">
+            <div class="lp-kit-icon blue">🗺️</div>
+            <div>
+              <div class="lp-kit-info-title">Prep Plan</div>
+              <div class="lp-kit-info-sub">Study schedule, mock questions, and resources based on your skill gaps</div>
+            </div>
+          </div>
+          <div class="lp-kit-item">
+            <div class="lp-kit-icon orange">🏢</div>
+            <div>
+              <div class="lp-kit-info-title">Company Intelligence Report</div>
+              <div class="lp-kit-info-sub">Interview process, culture, salary range, and what the company actually looks for</div>
+            </div>
+          </div>
+        </div>
       </div>
+
+      <!-- How it works -->
+      <div class="lp-how">
+        <div class="lp-how-title">How it works</div>
+        <div class="lp-steps">
+          <div class="lp-step">
+            <div class="lp-step-num">1</div>
+            <div class="lp-step-body">
+              <div class="lp-step-title">Add your resume</div>
+              <div class="lp-step-sub">Upload a PDF or fill in your details — takes 2 minutes</div>
+            </div>
+          </div>
+          <div class="lp-step">
+            <div class="lp-step-num">2</div>
+            <div class="lp-step-body">
+              <div class="lp-step-title">Paste the job description</div>
+              <div class="lp-step-sub">From LinkedIn, Naukri, or any job posting</div>
+            </div>
+          </div>
+          <div class="lp-step">
+            <div class="lp-step-num">3</div>
+            <div class="lp-step-body">
+              <div class="lp-step-title">Download your complete kit</div>
+              <div class="lp-step-sub">4 tailored PDFs ready in 60 seconds — apply with confidence</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Social proof -->
+      <div class="lp-proof">
+        <div class="lp-proof-tag">🏆 Award-Winning Research</div>
+        <div class="lp-proof-text">Best Research Paper — Kaveri ThinkFest 2026</div>
+        <div class="lp-proof-sub">15-step ATS optimization framework validated on 20+ student resumes at G.H. Raisoni College of Engineering, Pune</div>
+      </div>
+
+      <!-- CTA -->
+      <div class="lp-cta-section">
+        <div class="lp-cta-title">Ready to get shortlisted?</div>
+        <div class="lp-cta-sub">Choose how you want to start</div>
+        <div class="lp-options">
+          <div class="lp-option primary" onclick="startUploadFlow()">
+            <div class="lp-option-icon">📄</div>
+            <div class="lp-option-title">Upload Resume</div>
+            <div class="lp-option-sub">We extract your info</div>
+            <input type="file" id="pdfUploadInput" accept=".pdf" style="display:none" onchange="handlePdfUpload(this.files[0])" />
+          </div>
+          <div class="lp-option" onclick="goToStep1()">
+            <div class="lp-option-icon">✏️</div>
+            <div class="lp-option-title">Fill in 2 mins</div>
+            <div class="lp-option-sub">Answer a few questions</div>
+          </div>
+        </div>
+        <div class="lp-footer-note">
+          No login required <span>·</span> Free to use <span>·</span> Your data stays in your browser
+        </div>
+      </div>
+
     </div>
 
     <!-- ═══════════════════════════════════════════════
