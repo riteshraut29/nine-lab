@@ -2712,7 +2712,7 @@
           <div class="fc-controls">
             <button class="fc-btn" onclick="prevFlashcard()" ${fcIndex === 0 ? 'disabled' : ''}>← Prev</button>
             <div class="fc-dots">
-              ${gFlashcards.map((_, i) => \`<div class="fc-dot \${i === fcIndex ? 'active' : ''}"></div>\`).join('')}
+              ${gFlashcards.map((_, i) => `<div class="fc-dot ${i === fcIndex ? 'active' : ''}"></div>`).join('')}
             </div>
             <button class="fc-btn" onclick="nextFlashcard()" ${fcIndex === gFlashcards.length - 1 ? 'disabled' : ''}>Next →</button>
           </div>
