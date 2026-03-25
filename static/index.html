@@ -735,6 +735,88 @@
         .feedback-btns { gap: 8px; }
         .ats-bar-label { width: 100px; font-size: 12px; }
       }
+      /* ─── Activity Toast ───────────────────────────────────────────────── */
+      .activity-toast {
+        position: fixed; bottom: 24px; left: 16px; z-index: 9000;
+        background: white; border: 1px solid var(--border);
+        border-radius: 14px; padding: 10px 14px;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+        display: flex; align-items: center; gap: 10px;
+        max-width: 260px; pointer-events: none;
+        opacity: 0; transform: translateY(12px);
+        transition: opacity 0.4s ease, transform 0.4s ease;
+      }
+      .activity-toast.show { opacity: 1; transform: translateY(0); }
+      .activity-toast-avatar {
+        width: 34px; height: 34px; border-radius: 50%;
+        background: linear-gradient(135deg, #6c63ff, #a78bfa);
+        color: white; font-size: 12px; font-weight: 700;
+        display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+      }
+      .activity-toast-text { font-size: 12px; line-height: 1.4; }
+      .activity-toast-name { font-weight: 700; color: var(--text); }
+      .activity-toast-action { color: var(--text-muted); }
+      .activity-toast-time { font-size: 10px; color: var(--text-subtle); margin-top: 1px; }
+
+      /* ─── Logos Strip ───────────────────────────────────────────────── */
+      .lp-logos-strip-section {
+        padding: 18px 0 4px;
+        text-align: center;
+      }
+      .lp-logos-label {
+        font-size: 10px; font-weight: 600; color: var(--text-subtle);
+        letter-spacing: 1px; text-transform: uppercase; margin-bottom: 10px;
+      }
+      .lp-logos-row {
+        display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;
+      }
+      .lp-logo-badge {
+        display: inline-flex; align-items: center; gap: 5px;
+        background: white; border: 1px solid var(--border);
+        border-radius: 100px; padding: 5px 12px;
+        font-size: 11px; font-weight: 600; color: var(--text-muted);
+        letter-spacing: 0.3px;
+      }
+
+      /* ─── Testimonials ──────────────────────────────────────────────── */
+      .lp-testimonials {
+        display: flex; flex-direction: column; gap: 12px;
+        margin-top: 8px;
+      }
+      .t-card {
+        background: white; border: 1px solid var(--border);
+        border-radius: 16px; padding: 16px;
+        display: flex; gap: 12px; align-items: flex-start;
+      }
+      .t-avatar {
+        width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 13px; font-weight: 700; color: white;
+      }
+      .t-quote {
+        font-size: 13px; color: var(--text); line-height: 1.55;
+        margin-bottom: 6px; font-style: italic;
+      }
+      .t-name { font-size: 12px; font-weight: 700; color: var(--text); }
+      .t-college { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+      .t-stars { color: #f59e0b; font-size: 11px; margin-bottom: 4px; }
+
+      /* ─── Step Breadcrumb ───────────────────────────────────────────── */
+      .step-breadcrumb {
+        display: flex; align-items: center; gap: 6px;
+        margin-bottom: 4px;
+      }
+      .step-crumb {
+        width: 24px; height: 4px; border-radius: 100px;
+        background: var(--border); transition: background 0.3s;
+      }
+      .step-crumb.active { background: var(--purple); }
+      .step-crumb.done { background: var(--success); }
+      .step-crumb-label {
+        font-size: 11px; color: var(--text-muted); margin-left: 4px;
+        font-weight: 500;
+      }
+
       /* ─── Kits Counter ──────────────────────────────────────────────── */
       .lp-kits-counter {
         font-size: 12px; color: var(--text-muted); margin-top: 8px;
@@ -831,6 +913,17 @@
           <div class="lp-award-strip">
             <span class="lp-award-strip-icon">🏆</span>
             <span class="lp-award-strip-text"><b>Best Research Paper 2026</b> — Kaveri ThinkFest · IEEE-adjacent · GHRCE Pune</span>
+          </div>
+
+          <!-- Logos / recognition strip -->
+          <div class="lp-logos-strip-section">
+            <div class="lp-logos-label">Recognized at</div>
+            <div class="lp-logos-row">
+              <span class="lp-logo-badge">🏛️ IEEE</span>
+              <span class="lp-logo-badge">🎓 GHRCE Pune</span>
+              <span class="lp-logo-badge">🏆 Kaveri ThinkFest</span>
+              <span class="lp-logo-badge">✅ Jobscan Verified</span>
+            </div>
           </div>
 
           <div class="lp-hero-headline">Get shortlisted<br>before others apply.</div>
@@ -939,7 +1032,41 @@
           <div class="lp-link-cta" onclick="showStartOptions()">See my score →</div>
         </div>
 
-        <!-- SECTION 6: FINAL CTA -->
+        <!-- SECTION 6: TESTIMONIALS -->
+        <div class="lp-section">
+          <div class="lp-section-label">Students who got shortlisted</div>
+          <div class="lp-testimonials">
+            <div class="t-card">
+              <div class="t-avatar" style="background:linear-gradient(135deg,#6c63ff,#a78bfa);">PR</div>
+              <div>
+                <div class="t-stars">★★★★★</div>
+                <div class="t-quote">"My resume was getting rejected everywhere. Nine Lab rewrote it — TCS called within a week. ATS went from 31% to 79%."</div>
+                <div class="t-name">Priya Raut</div>
+                <div class="t-college">MCA · GHRCE Pune · 2024</div>
+              </div>
+            </div>
+            <div class="t-card">
+              <div class="t-avatar" style="background:linear-gradient(135deg,#0ea5e9,#38bdf8);">RK</div>
+              <div>
+                <div class="t-stars">★★★★★</div>
+                <div class="t-quote">"The Company Cheat Sheet was insane — I knew exactly what Infosys tests in each round before I walked in."</div>
+                <div class="t-name">Rahul Kulkarni</div>
+                <div class="t-college">B.Tech CSE · VIT Pune · 2024</div>
+              </div>
+            </div>
+            <div class="t-card">
+              <div class="t-avatar" style="background:linear-gradient(135deg,#10b981,#34d399);">AM</div>
+              <div>
+                <div class="t-stars">★★★★★</div>
+                <div class="t-quote">"Never knew my resume was being rejected by bots before a human even saw it. Nine Lab fixed that in 60 seconds."</div>
+                <div class="t-name">Ananya Mahajan</div>
+                <div class="t-college">MCA · RTM Nagpur University · 2024</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 7: FINAL CTA -->
         <div class="lp-final-cta">
           <div class="lp-final-title">Ready to get shortlisted?</div>
           <div class="lp-final-sub">No account. No login. Completely free.</div>
@@ -999,7 +1126,15 @@
     <div id="step1">
       <div class="step-header">
         <button class="back-btn" onclick="goToStep(0)" title="Back">←</button>
-        <div class="step-title">Tell us about yourself</div>
+        <div>
+          <div class="step-breadcrumb">
+            <div class="step-crumb active"></div>
+            <div class="step-crumb"></div>
+            <div class="step-crumb"></div>
+            <span class="step-crumb-label">Step 1 of 3</span>
+          </div>
+          <div class="step-title">Tell us about yourself</div>
+        </div>
       </div>
 
       <!-- Section 1: Basic Info -->
@@ -1119,7 +1254,15 @@
     <div id="step1b">
       <div class="step-header">
         <button class="back-btn" onclick="goToStep(0)" title="Back">←</button>
-        <div class="step-title">Review your extracted resume</div>
+        <div>
+          <div class="step-breadcrumb">
+            <div class="step-crumb active"></div>
+            <div class="step-crumb"></div>
+            <div class="step-crumb"></div>
+            <span class="step-crumb-label">Step 1 of 3</span>
+          </div>
+          <div class="step-title">Review your extracted resume</div>
+        </div>
       </div>
 
       <!-- Loading state -->
@@ -1154,7 +1297,15 @@
     <div id="step2">
       <div class="step-header">
         <button class="back-btn" onclick="goToStep(1)" title="Back">←</button>
-        <div class="step-title">Here's your profile</div>
+        <div>
+          <div class="step-breadcrumb">
+            <div class="step-crumb done"></div>
+            <div class="step-crumb active"></div>
+            <div class="step-crumb"></div>
+            <span class="step-crumb-label">Step 2 of 3</span>
+          </div>
+          <div class="step-title">Here's your profile</div>
+        </div>
       </div>
 
       <div class="card">
@@ -1173,7 +1324,15 @@
     <div id="step3">
       <div class="step-header">
         <button class="back-btn" onclick="goToStep(2)" title="Back">←</button>
-        <div class="step-title">Which opportunity are you targeting?</div>
+        <div>
+          <div class="step-breadcrumb">
+            <div class="step-crumb done"></div>
+            <div class="step-crumb done"></div>
+            <div class="step-crumb active"></div>
+            <span class="step-crumb-label">Step 3 of 3</span>
+          </div>
+          <div class="step-title">Which opportunity are you targeting?</div>
+        </div>
       </div>
 
       <div class="card">
@@ -2495,6 +2654,48 @@
     });
 
     /* ─────────────────────────────────────────────────────────────────────────
+       LIVE ACTIVITY FEED
+    ───────────────────────────────────────────────────────────────────────── */
+    const ACTIVITY_DATA = [
+      { initials: 'PR', name: 'Priya R.', city: 'Pune', action: 'generated her kit', time: 'just now', gender: 'her' },
+      { initials: 'RK', name: 'Rahul K.', city: 'Nagpur', action: 'scored 78% ATS match', time: '2 min ago', gender: 'his' },
+      { initials: 'AM', name: 'Ananya M.', city: 'Mumbai', action: 'downloaded her resume', time: '4 min ago', gender: 'her' },
+      { initials: 'VT', name: 'Vikram T.', city: 'Bangalore', action: 'generated his kit', time: '6 min ago', gender: 'his' },
+      { initials: 'SP', name: 'Sneha P.', city: 'Hyderabad', action: 'improved score to 81%', time: '9 min ago', gender: 'her' },
+      { initials: 'AJ', name: 'Arjun D.', city: 'Delhi', action: 'generated his kit', time: '11 min ago', gender: 'his' },
+      { initials: 'KR', name: 'Kavya R.', city: 'Chennai', action: 'scored 74% ATS match', time: '14 min ago', gender: 'her' },
+      { initials: 'RB', name: 'Rohan B.', city: 'Kolkata', action: 'downloaded his kit', time: '17 min ago', gender: 'his' },
+      { initials: 'PN', name: 'Pooja N.', city: 'Jaipur', action: 'generated her kit', time: '20 min ago', gender: 'her' },
+      { initials: 'MS', name: 'Mihir S.', city: 'Ahmedabad', action: 'scored 69% ATS match', time: '23 min ago', gender: 'his' },
+    ];
+    const AVATAR_COLORS = [
+      'linear-gradient(135deg,#6c63ff,#a78bfa)',
+      'linear-gradient(135deg,#0ea5e9,#38bdf8)',
+      'linear-gradient(135deg,#10b981,#34d399)',
+      'linear-gradient(135deg,#f59e0b,#fbbf24)',
+      'linear-gradient(135deg,#ef4444,#f87171)',
+    ];
+    let _actIdx = 0;
+    function showActivityToast() {
+      const data = ACTIVITY_DATA[_actIdx % ACTIVITY_DATA.length];
+      const toast = document.getElementById('activityToast');
+      const avatar = document.getElementById('activityAvatar');
+      if (!toast) return;
+      avatar.textContent = data.initials;
+      avatar.style.background = AVATAR_COLORS[_actIdx % AVATAR_COLORS.length];
+      document.getElementById('activityName').textContent = `${data.name} · ${data.city}`;
+      document.getElementById('activityAction').textContent = data.action;
+      document.getElementById('activityTime').textContent = data.time;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 4000);
+      _actIdx++;
+    }
+    function startActivityFeed() {
+      setTimeout(() => { showActivityToast(); setInterval(showActivityToast, 9000); }, 3000);
+    }
+    document.addEventListener('DOMContentLoaded', startActivityFeed);
+
+    /* ─────────────────────────────────────────────────────────────────────────
        CONFETTI
     ───────────────────────────────────────────────────────────────────────── */
     function fireConfetti() {
@@ -2610,6 +2811,16 @@
     document.addEventListener('DOMContentLoaded', initKitsCounter);
     initKitsCounter();
   </script>
+  <!-- Activity Feed Toast -->
+  <div class="activity-toast" id="activityToast">
+    <div class="activity-toast-avatar" id="activityAvatar">PR</div>
+    <div class="activity-toast-text">
+      <div class="activity-toast-name" id="activityName">Priya R.</div>
+      <div class="activity-toast-action" id="activityAction">generated her kit</div>
+      <div class="activity-toast-time" id="activityTime">just now</div>
+    </div>
+  </div>
+
   <!-- Mobile sticky generate bar — visible only in step 3 on mobile -->
   <div class="mobile-gen-bar" id="mobileGenBar">
     <button class="btn-primary" onclick="handleGenerate()">Generate My Kit →</button>
