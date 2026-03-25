@@ -128,6 +128,51 @@
       /* Footer */
       .lp-footer { text-align: center; font-size: 11px; color: var(--text-subtle); padding: 16px 0 8px; }
 
+      /* Award strip — top trust bar */
+      .lp-award-strip {
+        display: flex; align-items: flex-start; gap: 8px;
+        background: #1E2761; border-radius: 12px;
+        padding: 12px 14px; margin-bottom: 20px;
+      }
+      .lp-award-strip-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+      .lp-award-strip-text { font-size: 11.5px; color: rgba(255,255,255,0.85); line-height: 1.5; }
+      .lp-award-strip-text b { color: #fbbf24; }
+
+      /* Kit card clickable + peek label */
+      .lp-kit-card { cursor: pointer; transition: transform 0.15s, box-shadow 0.15s; }
+      .lp-kit-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(108,99,255,0.12); }
+      .lp-kit-card:active { transform: scale(0.97); }
+      .lp-kit-peek { font-size: 10px; color: var(--purple); font-weight: 600; margin-top: 8px; }
+
+      /* Kit preview modal */
+      .kit-overlay {
+        display: none; position: fixed; inset: 0;
+        background: rgba(0,0,0,0.45); z-index: 9999;
+        align-items: flex-end; justify-content: center;
+      }
+      .kit-overlay.open { display: flex; animation: fadeIn 0.2s ease; }
+      .kit-sheet {
+        background: white; border-radius: 24px 24px 0 0;
+        padding: 24px 20px 36px; width: 100%; max-width: 640px;
+        max-height: 80vh; overflow-y: auto;
+        animation: slideUp 0.25s cubic-bezier(0.34,1.2,0.64,1);
+      }
+      .kit-sheet-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+      .kit-sheet-title { font-size: 16px; font-weight: 700; color: var(--text); }
+      .kit-sheet-close { font-size: 20px; color: var(--text-muted); cursor: pointer; padding: 4px 8px; }
+      .kit-preview-section { margin-bottom: 14px; }
+      .kit-preview-label { font-size: 10px; font-weight: 700; color: var(--text-muted); letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 6px; }
+      .kit-preview-box {
+        background: var(--bg); border-radius: 10px;
+        padding: 12px 14px; font-size: 12px; color: var(--text);
+        line-height: 1.7; font-family: monospace;
+        border-left: 3px solid var(--purple);
+      }
+      .kit-preview-box.green { border-left-color: #22c55e; }
+      .kit-preview-box.blue  { border-left-color: #3b82f6; }
+      .kit-preview-box.amber { border-left-color: #f59e0b; }
+      .kit-cta-row { margin-top: 18px; }
+
       /* Start Options Bottom Sheet */
       .start-overlay {
         display: none; position: fixed; inset: 0;
@@ -718,20 +763,20 @@
               <div class="brand-icon">9L</div>
               <span class="brand-name">Nine Lab</span>
             </div>
-            <div class="lp-badge">🏆 Best Paper 2026</div>
+            <div class="lp-badge">✓ No login &nbsp;·&nbsp; ✓ Free</div>
           </div>
 
-          <div class="lp-hero-tag">
-            <span class="lp-tag-item">✓ No login</span>
-            <span class="lp-tag-item">✓ Free</span>
-            <span class="lp-tag-item">✓ For Indian students</span>
+          <!-- Award strip — moved to top for instant trust -->
+          <div class="lp-award-strip">
+            <span class="lp-award-strip-icon">🏆</span>
+            <span class="lp-award-strip-text"><b>Best Research Paper 2026</b> — Kaveri ThinkFest · IEEE-adjacent · GHRCE Pune</span>
           </div>
 
           <div class="lp-hero-headline">Get shortlisted<br>before others apply.</div>
           <div class="lp-hero-sub">Nine Lab rewrites your resume using a 15-step ATS framework — and delivers your complete placement kit in 60 seconds.</div>
 
           <button class="lp-cta-btn" onclick="showStartOptions()">Get My Free Kit →</button>
-          <div class="lp-trust-line">4 PDFs · No account · 20+ students tested</div>
+          <div class="lp-trust-line">4 PDFs · No account · For Indian students</div>
         </div>
 
         <!-- SECTION 2: PROBLEM — floating stats, no boxes -->
@@ -757,29 +802,33 @@
           <div class="lp-link-cta" onclick="showStartOptions()">Fix my resume free →</div>
         </div>
 
-        <!-- SECTION 3: WHAT YOU GET — colored kit cards -->
+        <!-- SECTION 3: WHAT YOU GET — clickable kit cards -->
         <div class="lp-section">
-          <div class="lp-section-label">What you download — completely free</div>
+          <div class="lp-section-label">What you download — tap to preview</div>
           <div class="lp-kit-grid">
-            <div class="lp-kit-card">
+            <div class="lp-kit-card" onclick="showKitPreview('resume')">
               <div class="lp-kit-icon-wrap" style="background:#f0efff;">📄</div>
               <div class="lp-kit-name">Job-Ready Resume</div>
               <div class="lp-kit-sub">ATS keywords injected, format fixed</div>
+              <div class="lp-kit-peek">Tap to preview →</div>
             </div>
-            <div class="lp-kit-card">
+            <div class="lp-kit-card" onclick="showKitPreview('scorecard')">
               <div class="lp-kit-icon-wrap" style="background:#f0fdf4;">📊</div>
               <div class="lp-kit-name">Resume Scorecard</div>
               <div class="lp-kit-sub">Your match % vs the JD</div>
+              <div class="lp-kit-peek">Tap to preview →</div>
             </div>
-            <div class="lp-kit-card">
+            <div class="lp-kit-card" onclick="showKitPreview('prep')">
               <div class="lp-kit-icon-wrap" style="background:#eff6ff;">🗺️</div>
               <div class="lp-kit-name">Interview Prep Guide</div>
               <div class="lp-kit-sub">Study plan + likely questions</div>
+              <div class="lp-kit-peek">Tap to preview →</div>
             </div>
-            <div class="lp-kit-card">
+            <div class="lp-kit-card" onclick="showKitPreview('company')">
               <div class="lp-kit-icon-wrap" style="background:#fffbeb;">🏢</div>
               <div class="lp-kit-name">Company Cheat Sheet</div>
               <div class="lp-kit-sub">Culture, salary, interview tips</div>
+              <div class="lp-kit-peek">Tap to preview →</div>
             </div>
           </div>
           <div class="lp-link-cta" onclick="showStartOptions()">Try it free — no login needed →</div>
@@ -827,16 +876,7 @@
           <div class="lp-link-cta" onclick="showStartOptions()">See my score →</div>
         </div>
 
-        <!-- SECTION 6: AWARD -->
-        <div class="lp-section">
-          <div class="lp-award">
-            <div class="lp-award-tag">🏆 &nbsp;AWARD-WINNING RESEARCH</div>
-            <div class="lp-award-title">Best Research Paper<br>Kaveri ThinkFest 2026</div>
-            <div class="lp-award-sub">IEEE-adjacent multidisciplinary conference · Peer-reviewed · G.H. Raisoni College of Engineering, Pune</div>
-          </div>
-        </div>
-
-        <!-- SECTION 7: FINAL CTA -->
+        <!-- SECTION 6: FINAL CTA -->
         <div class="lp-final-cta">
           <div class="lp-final-title">Ready to get shortlisted?</div>
           <div class="lp-final-sub">No account. No login. Completely free.</div>
@@ -848,6 +888,20 @@
 
         <!-- Hidden file input for JS compatibility -->
         <input type="file" id="pdfUploadInput" accept=".pdf" style="display:none" onchange="handlePdfUpload(this.files[0])" />
+
+        <!-- Kit Preview Modal -->
+        <div class="kit-overlay" id="kitOverlay" onclick="closeKitPreview(event)">
+          <div class="kit-sheet" id="kitSheet">
+            <div class="kit-sheet-header">
+              <div class="kit-sheet-title" id="kitSheetTitle"></div>
+              <div class="kit-sheet-close" onclick="closeKitPreview()">✕</div>
+            </div>
+            <div id="kitSheetBody"></div>
+            <div class="kit-cta-row">
+              <button class="lp-cta-btn" onclick="closeKitPreview();showStartOptions()">Get this free →</button>
+            </div>
+          </div>
+        </div>
 
         <!-- Start Options Bottom Sheet -->
         <div class="start-overlay" id="startOverlay" onclick="closeStartOptions(event)">
@@ -1363,6 +1417,120 @@
     /* ─────────────────────────────────────────────────────────────────────────
        STEP 1 — Manual form
     ───────────────────────────────────────────────────────────────────────── */
+    const KIT_PREVIEWS = {
+      resume: {
+        title: '📄 Job-Ready Resume',
+        sections: [
+          { label: 'What it looks like', style: '', content:
+`RAHUL SHARMA
+Pune, MH | rahul@email.com | +91 98765 43210 | github.com/rahul
+
+SUMMARY
+Python Developer with 1 year of experience in Django and REST APIs,
+seeking Software Engineer role at TCS. Built 3 production-ready
+applications serving 10,000+ users.
+
+TECHNICAL SKILLS
+Languages:   Python, Java, SQL, JavaScript
+Frameworks:  Django, FastAPI, React
+Databases:   PostgreSQL, MongoDB, Redis
+Tools:       Git, Docker, Linux, AWS EC2` },
+          { label: 'What Nine Lab fixes', style: 'green', content:
+`✅ Keywords from JD injected exactly as written
+✅ Single-column layout (ATS-safe)
+✅ Section headers standardized (CAPS)
+✅ Every bullet: Action verb + Task + Number
+✅ Tech stack listed under each project
+✅ Education with CGPA properly labeled` }
+        ]
+      },
+      scorecard: {
+        title: '📊 Resume Scorecard',
+        sections: [
+          { label: 'Sample scorecard output', style: '', content:
+`MATCH SCORE vs TCS SDE Role
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+Overall Match:     82%  ████████░░
+Keyword Match:     91%  █████████░
+Tech Skills:       85%  ████████░░
+Format Score:     100%  ██████████
+
+MATCHED KEYWORDS
+✅ Python  ✅ REST API  ✅ Django
+✅ PostgreSQL  ✅ Git  ✅ Docker` },
+          { label: 'Gaps identified', style: 'green', content:
+`❌ Missing: "Agile methodology" — add to skills
+❌ Missing: "CI/CD" — mention in projects
+⚠️  Weak: Internship under wrong section
+⚠️  Weak: No quantified result in Project 2` }
+        ]
+      },
+      prep: {
+        title: '🗺️ Interview Prep Guide',
+        sections: [
+          { label: 'Sample study plan', style: 'blue', content:
+`WEEK 1 — Technical Foundation
+Day 1-2: DSA (Arrays, Strings) — LeetCode Easy
+Day 3-4: OOP Concepts + Java/Python revision
+Day 5-6: DBMS — SQL queries, normalization
+Day 7:   Mock test + review weak areas
+
+WEEK 2 — Role-Specific Prep
+Day 1-2: Django REST API deep dive
+Day 3-4: System Design basics
+Day 5:   TCS-specific past questions` },
+          { label: 'Likely interview questions', style: '', content:
+`1. Explain REST vs SOAP with example
+2. How does Django ORM work?
+3. Difference: SQL vs NoSQL — when to use?
+4. Write: Reverse a linked list
+5. What is Docker? Why use containers?
+6. Describe a project you built end-to-end` }
+        ]
+      },
+      company: {
+        title: '🏢 Company Cheat Sheet',
+        sections: [
+          { label: 'Sample — TCS Intelligence', style: 'amber', content:
+`COMPANY OVERVIEW
+TCS is India's largest IT company with 600,000+
+employees. Focus: consulting, outsourcing, digital.
+
+INTERVIEW PROCESS
+Round 1: TCS NQT (online aptitude + coding)
+Round 2: Technical Interview (DSA + projects)
+Round 3: Managerial (communication + fit)
+Round 4: HR (salary, joining, background)
+
+SALARY RANGE
+Fresher: ₹3.36 LPA (NQT) – ₹7 LPA (Ninja/Digital)` },
+          { label: 'What TCS looks for', style: '', content:
+`✅ Strong aptitude score (NQT cutoff: 65%+)
+✅ Clean communication — no jargon
+✅ 1 well-explained end-to-end project
+✅ Basics of DBMS, OS, CN
+✅ Consistent academic record (60%+ throughout)` }
+        ]
+      }
+    };
+
+    function showKitPreview(type) {
+      const data = KIT_PREVIEWS[type];
+      if (!data) return;
+      document.getElementById('kitSheetTitle').textContent = data.title;
+      document.getElementById('kitSheetBody').innerHTML = data.sections.map(s => `
+        <div class="kit-preview-section">
+          <div class="kit-preview-label">${s.label}</div>
+          <div class="kit-preview-box ${s.style}">${s.content}</div>
+        </div>`).join('');
+      document.getElementById('kitOverlay').classList.add('open');
+    }
+    function closeKitPreview(e) {
+      if (!e || e.target === document.getElementById('kitOverlay')) {
+        document.getElementById('kitOverlay').classList.remove('open');
+      }
+    }
+
     function showStartOptions() {
       document.getElementById('startOverlay').classList.add('open');
     }
