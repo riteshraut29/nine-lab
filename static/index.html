@@ -3009,16 +3009,18 @@
        LIVE ACTIVITY FEED
     ───────────────────────────────────────────────────────────────────────── */
     const ACTIVITY_DATA = [
-      { initials: 'PR', name: 'Priya R.', city: 'Pune', action: 'generated her kit', time: 'just now', gender: 'her' },
-      { initials: 'RK', name: 'Rahul K.', city: 'Nagpur', action: 'scored 78% ATS match', time: '2 min ago', gender: 'his' },
-      { initials: 'AM', name: 'Ananya M.', city: 'Mumbai', action: 'downloaded her resume', time: '4 min ago', gender: 'her' },
-      { initials: 'VT', name: 'Vikram T.', city: 'Bangalore', action: 'generated his kit', time: '6 min ago', gender: 'his' },
-      { initials: 'SP', name: 'Sneha P.', city: 'Hyderabad', action: 'improved score to 81%', time: '9 min ago', gender: 'her' },
-      { initials: 'AJ', name: 'Arjun D.', city: 'Delhi', action: 'generated his kit', time: '11 min ago', gender: 'his' },
-      { initials: 'KR', name: 'Kavya R.', city: 'Chennai', action: 'scored 74% ATS match', time: '14 min ago', gender: 'her' },
-      { initials: 'RB', name: 'Rohan B.', city: 'Kolkata', action: 'downloaded his kit', time: '17 min ago', gender: 'his' },
-      { initials: 'PN', name: 'Pooja N.', city: 'Jaipur', action: 'generated her kit', time: '20 min ago', gender: 'her' },
-      { initials: 'MS', name: 'Mihir S.', city: 'Ahmedabad', action: 'scored 69% ATS match', time: '23 min ago', gender: 'his' },
+      { icon: '🎓', label: 'Student from Pune',       action: 'just downloaded their placement kit',         time: 'just now' },
+      { icon: '📊', label: 'Resume from Nagpur',       action: 'ATS score jumped from 38% → 74%',            time: '1 min ago' },
+      { icon: '🚀', label: 'Student from Mumbai',      action: 'generated kit targeting TCS',                time: '2 min ago' },
+      { icon: '✅', label: 'Resume from Bangalore',    action: 'fully optimized — scored 81% ATS match',     time: '4 min ago' },
+      { icon: '📄', label: 'Student from Hyderabad',   action: 'just got their Interview Prep Guide',        time: '6 min ago' },
+      { icon: '🎯', label: 'Student from Delhi',       action: 'improved ATS score by 29 points',           time: '8 min ago' },
+      { icon: '🏆', label: 'Resume from Chennai',      action: 'scored 76% — kit generated in 58 seconds',  time: '11 min ago' },
+      { icon: '📈', label: 'Student from Kolkata',     action: 'ATS score went from 41% → 79%',             time: '13 min ago' },
+      { icon: '🎓', label: 'Student from Jaipur',      action: 'downloaded Company Cheat Sheet for Wipro',  time: '16 min ago' },
+      { icon: '✅', label: 'Resume from Ahmedabad',    action: 'optimized for Infosys — 72% ATS match',     time: '19 min ago' },
+      { icon: '🚀', label: 'Student from Nashik',      action: 'generated kit in under 60 seconds',         time: '22 min ago' },
+      { icon: '📊', label: 'Resume from Bhopal',       action: 'went from 33% → 71% after optimization',   time: '25 min ago' },
     ];
     const AVATAR_COLORS = [
       'linear-gradient(135deg,#6c63ff,#a78bfa)',
@@ -3026,6 +3028,7 @@
       'linear-gradient(135deg,#10b981,#34d399)',
       'linear-gradient(135deg,#f59e0b,#fbbf24)',
       'linear-gradient(135deg,#ef4444,#f87171)',
+      'linear-gradient(135deg,#8b5cf6,#c084fc)',
     ];
     let _actIdx = 0;
     function showActivityToast() {
@@ -3033,17 +3036,17 @@
       const toast = document.getElementById('activityToast');
       const avatar = document.getElementById('activityAvatar');
       if (!toast) return;
-      avatar.textContent = data.initials;
+      avatar.textContent = data.icon;
       avatar.style.background = AVATAR_COLORS[_actIdx % AVATAR_COLORS.length];
-      document.getElementById('activityName').textContent = `${data.name} · ${data.city}`;
+      document.getElementById('activityName').textContent = data.label;
       document.getElementById('activityAction').textContent = data.action;
       document.getElementById('activityTime').textContent = data.time;
       toast.classList.add('show');
-      setTimeout(() => toast.classList.remove('show'), 4000);
+      setTimeout(() => toast.classList.remove('show'), 4500);
       _actIdx++;
     }
     function startActivityFeed() {
-      setTimeout(() => { showActivityToast(); setInterval(showActivityToast, 9000); }, 3000);
+      setTimeout(() => { showActivityToast(); setInterval(showActivityToast, 10000); }, 4000);
     }
     document.addEventListener('DOMContentLoaded', startActivityFeed);
 
@@ -3229,10 +3232,10 @@
 
   <!-- Activity Feed Toast -->
   <div class="activity-toast" id="activityToast">
-    <div class="activity-toast-avatar" id="activityAvatar">PR</div>
+    <div class="activity-toast-avatar" id="activityAvatar">🎓</div>
     <div class="activity-toast-text">
-      <div class="activity-toast-name" id="activityName">Priya R.</div>
-      <div class="activity-toast-action" id="activityAction">generated her kit</div>
+      <div class="activity-toast-name" id="activityName">Student from Pune</div>
+      <div class="activity-toast-action" id="activityAction">just downloaded their placement kit</div>
       <div class="activity-toast-time" id="activityTime">just now</div>
     </div>
   </div>
