@@ -1349,51 +1349,55 @@ def _generate_insight_cards(resume: str, jd: str, company: str,
                              score_before: int, score_after: int,
                              gap_summary: str, analysis_text: str) -> list:
     """Generate 6 personalised insight cards using AI — specific to this candidate."""
-    prompt = f"""You are a placement expert. Generate exactly 6 personalised insight cards for this candidate.
 
-CANDIDATE RESUME (first 600 chars): {resume[:600]}
-JOB DESCRIPTION (first 400 chars): {jd[:400]}
+    # ── Extract real skills/gaps from resume vs JD for richer fallback ────────
+    TECH = ["python","java","javascript","typescript","react","angular","nodejs","django",
+            "flask","fastapi","spring","sql","mysql","postgresql","mongodb","redis","aws",
+            "azure","gcp","docker","kubernetes","git","machine learning","tensorflow",
+            "pytorch","data science","c++","golang","kotlin","flutter","android","ios"]
+    rt = resume.lower(); jt = jd.lower()
+    resume_skills = [s for s in TECH if s in rt]
+    jd_skills     = [s for s in TECH if s in jt]
+    missing_skills = [s for s in jd_skills if s not in rt][:4]
+    top_skill      = resume_skills[0] if resume_skills else "programming"
+    diff           = score_after - score_before
+
+    prompt = f"""You are a placement expert. Generate exactly 6 personalised insight cards.
+
+RESUME SKILLS FOUND: {', '.join(resume_skills[:8]) or 'not specified'}
+MISSING FROM JD: {', '.join(missing_skills) or 'none'}
 COMPANY: {company}
-ATS SCORE: {score_before}% → {score_after}% after Nine Lab
-KEY GAPS: {gap_summary[:300]}
+ATS: {score_before}% → {score_after}% (improved by {diff} points)
+TOP GAP: {gap_summary[:200]}
+JD KEYWORDS: {jt[:300]}
 
-Generate 6 cards covering these categories (one each):
-1. salary    — what {company} actually pays freshers in India (real numbers)
-2. interview — one surprising/unknown fact about {company}'s interview process
-3. gap       — candidate's single biggest gap vs this specific JD
-4. priority  — their #1 action to do THIS WEEK based on their resume
-5. culture   — one insider insight about {company} most candidates don't know
-6. score     — what their {score_after}% ATS score means and one thing to push it higher
+Generate 6 cards (one per category). Each card must be SPECIFIC to this candidate's skills and gaps above.
 
-Rules:
-- front: max 12 words, must start with a number/stat OR "Did you know?" — create curiosity
-- back: max 40 words, specific, actionable, reference their actual skills/gaps
-- tag: 2-word label (e.g. "Salary Intel", "Your Gap", "This Week", "Insider Tip")
-- color: one of: green, red, purple, blue, amber, navy
-
-Return ONLY valid JSON array, no markdown, no explanation:
+Return ONLY a JSON array — no markdown fences, no explanation, just raw JSON:
 [
-  {{"category":"salary","emoji":"💰","front":"...","back":"...","tag":"Salary Intel","color":"green"}},
-  {{"category":"interview","emoji":"🎯","front":"...","back":"...","tag":"Insider Tip","color":"purple"}},
-  {{"category":"gap","emoji":"⚠️","front":"...","back":"...","tag":"Your Gap","color":"red"}},
-  {{"category":"priority","emoji":"🚀","front":"...","back":"...","tag":"This Week","color":"blue"}},
-  {{"category":"culture","emoji":"🏢","front":"...","back":"...","tag":"Culture Intel","color":"navy"}},
-  {{"category":"score","emoji":"📊","front":"...","back":"...","tag":"Your Score","color":"amber"}}
+  {{"category":"salary","emoji":"💰","front":"<12 words starting with number or stat about {company} fresher pay>","back":"<35 words: specific salary breakdown for {company} India fresher>","tag":"Salary Intel","color":"green"}},
+  {{"category":"interview","emoji":"🎯","front":"<12 words: surprising fact about {company} interview>","back":"<35 words: specific round info + what to prepare>","tag":"Insider Tip","color":"purple"}},
+  {{"category":"gap","emoji":"⚠️","front":"<12 words: mention specific missing skill if any>","back":"<35 words: exactly what to add and where in resume>","tag":"Your Gap","color":"red"}},
+  {{"category":"priority","emoji":"🚀","front":"<12 words: specific action for THIS candidate>","back":"<35 words: actionable step using their actual skills>","tag":"This Week","color":"blue"}},
+  {{"category":"culture","emoji":"🏢","front":"<12 words: insider {company} culture fact>","back":"<35 words: how to use this in interview>","tag":"Culture Intel","color":"navy"}},
+  {{"category":"score","emoji":"📊","front":"<12 words: mention their actual score numbers>","back":"<35 words: what it means + one specific next step>","tag":"Your Score","color":"amber"}}
 ]"""
 
     try:
-        raw = gemini_call(prompt, retries=2, temperature=0.4)
-        # Extract JSON array from response
-        m = re.search(r'\[.*\]', raw, re.DOTALL)
-        if not m:
-            raise ValueError("No JSON array found")
-        cards = json.loads(m.group(0))
-        # Validate and sanitize each card
+        raw = gemini_call(prompt, retries=2, temperature=0.6)
+        # Strip markdown fences if present
+        raw = re.sub(r'```(?:json)?', '', raw).strip()
+        # Find JSON array — use last [ to ] to handle any prefix text
+        start = raw.find('[')
+        end   = raw.rfind(']')
+        if start == -1 or end == -1:
+            raise ValueError("No JSON array in response")
+        cards = json.loads(raw[start:end+1])
         valid = []
         for c in cards:
             if not all(k in c for k in ("front", "back", "emoji", "tag", "color")):
                 continue
-            if len(c["front"]) > 150 or len(c["back"]) > 300:
+            if len(c["front"]) > 160 or len(c["back"]) > 400:
                 continue
             valid.append({
                 "category": c.get("category", "insight"),
@@ -1408,14 +1412,19 @@ Return ONLY valid JSON array, no markdown, no explanation:
     except Exception:
         pass
 
-    # Guaranteed fallback
+    # Personalised fallback — uses actual resume data so no two look the same
+    gap_card_front = f"You're missing {missing_skills[0]} — {company} uses it heavily" if missing_skills else "Your resume lacks JD-specific keywords"
+    gap_card_back  = f"Add {', '.join(missing_skills)} to your skills section. {company}'s JD explicitly mentions these — they're scanned first by ATS." if missing_skills else f"Mirror the first 3 sentences of the JD in your summary. {company}'s ATS is keyword-heavy."
+    priority_front = f"Your {top_skill} projects need one number to stand out"
+    priority_back  = f"Recruiters at {company} scan for impact metrics. Add a number to each {top_skill} project: users, performance %, or lines of code."
+
     return [
-        {"category":"salary",   "emoji":"💰","front":f"Did you know? {company} offers ₹8–35 LPA for freshers","back":f"Entry-level at {company} India: ₹8–12 LPA base. Top performers with strong DSA + system design can get ₹25–35 LPA CTC.","tag":"Salary Intel","color":"green"},
-        {"category":"gap",      "emoji":"⚠️","front":"Your resume is missing keywords the ATS scans first","back":f"Based on your JD, add role-specific keywords in your summary and skills section to push your score above {score_after}%.","tag":"Your Gap","color":"red"},
-        {"category":"priority", "emoji":"🚀","front":"One thing to do before you apply — takes 20 mins","back":"Update your resume summary to mirror the first 3 lines of the JD. Recruiters read the summary first — make it a mirror.","tag":"This Week","color":"blue"},
-        {"category":"interview","emoji":"🎯","front":f"60% of candidates fail {company}'s first round","back":f"{company} Round 1 is typically a coding test — 2 medium DSA problems in 60 mins. Practice arrays, strings, and hashmaps first.","tag":"Insider Tip","color":"purple"},
-        {"category":"score",    "emoji":"📊","front":f"Your ATS score jumped from {score_before}% to {score_after}%","back":"Nine Lab injected missing JD keywords and restructured your resume format. One more thing: add quantified achievements (numbers).","tag":"Your Score","color":"amber"},
-        {"category":"culture",  "emoji":"🏢","front":f"What {company} actually looks for beyond your resume","back":f"{company} values problem-solving clarity over perfect syntax. In interviews, think aloud — they assess your reasoning, not just the answer.","tag":"Culture Intel","color":"navy"},
+        {"category":"salary",   "emoji":"💰","front":f"{company} pays freshers ₹8–45 LPA — gap is huge","back":f"Entry level at {company} India: ₹8–12 LPA base. Top performers with strong DSA + system design land ₹25–45 LPA CTC. Your score is {score_after}%.","tag":"Salary Intel","color":"green"},
+        {"category":"gap",      "emoji":"⚠️","front":gap_card_front,"back":gap_card_back,"tag":"Your Gap","color":"red"},
+        {"category":"priority", "emoji":"🚀","front":priority_front,"back":priority_back,"tag":"This Week","color":"blue"},
+        {"category":"interview","emoji":"🎯","front":f"{company} rejects 70% in Round 1 — here's why","back":f"{company} Round 1 is a timed coding test: 2 medium DSA problems in 60 mins. Focus on arrays, hashmaps, and strings — they appear in 80% of tests.","tag":"Insider Tip","color":"purple"},
+        {"category":"score",    "emoji":"📊","front":f"Your score jumped {diff} points — here's what changed","back":f"Nine Lab pushed your ATS from {score_before}% to {score_after}% by injecting missing keywords and restructuring sections. Next step: add 3 quantified achievements.","tag":"Your Score","color":"amber"},
+        {"category":"culture",  "emoji":"🏢","front":f"{company} cares more about thinking than answers","back":f"In {company} interviews, interviewers reward candidates who think aloud and ask clarifying questions. Practise narrating your thought process — silence is penalised.","tag":"Culture Intel","color":"navy"},
     ]
 
 
