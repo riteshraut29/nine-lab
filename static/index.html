@@ -1076,7 +1076,6 @@
       @media (max-width: 480px) {
         .mobile-gen-bar { display: none; } /* shown/hidden via JS */
       }
-
       /* ─── Scroll Progress Bar ─────────────────────────────────────────── */
       #scrollProgress {
         position: fixed; top: 0; left: 0; height: 3px; width: 0%;
@@ -1126,6 +1125,27 @@
       .lp-bar-fill { width: 0% !important; transition: width 1s cubic-bezier(0.22,1,0.36,1); }
       .lp-bar-fill.anim-bad  { width: 38% !important; }
       .lp-bar-fill.anim-good { width: 82% !important; }
+
+      /* ─── Flashcards UI ────────────────────────────────────────────── */
+      .fc-section { margin: 24px 0; }
+      .fc-title { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 12px; }
+      .fc-container { perspective: 1000px; width: 100%; height: 200px; position: relative; margin-bottom: 12px; cursor: pointer; }
+      .fc-card { width: 100%; height: 100%; transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); transform-style: preserve-3d; position: relative; border-radius: 16px; box-shadow: 0 8px 24px rgba(108,99,255,0.12); }
+      .fc-card.flipped { transform: rotateY(180deg); }
+      .fc-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 16px; padding: 24px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
+      .fc-front { background: var(--purple-light); color: var(--text); border: 2px solid #e0ddff; }
+      .fc-front::before { content: "Q"; position: absolute; top: -12px; left: -12px; background: var(--purple); color: white; width: 32px; height: 32px; border-radius: 50%; font-weight: 800; display: flex; align-items: center; justify-content: center; font-size: 16px; box-shadow: 0 4px 12px rgba(108,99,255,0.3); z-index: 2; }
+      .fc-front-text { font-size: 16px; font-weight: 700; line-height: 1.4; color: var(--purple); }
+      .fc-hint { position: absolute; bottom: 12px; font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; font-weight: 600; padding: 4px 10px; background: rgba(108,99,255,0.1); border-radius: 20px; }
+      .fc-back { background: var(--bg-card); transform: rotateY(180deg); border: 2px solid var(--border); overflow-y: auto; align-items: flex-start; text-align: left; }
+      .fc-back-text { font-size: 14px; line-height: 1.6; color: var(--text); }
+      .fc-controls { display: flex; justify-content: space-between; align-items: center; margin-top: 14px; }
+      .fc-btn { background: var(--bg-card); border: 1.5px solid var(--border); padding: 8px 16px; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.15s; color: var(--text-muted); }
+      .fc-btn:hover:not(:disabled) { border-color: var(--purple); color: var(--purple); background: var(--purple-light); }
+      .fc-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+      .fc-dots { display: flex; gap: 6px; }
+      .fc-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border); transition: all 0.3s; }
+      .fc-dot.active { background: var(--purple); width: 16px; border-radius: 6px; }
     </style>
   </head>
   <body>
@@ -1776,6 +1796,9 @@
           <a href="#" class="download-btn" id="dlCompany">↓ Download</a>
         </div>
       </div>
+
+      <!-- Interactive Flashcards -->
+      <div id="flashcardsContainer" style="display: none;"></div>
 
       <!-- Share Section -->
       <div class="share-section">
@@ -2616,7 +2639,7 @@
 
           if (data.stage === 'done') {
             clearInterval(pollInterval);
-            showResults(data.files, jd, company, data.ats_before, data.ats_after);
+            showResults(data.files, jd, company, data.ats_before, data.ats_after, data.flashcards);
           } else if (data.stage === 'error') {
             clearInterval(pollInterval);
             goToStep(3);
@@ -2629,7 +2652,7 @@
     /* ─────────────────────────────────────────────────────────────────────────
        STEP 5 — Show Results
     ───────────────────────────────────────────────────────────────────────── */
-    async function showResults(files, jd, company, atsBefore, atsAfter) {
+    async function showResults(files, jd, company, atsBefore, atsAfter, flashcards) {
       // Set download links
       document.getElementById('dlReality').href = `${BASE}/pdf/${files.reality}`;
       document.getElementById('dlPlan').href = `${BASE}/pdf/${files.plan}`;
@@ -2688,7 +2711,78 @@
           atsContainer.innerHTML = '<p style="font-size:13px;color:var(--text-muted);text-align:center;">ATS score unavailable</p>';
         }
       }
+
+      renderFlashcards(flashcards);
     }
+
+    /* ─────────────────────────────────────────────────────────────────────────
+       FLASHCARDS JS
+    ───────────────────────────────────────────────────────────────────────── */
+    let gFlashcards = [];
+    let fcIndex = 0;
+
+    function renderFlashcards(cards) {
+      const container = document.getElementById('flashcardsContainer');
+      if (!cards || cards.length === 0) {
+        container.style.display = 'none';
+        return;
+      }
+      gFlashcards = cards;
+      fcIndex = 0;
+      container.style.display = 'block';
+      updateFlashcardUI();
+    }
+
+    function toggleFlashcard() {
+      const card = document.getElementById('fcCard');
+      if (card) card.classList.toggle('flipped');
+    }
+
+    function nextFlashcard() {
+      if (fcIndex < gFlashcards.length - 1) {
+        const card = document.getElementById('fcCard');
+        card.classList.remove('flipped');
+        setTimeout(() => { fcIndex++; updateFlashcardUI(); }, 200);
+      }
+    }
+
+    function prevFlashcard() {
+      if (fcIndex > 0) {
+        const card = document.getElementById('fcCard');
+        card.classList.remove('flipped');
+        setTimeout(() => { fcIndex--; updateFlashcardUI(); }, 200);
+      }
+    }
+
+    function updateFlashcardUI() {
+      const container = document.getElementById('flashcardsContainer');
+      const fc = gFlashcards[fcIndex];
+      const html = `
+        <div class="fc-section">
+          <div class="fc-title">🧠 Interactive Interview Practice</div>
+          <div class="fc-container" onclick="toggleFlashcard()">
+            <div class="fc-card" id="fcCard">
+              <div class="fc-face fc-front">
+                <div class="fc-front-text">${escHtml(fc.q)}</div>
+                <div class="fc-hint">Wait... think... then tap to flip</div>
+              </div>
+              <div class="fc-face fc-back">
+                <div class="fc-back-text">${escHtml(fc.a).replace(/\n/g, '<br>')}</div>
+              </div>
+            </div>
+          </div>
+          <div class="fc-controls">
+            <button class="fc-btn" onclick="prevFlashcard()" ${fcIndex === 0 ? 'disabled' : ''}>← Prev</button>
+            <div class="fc-dots">
+              ${gFlashcards.map((_, i) => `<div class="fc-dot ${i === fcIndex ? 'active' : ''}"></div>`).join('')}
+            </div>
+            <button class="fc-btn" onclick="nextFlashcard()" ${fcIndex === gFlashcards.length - 1 ? 'disabled' : ''}>Next →</button>
+          </div>
+        </div>
+      `;
+      container.innerHTML = html;
+    }
+
 
     /* ─────────────────────────────────────────────────────────────────────────
        ATS PANEL BUILDERS (shared HTML templates)
