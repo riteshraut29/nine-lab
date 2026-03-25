@@ -1345,6 +1345,80 @@ def _quick_ats_score(resume_text: str, jd_text: str) -> int:
     return round(min(score, 100))
 
 
+def _generate_insight_cards(resume: str, jd: str, company: str,
+                             score_before: int, score_after: int,
+                             gap_summary: str, analysis_text: str) -> list:
+    """Generate 6 personalised insight cards using AI — specific to this candidate."""
+    prompt = f"""You are a placement expert. Generate exactly 6 personalised insight cards for this candidate.
+
+CANDIDATE RESUME (first 600 chars): {resume[:600]}
+JOB DESCRIPTION (first 400 chars): {jd[:400]}
+COMPANY: {company}
+ATS SCORE: {score_before}% → {score_after}% after Nine Lab
+KEY GAPS: {gap_summary[:300]}
+
+Generate 6 cards covering these categories (one each):
+1. salary    — what {company} actually pays freshers in India (real numbers)
+2. interview — one surprising/unknown fact about {company}'s interview process
+3. gap       — candidate's single biggest gap vs this specific JD
+4. priority  — their #1 action to do THIS WEEK based on their resume
+5. culture   — one insider insight about {company} most candidates don't know
+6. score     — what their {score_after}% ATS score means and one thing to push it higher
+
+Rules:
+- front: max 12 words, must start with a number/stat OR "Did you know?" — create curiosity
+- back: max 40 words, specific, actionable, reference their actual skills/gaps
+- tag: 2-word label (e.g. "Salary Intel", "Your Gap", "This Week", "Insider Tip")
+- color: one of: green, red, purple, blue, amber, navy
+
+Return ONLY valid JSON array, no markdown, no explanation:
+[
+  {{"category":"salary","emoji":"💰","front":"...","back":"...","tag":"Salary Intel","color":"green"}},
+  {{"category":"interview","emoji":"🎯","front":"...","back":"...","tag":"Insider Tip","color":"purple"}},
+  {{"category":"gap","emoji":"⚠️","front":"...","back":"...","tag":"Your Gap","color":"red"}},
+  {{"category":"priority","emoji":"🚀","front":"...","back":"...","tag":"This Week","color":"blue"}},
+  {{"category":"culture","emoji":"🏢","front":"...","back":"...","tag":"Culture Intel","color":"navy"}},
+  {{"category":"score","emoji":"📊","front":"...","back":"...","tag":"Your Score","color":"amber"}}
+]"""
+
+    try:
+        raw = gemini_call(prompt, retries=2, temperature=0.4)
+        # Extract JSON array from response
+        m = re.search(r'\[.*\]', raw, re.DOTALL)
+        if not m:
+            raise ValueError("No JSON array found")
+        cards = json.loads(m.group(0))
+        # Validate and sanitize each card
+        valid = []
+        for c in cards:
+            if not all(k in c for k in ("front", "back", "emoji", "tag", "color")):
+                continue
+            if len(c["front"]) > 150 or len(c["back"]) > 300:
+                continue
+            valid.append({
+                "category": c.get("category", "insight"),
+                "emoji":    c.get("emoji", "💡"),
+                "front":    c["front"].strip(),
+                "back":     c["back"].strip(),
+                "tag":      c.get("tag", "Insight"),
+                "color":    c.get("color", "purple"),
+            })
+        if len(valid) >= 3:
+            return valid
+    except Exception:
+        pass
+
+    # Guaranteed fallback
+    return [
+        {"category":"salary",   "emoji":"💰","front":f"Did you know? {company} offers ₹8–35 LPA for freshers","back":f"Entry-level at {company} India: ₹8–12 LPA base. Top performers with strong DSA + system design can get ₹25–35 LPA CTC.","tag":"Salary Intel","color":"green"},
+        {"category":"gap",      "emoji":"⚠️","front":"Your resume is missing keywords the ATS scans first","back":f"Based on your JD, add role-specific keywords in your summary and skills section to push your score above {score_after}%.","tag":"Your Gap","color":"red"},
+        {"category":"priority", "emoji":"🚀","front":"One thing to do before you apply — takes 20 mins","back":"Update your resume summary to mirror the first 3 lines of the JD. Recruiters read the summary first — make it a mirror.","tag":"This Week","color":"blue"},
+        {"category":"interview","emoji":"🎯","front":f"60% of candidates fail {company}'s first round","back":f"{company} Round 1 is typically a coding test — 2 medium DSA problems in 60 mins. Practice arrays, strings, and hashmaps first.","tag":"Insider Tip","color":"purple"},
+        {"category":"score",    "emoji":"📊","front":f"Your ATS score jumped from {score_before}% to {score_after}%","back":"Nine Lab injected missing JD keywords and restructured your resume format. One more thing: add quantified achievements (numbers).","tag":"Your Score","color":"amber"},
+        {"category":"culture",  "emoji":"🏢","front":f"What {company} actually looks for beyond your resume","back":f"{company} values problem-solving clarity over perfect syntax. In interviews, think aloud — they assess your reasoning, not just the answer.","tag":"Culture Intel","color":"navy"},
+    ]
+
+
 def run_pipeline(job_id: str, resume: str, jd: str, company: str):
     def update(stage: str, pct: int, msg: str):
         jobs[job_id].update({"stage": stage, "progress": pct, "message": msg})
@@ -1408,38 +1482,8 @@ def run_pipeline(job_id: str, resume: str, jd: str, company: str):
         update("pdf", 92, "Generating Optimized Resume PDF...")
         resume_file = make_pdf_resume(job_id, company, resume_result)
 
-        # ── Extract Flashcards ────────────────────────────────────────────────
-        plan_text = plan_result.get("data", "")
-        tech_q = extract_section(plan_text, "TOP 10 TECHNICAL INTERVIEW QUESTIONS WITH ANSWERS") or \
-                 extract_section(plan_text, "TOP 10 TECHNICAL INTERVIEW QUESTIONS") or \
-                 extract_section(plan_text, "TECHNICAL QUESTIONS")
-        
-        flashcards = []
-        if tech_q:
-            for b in section_bullets(tech_q)[:5]:
-                parts = re.split(r'\?|\n|- |—|:|Answer:', b, maxsplit=1)
-                if len(parts) > 1:
-                    flashcards.append({"q": parts[0].strip() + "?", "a": parts[1].strip()})
-                else:
-                    flashcards.append({"q": "Interview Question", "a": b.strip()})
-        
-        # Fallback if AI didn't format exactly as expected
-        # Use [^?\n]+ so we don't swallow entire paragraphs across newlines
-        if len(flashcards) == 0:
-            q_matches = re.findall(r'((?:what|why|how|explain|describe)[^?\n]{5,120}\?)\s*([^\n]{10,300})', plan_text, re.IGNORECASE)
-            for q, a in q_matches[:5]:
-                flashcards.append({"q": q.strip().capitalize(), "a": a.strip().capitalize()})
-                
-        # Sanitize: drop any card where q or a is suspiciously long (caught raw text)
-        flashcards = [c for c in flashcards if len(c["q"]) <= 200 and len(c["a"]) <= 500]
-
-        # Guaranteed fallback so the feature is always visible for testing
-        if len(flashcards) == 0:
-            flashcards = [
-                {"q": f"Why do you want to join {company}?", "a": "Think about their specific products, recent news, and culture."},
-                {"q": "Explain a tough technical problem you solved.", "a": "Use the STAR method: Situation, Task, Action, Result."},
-                {"q": "What is your strongest technical skill?", "a": "Ensure it aligns exactly with the Job Description keywords."}
-            ]
+        # ── Generate Personalized Insight Cards ──────────────────────────────
+        flashcards = _generate_insight_cards(resume, jd, company, before_score, after_score, gap_summary, analysis_text)
 
         jobs[job_id].update({
             "stage": "done",

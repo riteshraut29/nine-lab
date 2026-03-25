@@ -1126,26 +1126,71 @@
       .lp-bar-fill.anim-bad  { width: 38% !important; }
       .lp-bar-fill.anim-good { width: 82% !important; }
 
-      /* ─── Flashcards UI ────────────────────────────────────────────── */
-      .fc-section { margin: 24px 0; }
-      .fc-title { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 12px; }
-      .fc-container { perspective: 1000px; width: 100%; height: 200px; position: relative; margin-bottom: 12px; cursor: pointer; }
-      .fc-card { width: 100%; height: 100%; transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); transform-style: preserve-3d; position: relative; border-radius: 16px; box-shadow: 0 8px 24px rgba(108,99,255,0.12); }
-      .fc-card.flipped { transform: rotateY(180deg); }
-      .fc-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 16px; padding: 24px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
-      .fc-front { background: var(--purple-light); color: var(--text); border: 2px solid #e0ddff; }
-      .fc-front::before { content: "Q"; position: absolute; top: -12px; left: -12px; background: var(--purple); color: white; width: 32px; height: 32px; border-radius: 50%; font-weight: 800; display: flex; align-items: center; justify-content: center; font-size: 16px; box-shadow: 0 4px 12px rgba(108,99,255,0.3); z-index: 2; }
-      .fc-front-text { font-size: 16px; font-weight: 700; line-height: 1.4; color: var(--purple); }
-      .fc-hint { position: absolute; bottom: 12px; font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; font-weight: 600; padding: 4px 10px; background: rgba(108,99,255,0.1); border-radius: 20px; }
-      .fc-back { background: var(--bg-card); transform: rotateY(180deg); border: 2px solid var(--border); overflow-y: auto; align-items: flex-start; text-align: left; }
-      .fc-back-text { font-size: 14px; line-height: 1.6; color: var(--text); }
-      .fc-controls { display: flex; justify-content: space-between; align-items: center; margin-top: 14px; }
-      .fc-btn { background: var(--bg-card); border: 1.5px solid var(--border); padding: 8px 16px; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.15s; color: var(--text-muted); }
-      .fc-btn:hover:not(:disabled) { border-color: var(--purple); color: var(--purple); background: var(--purple-light); }
-      .fc-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-      .fc-dots { display: flex; gap: 6px; }
-      .fc-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border); transition: all 0.3s; }
-      .fc-dot.active { background: var(--purple); width: 16px; border-radius: 6px; }
+      /* ─── Insight Cards (Flashcards redesign) ──────────────────────── */
+      .ic-section { margin: 28px 0 8px; }
+      .ic-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+      .ic-title { font-size: 15px; font-weight: 700; color: var(--text); }
+      .ic-progress-wrap { display: flex; align-items: center; gap: 8px; }
+      .ic-progress-bar { width: 80px; height: 4px; background: var(--border); border-radius: 99px; overflow: hidden; }
+      .ic-progress-fill { height: 100%; background: var(--purple); border-radius: 99px; transition: width 0.4s ease; }
+      .ic-progress-txt { font-size: 11px; color: var(--text-muted); font-weight: 600; }
+
+      /* Card scene */
+      .ic-scene { perspective: 1200px; width: 100%; height: 220px; cursor: pointer; margin-bottom: 10px; user-select: none; }
+      .ic-card { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; transition: transform 0.55s cubic-bezier(0.4,0,0.2,1); border-radius: 20px; }
+      .ic-card.flipped { transform: rotateY(180deg); }
+      .ic-face { position: absolute; inset: 0; backface-visibility: hidden; border-radius: 20px; padding: 22px 20px 16px; display: flex; flex-direction: column; justify-content: space-between; overflow: hidden; }
+
+      /* Shine effect */
+      .ic-face::after { content: ''; position: absolute; top: -50%; left: -60%; width: 40%; height: 200%; background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.18) 50%, transparent 60%); transform: skewX(-15deg); transition: left 0.6s ease; pointer-events: none; }
+      .ic-scene:hover .ic-face::after { left: 130%; }
+
+      /* Color themes */
+      .ic-front-green { background: linear-gradient(135deg,#064e3b,#065f46); color: white; }
+      .ic-front-red    { background: linear-gradient(135deg,#7f1d1d,#991b1b); color: white; }
+      .ic-front-purple { background: linear-gradient(135deg,#3b0764,#5b21b6); color: white; }
+      .ic-front-blue   { background: linear-gradient(135deg,#1e3a5f,#1d4ed8); color: white; }
+      .ic-front-amber  { background: linear-gradient(135deg,#78350f,#b45309); color: white; }
+      .ic-front-navy   { background: linear-gradient(135deg,#1E2761,#2d3a8c); color: white; }
+
+      .ic-back { background: white; border: 1.5px solid var(--border); transform: rotateY(180deg); }
+
+      /* Card internals */
+      .ic-tag { display: inline-flex; align-items: center; gap: 5px; font-size: 10px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; padding: 3px 9px; border-radius: 20px; background: rgba(255,255,255,0.18); color: rgba(255,255,255,0.9); width: fit-content; }
+      .ic-emoji { font-size: 28px; line-height: 1; }
+      .ic-front-text { font-size: 17px; font-weight: 700; line-height: 1.35; color: white; flex: 1; display: flex; align-items: center; }
+      .ic-hint { font-size: 10px; color: rgba(255,255,255,0.6); font-weight: 600; letter-spacing: 0.5px; display: flex; align-items: center; gap: 4px; }
+
+      .ic-back-tag { font-size: 10px; font-weight: 700; color: var(--purple); letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 8px; }
+      .ic-back-text { font-size: 14px; line-height: 1.6; color: var(--text); flex: 1; }
+      .ic-resume-tag { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; color: var(--text-muted); background: var(--bg); padding: 3px 8px; border-radius: 20px; font-weight: 600; }
+
+      /* Reaction buttons */
+      .ic-reactions { display: flex; gap: 8px; margin-top: 10px; }
+      .ic-react-btn { flex: 1; padding: 9px; border-radius: 10px; border: 1.5px solid var(--border); background: white; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.15s; color: var(--text-muted); text-align: center; }
+      .ic-react-btn:hover { border-color: var(--purple); color: var(--purple); background: var(--purple-light); }
+      .ic-react-btn.selected-knew { border-color: #22c55e; color: #16a34a; background: #f0fdf4; }
+      .ic-react-btn.selected-new  { border-color: #6c63ff; color: #6c63ff; background: #f0efff; }
+
+      /* Nav */
+      .ic-nav { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; }
+      .ic-nav-btn { display: flex; align-items: center; gap: 5px; padding: 8px 14px; border-radius: 10px; border: 1.5px solid var(--border); background: white; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.15s; color: var(--text-muted); }
+      .ic-nav-btn:hover:not(:disabled) { border-color: var(--purple); color: var(--purple); }
+      .ic-nav-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+      .ic-dots { display: flex; gap: 5px; align-items: center; }
+      .ic-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border); transition: all 0.3s; }
+      .ic-dot.active { background: var(--purple); width: 18px; border-radius: 6px; }
+
+      /* End screen */
+      .ic-end { text-align: center; padding: 24px 16px; background: linear-gradient(135deg,#f0efff,#e8f5ff); border-radius: 20px; margin-bottom: 10px; }
+      .ic-end-emoji { font-size: 40px; margin-bottom: 10px; }
+      .ic-end-title { font-size: 18px; font-weight: 800; color: var(--text); margin-bottom: 6px; }
+      .ic-end-sub { font-size: 13px; color: var(--text-muted); margin-bottom: 16px; line-height: 1.5; }
+      .ic-end-stats { display: flex; gap: 10px; justify-content: center; margin-bottom: 16px; }
+      .ic-end-stat { background: white; border-radius: 12px; padding: 10px 16px; text-align: center; }
+      .ic-end-stat-num { font-size: 22px; font-weight: 800; color: var(--purple); }
+      .ic-end-stat-label { font-size: 10px; color: var(--text-muted); font-weight: 600; }
+      .ic-restart-btn { font-size: 13px; color: var(--purple); font-weight: 600; cursor: pointer; background: none; border: none; text-decoration: underline; }
     </style>
   </head>
   <body>
@@ -2723,67 +2768,132 @@
 
     function renderFlashcards(cards) {
       const container = document.getElementById('flashcardsContainer');
-      if (!cards || cards.length === 0) {
-        container.style.display = 'none';
-        return;
-      }
-      // Guard: drop any card where question is raw AI dump (>200 chars)
-      const clean = cards.filter(c => c.q && c.q.length <= 200 && c.a && c.a.length <= 500);
+      if (!cards || cards.length === 0) { container.style.display = 'none'; return; }
+      // Guard: drop raw AI dumps
+      const clean = cards.filter(c => (c.front || c.q) && (c.front || c.q).length <= 200);
       if (clean.length === 0) { container.style.display = 'none'; return; }
       gFlashcards = clean;
       fcIndex = 0;
+      icReactions = {};
       container.style.display = 'block';
-      updateFlashcardUI();
+      updateInsightCardUI();
+      initCardSwipe();
     }
 
-    function toggleFlashcard() {
-      const card = document.getElementById('fcCard');
+    let icReactions = {};
+
+    function toggleInsightCard() {
+      const card = document.getElementById('icCard');
       if (card) card.classList.toggle('flipped');
     }
 
-    function nextFlashcard() {
-      if (fcIndex < gFlashcards.length - 1) {
-        const card = document.getElementById('fcCard');
-        card.classList.remove('flipped');
-        setTimeout(() => { fcIndex++; updateFlashcardUI(); }, 200);
-      }
+    function icReact(type) {
+      icReactions[fcIndex] = type;
+      document.querySelectorAll('.ic-react-btn').forEach(b => b.classList.remove('selected-knew','selected-new'));
+      const btn = document.getElementById('icReact_' + type);
+      if (btn) btn.classList.add(type === 'knew' ? 'selected-knew' : 'selected-new');
+      // Auto-advance after 600ms
+      setTimeout(() => {
+        if (fcIndex < gFlashcards.length - 1) icNext();
+        else showInsightEndScreen();
+      }, 600);
     }
 
-    function prevFlashcard() {
-      if (fcIndex > 0) {
-        const card = document.getElementById('fcCard');
-        card.classList.remove('flipped');
-        setTimeout(() => { fcIndex--; updateFlashcardUI(); }, 200);
-      }
+    function icNext() {
+      if (fcIndex >= gFlashcards.length - 1) { showInsightEndScreen(); return; }
+      const card = document.getElementById('icCard');
+      if (card) { card.classList.add('flipped'); }
+      setTimeout(() => { fcIndex++; updateInsightCardUI(); }, 220);
     }
 
-    function updateFlashcardUI() {
+    function icPrev() {
+      if (fcIndex <= 0) return;
+      const card = document.getElementById('icCard');
+      if (card) card.classList.remove('flipped');
+      setTimeout(() => { fcIndex--; updateInsightCardUI(); }, 220);
+    }
+
+    function showInsightEndScreen() {
+      const knew = Object.values(icReactions).filter(r => r === 'knew').length;
+      const newCount = Object.values(icReactions).filter(r => r === 'new').length;
+      const container = document.getElementById('flashcardsContainer');
+      container.innerHTML = `
+        <div class="ic-end">
+          <div class="ic-end-emoji">🎯</div>
+          <div class="ic-end-title">You're more prepared now</div>
+          <div class="ic-end-sub">You discovered ${newCount} new insight${newCount !== 1 ? 's' : ''} and confirmed ${knew} thing${knew !== 1 ? 's' : ''} you already knew.</div>
+          <div class="ic-end-stats">
+            <div class="ic-end-stat"><div class="ic-end-stat-num">${newCount}</div><div class="ic-end-stat-label">New insights</div></div>
+            <div class="ic-end-stat"><div class="ic-end-stat-num">${knew}</div><div class="ic-end-stat-label">Already knew</div></div>
+            <div class="ic-end-stat"><div class="ic-end-stat-num">${gFlashcards.length}</div><div class="ic-end-stat-label">Cards seen</div></div>
+          </div>
+          <button class="ic-restart-btn" onclick="fcIndex=0;icReactions={};updateInsightCardUI();initCardSwipe();">Review again →</button>
+        </div>`;
+    }
+
+    function updateInsightCardUI() {
       const container = document.getElementById('flashcardsContainer');
       const fc = gFlashcards[fcIndex];
-      const html = `
-        <div class="fc-section">
-          <div class="fc-title">🧠 Interactive Interview Practice</div>
-          <div class="fc-container" onclick="toggleFlashcard()">
-            <div class="fc-card" id="fcCard">
-              <div class="fc-face fc-front">
-                <div class="fc-front-text">${escHtml(fc.q)}</div>
-                <div class="fc-hint">Wait... think... then tap to flip</div>
+      const front = fc.front || fc.q || '';
+      const back  = fc.back  || fc.a || '';
+      const emoji = fc.emoji || '💡';
+      const tag   = fc.tag   || 'Insight';
+      const color = fc.color || 'purple';
+      const pct   = Math.round(((fcIndex + 1) / gFlashcards.length) * 100);
+      const reacted = icReactions[fcIndex];
+
+      const dots = gFlashcards.map((_, i) =>
+        `<div class="ic-dot ${i === fcIndex ? 'active' : ''}"></div>`
+      ).join('');
+
+      container.innerHTML = `
+        <div class="ic-section">
+          <div class="ic-header">
+            <div class="ic-title">✨ Your Personalised Insights</div>
+            <div class="ic-progress-wrap">
+              <div class="ic-progress-bar"><div class="ic-progress-fill" style="width:${pct}%"></div></div>
+              <div class="ic-progress-txt">${fcIndex + 1}/${gFlashcards.length}</div>
+            </div>
+          </div>
+
+          <div class="ic-scene" id="icScene" onclick="toggleInsightCard()">
+            <div class="ic-card" id="icCard">
+              <div class="ic-face ic-front-${color}">
+                <div class="ic-tag">${emoji} ${escHtml(tag)}</div>
+                <div class="ic-front-text">${escHtml(front)}</div>
+                <div class="ic-hint">👆 Tap to reveal the insight</div>
               </div>
-              <div class="fc-face fc-back">
-                <div class="fc-back-text">${escHtml(fc.a).replace(/\n/g, '<br>')}</div>
+              <div class="ic-face ic-back">
+                <div class="ic-back-tag">${emoji} ${escHtml(tag)}</div>
+                <div class="ic-back-text">${escHtml(back)}</div>
+                <div class="ic-resume-tag">📄 Based on your resume</div>
               </div>
             </div>
           </div>
-          <div class="fc-controls">
-            <button class="fc-btn" onclick="prevFlashcard()" ${fcIndex === 0 ? 'disabled' : ''}>← Prev</button>
-            <div class="fc-dots">
-              ${gFlashcards.map((_, i) => `<div class="fc-dot ${i === fcIndex ? 'active' : ''}"></div>`).join('')}
-            </div>
-            <button class="fc-btn" onclick="nextFlashcard()" ${fcIndex === gFlashcards.length - 1 ? 'disabled' : ''}>Next →</button>
+
+          <div class="ic-reactions">
+            <button class="ic-react-btn ${reacted === 'knew' ? 'selected-knew' : ''}" id="icReact_knew" onclick="event.stopPropagation();icReact('knew')">✅ Already knew</button>
+            <button class="ic-react-btn ${reacted === 'new' ? 'selected-new' : ''}" id="icReact_new" onclick="event.stopPropagation();icReact('new')">😮 Didn't know!</button>
           </div>
-        </div>
-      `;
-      container.innerHTML = html;
+
+          <div class="ic-nav">
+            <button class="ic-nav-btn" onclick="icPrev()" ${fcIndex === 0 ? 'disabled' : ''}>← Back</button>
+            <div class="ic-dots">${dots}</div>
+            <button class="ic-nav-btn" onclick="icNext()">${fcIndex === gFlashcards.length - 1 ? 'Finish ✓' : 'Next →'}</button>
+          </div>
+        </div>`;
+    }
+
+    // Touch/swipe support
+    function initCardSwipe() {
+      const scene = document.getElementById('icScene');
+      if (!scene) return;
+      let startX = 0;
+      scene.addEventListener('touchstart', e => { startX = e.touches[0].clientX; }, { passive: true });
+      scene.addEventListener('touchend', e => {
+        const diff = e.changedTouches[0].clientX - startX;
+        if (Math.abs(diff) > 50) { diff < 0 ? icNext() : icPrev(); }
+      }, { passive: true });
     }
 
 
