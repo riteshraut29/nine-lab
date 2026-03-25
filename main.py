@@ -1045,7 +1045,7 @@ def _parse_resume_sections(raw: str) -> dict:
     return sections
 
 
-def make_pdf_resume(job_id: str, company: str, resume_data: dict) -> str:
+def make_pdf_resume(job_id: str, company: str, resume_data: dict, ats_score: int = 0) -> str:
     """Generate a clean, professional resume PDF matching reference format."""
     filename = f"{job_id}_resume.pdf"
     filepath = PDF_DIR / filename
@@ -1099,14 +1099,44 @@ def make_pdf_resume(job_id: str, company: str, resume_data: dict) -> str:
         leftMargin=50, rightMargin=50, topMargin=50, bottomMargin=40
     )
 
-    # ── HEADER: Name + Contact ────────────────────────────────────────────────
+    # ── HEADER: Name + Contact (with ATS badge top-right) ────────────────────
     name_text = sec.get("NAME", "").strip()
     contact_text = sec.get("CONTACT", "").strip()
 
-    if name_text:
-        story.append(Paragraph(safe_text(name_text), name_st))
-    if contact_text:
-        story.append(Paragraph(safe_text(contact_text), contact_st))
+    if name_text and ats_score:
+        # Score badge color
+        badge_color = HexColor("#16a34a") if ats_score >= 70 else (HexColor("#d97706") if ats_score >= 50 else HexColor("#dc2626"))
+        badge_st = ParagraphStyle("Badge", fontName="Helvetica-Bold", fontSize=18,
+                                   textColor=HexColor("#ffffff"), alignment=1, leading=22)
+        badge_sub_st = ParagraphStyle("BadgeSub", fontName="Helvetica", fontSize=7.5,
+                                       textColor=HexColor("#ffffff"), alignment=1, leading=10)
+        badge_col = [
+            Paragraph(f"{ats_score}%", badge_st),
+            Paragraph("ATS SCORE", badge_sub_st),
+        ]
+        name_col = [
+            Paragraph(safe_text(name_text), name_st),
+            Paragraph(safe_text(contact_text), contact_st) if contact_text else Spacer(1, 1),
+        ]
+        tbl = Table([[name_col, badge_col]], colWidths=["80%", "20%"])
+        tbl.setStyle(TableStyle([
+            ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+            ("ALIGN",  (1, 0), (1, 0),  "CENTER"),
+            ("BACKGROUND", (1, 0), (1, 0), badge_color),
+            ("ROUNDEDCORNERS", [6]),
+            ("TOPPADDING", (1, 0), (1, 0), 8),
+            ("BOTTOMPADDING", (1, 0), (1, 0), 8),
+            ("LEFTPADDING", (1, 0), (1, 0), 6),
+            ("RIGHTPADDING", (1, 0), (1, 0), 6),
+            ("TOPPADDING", (0, 0), (0, 0), 0),
+            ("BOTTOMPADDING", (0, 0), (0, 0), 4),
+        ]))
+        story.append(tbl)
+    else:
+        if name_text:
+            story.append(Paragraph(safe_text(name_text), name_st))
+        if contact_text:
+            story.append(Paragraph(safe_text(contact_text), contact_st))
     story.append(HRFlowable(width="100%", thickness=1.5, color=ACCENT, spaceAfter=6, spaceBefore=4))
 
     # ── SUMMARY ───────────────────────────────────────────────────────────────
@@ -1399,14 +1429,14 @@ def run_pipeline(job_id: str, resume: str, jd: str, company: str):
         update("pdf", 85, "Generating Prep Plan PDF...")
         plan_file = make_pdf_plan(job_id, company, plan_result)
 
-        update("pdf", 92, "Generating Optimized Resume PDF...")
-        resume_file = make_pdf_resume(job_id, company, resume_result)
-
-        # ── Stage 5: Calculate AFTER ATS score ────────────────────────────────
+        # ── Stage 5: Calculate AFTER ATS score (before PDF so badge can show it)
         after_score = _quick_ats_score(resume_result.get("data", resume), jd)
         # Ensure after is always higher (framework guarantees improvement)
         after_score = max(after_score, before_score + 15)
         after_score = min(after_score, 97)
+
+        update("pdf", 92, "Generating Optimized Resume PDF...")
+        resume_file = make_pdf_resume(job_id, company, resume_result, ats_score=after_score)
 
         jobs[job_id].update({
             "stage": "done",

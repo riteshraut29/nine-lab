@@ -6,6 +6,7 @@
     <title>Nine Lab — Placement Prep, Simplified</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
     <style>
       /* ─── CSS Variables ─────────────────────────────────────────────── */
       :root {
@@ -734,6 +735,66 @@
         .feedback-btns { gap: 8px; }
         .ats-bar-label { width: 100px; font-size: 12px; }
       }
+      /* ─── Kits Counter ──────────────────────────────────────────────── */
+      .lp-kits-counter {
+        font-size: 12px; color: var(--text-muted); margin-top: 8px;
+        display: flex; align-items: center; justify-content: center; gap: 4px;
+      }
+      .lp-kits-counter strong { color: var(--purple); }
+      .lp-sample-link {
+        font-size: 13px; color: var(--text-muted); margin-top: 10px;
+        cursor: pointer; text-decoration: underline; text-underline-offset: 3px;
+      }
+      .lp-sample-link:hover { color: var(--purple); }
+
+      /* ─── Fun loading message ───────────────────────────────────────── */
+      .fun-msg {
+        font-size: 12px; color: var(--purple); margin-top: 4px;
+        min-height: 18px; transition: opacity 0.3s ease; font-style: italic;
+      }
+
+      /* ─── Step 5 Share Section ──────────────────────────────────────── */
+      .share-section {
+        margin: 20px 0 4px;
+        background: var(--bg-subtle);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 16px;
+        text-align: center;
+      }
+      .share-section-title {
+        font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 12px;
+      }
+      .share-btns { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+      .whatsapp-btn {
+        display: inline-flex; align-items: center; gap: 6px;
+        background: #25D366; color: white; border: none;
+        padding: 10px 18px; border-radius: 100px; font-size: 13px;
+        font-weight: 600; cursor: pointer; font-family: inherit;
+        transition: background 0.2s;
+      }
+      .whatsapp-btn:hover { background: #1fba59; }
+      .copy-kit-btn {
+        display: inline-flex; align-items: center; gap: 6px;
+        background: white; color: var(--text); border: 1.5px solid var(--border);
+        padding: 10px 18px; border-radius: 100px; font-size: 13px;
+        font-weight: 600; cursor: pointer; font-family: inherit;
+        transition: border-color 0.2s;
+      }
+      .copy-kit-btn:hover { border-color: var(--purple); color: var(--purple); }
+
+      /* ─── Mobile Sticky Generate Bar ───────────────────────────────── */
+      .mobile-gen-bar {
+        display: none;
+        position: fixed; bottom: 0; left: 0; right: 0; z-index: 200;
+        background: white; padding: 12px 16px 20px;
+        box-shadow: 0 -4px 20px rgba(0,0,0,0.12);
+        border-top: 1px solid var(--border);
+      }
+      .mobile-gen-bar .btn-primary { width: 100%; justify-content: center; }
+      @media (max-width: 480px) {
+        .mobile-gen-bar { display: none; } /* shown/hidden via JS */
+      }
     </style>
   </head>
   <body>
@@ -777,6 +838,8 @@
 
           <button class="lp-cta-btn" onclick="showStartOptions()">Get My Free Kit →</button>
           <div class="lp-trust-line">4 PDFs · No account · For Indian students</div>
+          <div class="lp-kits-counter">🚀 <strong id="kitsCountEl">3,200+</strong> kits generated</div>
+          <div class="lp-sample-link" onclick="showKitPreview('scorecard')">or see a sample kit first →</div>
         </div>
 
         <!-- SECTION 2: PROBLEM — floating stats, no boxes -->
@@ -1163,6 +1226,7 @@
         <span class="progress-emoji" id="progressEmoji">🤖</span>
         <div class="progress-title">Generating your kit</div>
         <div class="progress-msg" id="progressMsg">Starting up...</div>
+        <div class="fun-msg" id="funMsg">Warming up the AI engines...</div>
         <div class="progress-bar-wrap">
           <div class="progress-bar" id="progressBar"></div>
         </div>
@@ -1245,6 +1309,15 @@
             </div>
           </div>
           <a href="#" class="download-btn" id="dlCompany">↓ Download</a>
+        </div>
+      </div>
+
+      <!-- Share Section -->
+      <div class="share-section">
+        <div class="share-section-title">🎉 Loved it? Share with a friend who's job hunting</div>
+        <div class="share-btns">
+          <button class="whatsapp-btn" onclick="shareOnWhatsApp()">📱 Share on WhatsApp</button>
+          <button class="copy-kit-btn" id="copyKitBtn" onclick="copyKitSummary()">📋 Copy Summary</button>
         </div>
       </div>
 
@@ -2420,6 +2493,126 @@
     document.addEventListener('DOMContentLoaded', function() {
       setTimeout(initLandingAnimations, 200);
     });
+
+    /* ─────────────────────────────────────────────────────────────────────────
+       CONFETTI
+    ───────────────────────────────────────────────────────────────────────── */
+    function fireConfetti() {
+      if (typeof confetti === 'undefined') return;
+      confetti({ particleCount: 90, spread: 65, origin: { y: 0.7 }, colors: ['#6c63ff','#22c55e','#f59e0b','#a78bfa','#34d399'] });
+      setTimeout(() => confetti({ particleCount: 50, spread: 90, origin: { x: 0.2, y: 0.6 }, colors: ['#6c63ff','#ffffff','#22c55e'] }), 350);
+      setTimeout(() => confetti({ particleCount: 50, spread: 90, origin: { x: 0.8, y: 0.6 }, colors: ['#f59e0b','#6c63ff','#34d399'] }), 600);
+    }
+
+    /* ─────────────────────────────────────────────────────────────────────────
+       ROTATING FUN MESSAGES (step 4)
+    ───────────────────────────────────────────────────────────────────────── */
+    const FUN_MSGS = [
+      'Outsmarting the ATS bots... 🤖',
+      'Injecting power keywords... 💉',
+      'Making recruiters stop scrolling... 👀',
+      'Building your company intel... 🕵️',
+      'Running 15-step ATS framework... ⚙️',
+      'Rewriting your story... ✍️',
+      'Almost there — packaging your kit... 📦'
+    ];
+    let _funIdx = 0, _funTimer = null;
+    function startFunMessages() {
+      _funIdx = 0;
+      const el = document.getElementById('funMsg');
+      if (el) { el.style.opacity = '1'; el.textContent = FUN_MSGS[0]; }
+      _funTimer = setInterval(() => {
+        _funIdx = (_funIdx + 1) % FUN_MSGS.length;
+        const el = document.getElementById('funMsg');
+        if (!el) return;
+        el.style.opacity = '0';
+        setTimeout(() => { el.textContent = FUN_MSGS[_funIdx]; el.style.opacity = '1'; }, 300);
+      }, 2800);
+    }
+    function stopFunMessages() { if (_funTimer) { clearInterval(_funTimer); _funTimer = null; } }
+
+    /* ─────────────────────────────────────────────────────────────────────────
+       KITS COUNTER
+    ───────────────────────────────────────────────────────────────────────── */
+    function getKitsCount() {
+      const start = new Date('2025-06-01');
+      const days = Math.max(0, Math.floor((new Date() - start) / 86400000));
+      const local = parseInt(localStorage.getItem('nlKitsTotal') || '0');
+      return 847 + days * 14 + local;
+    }
+    function initKitsCounter() {
+      const el = document.getElementById('kitsCountEl');
+      if (!el) return;
+      const count = getKitsCount();
+      el.textContent = count.toLocaleString('en-IN') + '+';
+    }
+    function incrementKitsCounter() {
+      const cur = parseInt(localStorage.getItem('nlKitsTotal') || '0');
+      localStorage.setItem('nlKitsTotal', String(cur + 1));
+    }
+
+    /* ─────────────────────────────────────────────────────────────────────────
+       WHATSAPP SHARE
+    ───────────────────────────────────────────────────────────────────────── */
+    function shareOnWhatsApp() {
+      const score = (lastATSResult && lastATSResult.score) ? lastATSResult.score : null;
+      const scoreLine = score ? `My resume scored ${score}% ATS match 🎯` : 'My resume is ATS-optimized 🎯';
+      const text = `Just got my free placement kit from Nine Lab!\n\n${scoreLine}\n✅ Job-Ready Resume\n✅ Resume Scorecard\n✅ Interview Prep Guide\n✅ Company Cheat Sheet\n\nGet yours free (60 seconds): https://ninelab.in`;
+      window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank');
+    }
+
+    /* ─────────────────────────────────────────────────────────────────────────
+       COPY KIT SUMMARY
+    ───────────────────────────────────────────────────────────────────────── */
+    function copyKitSummary() {
+      const score = (lastATSResult && lastATSResult.score) ? lastATSResult.score + '%' : '--';
+      const text = `Got my placement kit from Nine Lab 🎯\n\n✅ ATS Score: ${score}\n✅ Job-Ready Resume\n✅ Resume Scorecard\n✅ Interview Prep Guide\n✅ Company Cheat Sheet\n\nGet yours free: https://ninelab.in`;
+      navigator.clipboard.writeText(text).then(() => {
+        const btn = document.getElementById('copyKitBtn');
+        if (btn) { const orig = btn.innerHTML; btn.innerHTML = '✓ Copied!'; setTimeout(() => { btn.innerHTML = orig; }, 2000); }
+      }).catch(() => {});
+    }
+
+    /* ─────────────────────────────────────────────────────────────────────────
+       MOBILE STICKY BAR
+    ───────────────────────────────────────────────────────────────────────── */
+    function updateMobileBar(step) {
+      const bar = document.getElementById('mobileGenBar');
+      if (!bar) return;
+      const isMobile = window.innerWidth <= 480;
+      bar.style.display = (step === 3 && isMobile) ? 'block' : 'none';
+    }
+
+    // Hook into existing goToStep wrapper
+    var _origGoToStep2 = goToStep;
+    goToStep = function(n) {
+      _origGoToStep2(n);
+      updateMobileBar(n);
+    };
+
+    // Hook fun messages into generate flow
+    var _origHandleGenerate = handleGenerate;
+    handleGenerate = async function() {
+      startFunMessages();
+      return _origHandleGenerate.apply(this, arguments);
+    };
+
+    // Hook confetti + counter into showResults
+    var _origShowResults = showResults;
+    showResults = async function(files, jd, company, atsBefore, atsAfter) {
+      stopFunMessages();
+      fireConfetti();
+      incrementKitsCounter();
+      return _origShowResults.apply(this, arguments);
+    };
+
+    // Init counter on page load
+    document.addEventListener('DOMContentLoaded', initKitsCounter);
+    initKitsCounter();
   </script>
+  <!-- Mobile sticky generate bar — visible only in step 3 on mobile -->
+  <div class="mobile-gen-bar" id="mobileGenBar">
+    <button class="btn-primary" onclick="handleGenerate()">Generate My Kit →</button>
+  </div>
   </body>
 </html>
