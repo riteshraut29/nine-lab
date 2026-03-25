@@ -2727,7 +2727,10 @@
         container.style.display = 'none';
         return;
       }
-      gFlashcards = cards;
+      // Guard: drop any card where question is raw AI dump (>200 chars)
+      const clean = cards.filter(c => c.q && c.q.length <= 200 && c.a && c.a.length <= 500);
+      if (clean.length === 0) { container.style.display = 'none'; return; }
+      gFlashcards = clean;
       fcIndex = 0;
       container.style.display = 'block';
       updateFlashcardUI();

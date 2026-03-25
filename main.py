@@ -1424,12 +1424,15 @@ def run_pipeline(job_id: str, resume: str, jd: str, company: str):
                     flashcards.append({"q": "Interview Question", "a": b.strip()})
         
         # Fallback if AI didn't format exactly as expected
+        # Use [^?\n]+ so we don't swallow entire paragraphs across newlines
         if len(flashcards) == 0:
-            import re
-            q_matches = re.findall(r'((?:what|why|how|explain|describe)[^?]+\?)\s*([^\n]+)', plan_text, re.IGNORECASE)
+            q_matches = re.findall(r'((?:what|why|how|explain|describe)[^?\n]{5,120}\?)\s*([^\n]{10,300})', plan_text, re.IGNORECASE)
             for q, a in q_matches[:5]:
                 flashcards.append({"q": q.strip().capitalize(), "a": a.strip().capitalize()})
                 
+        # Sanitize: drop any card where q or a is suspiciously long (caught raw text)
+        flashcards = [c for c in flashcards if len(c["q"]) <= 200 and len(c["a"]) <= 500]
+
         # Guaranteed fallback so the feature is always visible for testing
         if len(flashcards) == 0:
             flashcards = [
