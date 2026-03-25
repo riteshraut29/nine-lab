@@ -1076,9 +1076,72 @@
       @media (max-width: 480px) {
         .mobile-gen-bar { display: none; } /* shown/hidden via JS */
       }
+
+      /* ─── Scroll Progress Bar ─────────────────────────────────────────── */
+      #scrollProgress {
+        position: fixed; top: 0; left: 0; height: 3px; width: 0%;
+        background: linear-gradient(90deg, #6c63ff, #a78bfa, #06b6d4);
+        z-index: 99999; pointer-events: none;
+        transition: width 0.08s linear;
+      }
+
+      /* ─── Section Reveal (fade-up on scroll) ─────────────────────────── */
+      .reveal-section {
+        opacity: 0; transform: translateY(32px);
+        transition: opacity 0.65s cubic-bezier(0.22,1,0.36,1), transform 0.65s cubic-bezier(0.22,1,0.36,1);
+      }
+      .reveal-section.in-view { opacity: 1; transform: translateY(0); }
+
+      /* ─── Button Ripple ───────────────────────────────────────────────── */
+      .lp-cta-btn { position: relative; overflow: hidden; }
+      .ripple {
+        position: absolute; border-radius: 50%;
+        background: rgba(255,255,255,0.32); transform: scale(0);
+        animation: rippleAnim 0.55s linear; pointer-events: none;
+      }
+      @keyframes rippleAnim { to { transform: scale(4); opacity: 0; } }
+
+      /* ─── Side Navigation Dots ────────────────────────────────────────── */
+      #sideNav {
+        position: fixed; right: 14px; top: 50%; transform: translateY(-50%);
+        display: flex; flex-direction: column; gap: 10px; z-index: 1000;
+      }
+      .side-dot {
+        width: 7px; height: 7px; border-radius: 50%;
+        background: #d1d5db; cursor: pointer;
+        transition: background 0.25s, transform 0.25s, height 0.25s;
+      }
+      .side-dot.active { background: var(--purple); transform: scale(1.5); height: 18px; border-radius: 4px; }
+      @media (max-width: 640px) { #sideNav { display: none; } }
+
+      /* ─── Typewriter cursor ───────────────────────────────────────────── */
+      .tw-cursor {
+        display: inline-block; width: 3px; height: 0.85em;
+        background: var(--purple); margin-left: 2px; border-radius: 2px;
+        animation: twBlink 0.75s step-end infinite; vertical-align: middle;
+      }
+      @keyframes twBlink { 50% { opacity: 0; } }
+
+      /* ─── ATS bar animated width ──────────────────────────────────────── */
+      .lp-bar-fill { width: 0% !important; transition: width 1s cubic-bezier(0.22,1,0.36,1); }
+      .lp-bar-fill.anim-bad  { width: 38% !important; }
+      .lp-bar-fill.anim-good { width: 82% !important; }
     </style>
   </head>
   <body>
+
+  <!-- Scroll progress bar -->
+  <div id="scrollProgress"></div>
+
+  <!-- Side navigation dots -->
+  <div id="sideNav">
+    <div class="side-dot" data-idx="0" title="Hero"></div>
+    <div class="side-dot" data-idx="1" title="Why"></div>
+    <div class="side-dot" data-idx="2" title="Kit"></div>
+    <div class="side-dot" data-idx="3" title="How"></div>
+    <div class="side-dot" data-idx="4" title="Result"></div>
+    <div class="side-dot" data-idx="5" title="Reviews"></div>
+  </div>
 
   <!-- ─── Main App ──────────────────────────────────────────────────────────── -->
   <div class="app" id="app">
@@ -1127,7 +1190,7 @@
             </div>
           </div>
 
-          <div class="lp-hero-headline">Get shortlisted<br>before others apply.</div>
+          <div class="lp-hero-headline" id="heroHeadline"></div>
           <div class="lp-hero-sub">Nine Lab rewrites your resume using a 15-step ATS framework — and delivers your complete placement kit in 60 seconds.</div>
 
           <button class="lp-cta-btn" onclick="showStartOptions()">Get My Free Kit →</button>
@@ -1137,7 +1200,7 @@
         </div>
 
         <!-- SECTION 2: PROBLEM — floating stats, no boxes -->
-        <div class="lp-section">
+        <div class="lp-section reveal-section">
           <div class="lp-section-label">Why most resumes never get read</div>
           <div class="lp-stat-grid">
             <div class="lp-stat-card">
@@ -1160,7 +1223,7 @@
         </div>
 
         <!-- SECTION 3: WHAT YOU GET — clickable kit cards -->
-        <div class="lp-section">
+        <div class="lp-section reveal-section">
           <div class="lp-section-label">What you download — tap to preview</div>
           <div class="lp-kit-grid">
             <div class="lp-kit-card" onclick="showKitPreview('resume')">
@@ -1192,7 +1255,7 @@
         </div>
 
         <!-- SECTION 4: HOW IT WORKS -->
-        <div class="lp-section">
+        <div class="lp-section reveal-section">
           <div class="lp-section-label">How it works</div>
           <div class="lp-steps">
             <div class="lp-step">
@@ -1216,17 +1279,17 @@
         </div>
 
         <!-- SECTION 5: BEFORE/AFTER — clean card -->
-        <div class="lp-section">
+        <div class="lp-section reveal-section">
           <div class="lp-section-label">Real result — MCA student applying to TCS</div>
           <div class="lp-demo-card">
             <div class="lp-bar-wrap">
               <div class="lp-bar-row"><span>Original resume</span><span style="color:#ef4444;font-weight:700;">38%</span></div>
-              <div class="lp-bar-track"><div class="lp-bar-fill bad"></div></div>
+              <div class="lp-bar-track"><div class="lp-bar-fill bad" id="atsBarBad"></div></div>
             </div>
             <div class="lp-demo-arrow">↓ &nbsp;Nine Lab applied 15-step framework</div>
             <div class="lp-bar-wrap">
-              <div class="lp-bar-row"><span>After Nine Lab</span><span style="color:#22c55e;font-weight:700;">82%</span></div>
-              <div class="lp-bar-track"><div class="lp-bar-fill good"></div></div>
+              <div class="lp-bar-row"><span>After Nine Lab</span><span id="atsScoreGood" style="color:#22c55e;font-weight:700;">82%</span></div>
+              <div class="lp-bar-track"><div class="lp-bar-fill good" id="atsBarGood"></div></div>
             </div>
             <div class="lp-demo-note">Nine Lab user · Pune, 2024</div>
           </div>
@@ -1234,7 +1297,7 @@
         </div>
 
         <!-- SECTION 6: TESTIMONIALS -->
-        <div class="lp-section">
+        <div class="lp-section reveal-section">
           <div class="lp-section-label">Students who got shortlisted</div>
           <div class="lp-testimonials">
             <div class="t-card">
@@ -3228,6 +3291,202 @@
       err.textContent = msg;
       err.style.display = 'block';
     }
+
+    /* ═══════════════════════════════════════════════════════════════════════
+       INTERACTIVE LANDING — all 9 features
+    ═══════════════════════════════════════════════════════════════════════ */
+
+    // 1. Typewriter on hero headline
+    function initTypewriter() {
+      var el = document.getElementById('heroHeadline');
+      if (!el) return;
+      var text1 = 'Get shortlisted';
+      var text2 = 'before others apply.';
+      var full = text1 + '\n' + text2;
+      var i = 0;
+      var cursor = '<span class="tw-cursor"></span>';
+      function tick() {
+        var part = full.slice(0, i);
+        var lines = part.split('\n');
+        el.innerHTML = lines.map(function(l, idx) {
+          return idx < lines.length - 1 ? l + '<br>' : l;
+        }).join('') + cursor;
+        if (i < full.length) {
+          i++;
+          setTimeout(tick, i < text1.length + 1 ? 70 : 50);
+        } else {
+          // Remove cursor after 2s
+          setTimeout(function() {
+            var c = el.querySelector('.tw-cursor');
+            if (c) c.style.animation = 'none', c.style.opacity = '0';
+          }, 2000);
+        }
+      }
+      setTimeout(tick, 300);
+    }
+
+    // 2. Scroll progress bar
+    function initScrollProgress() {
+      var bar = document.getElementById('scrollProgress');
+      if (!bar) return;
+      window.addEventListener('scroll', function() {
+        var scrolled = document.documentElement.scrollTop || document.body.scrollTop;
+        var total = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+        bar.style.width = (total > 0 ? Math.min(scrolled / total * 100, 100) : 0) + '%';
+      }, { passive: true });
+    }
+
+    // 3. Universal section reveal (fade-up on scroll)
+    function initSectionReveal() {
+      var sections = document.querySelectorAll('.reveal-section');
+      if (!sections.length) return;
+      var obs = new IntersectionObserver(function(entries) {
+        entries.forEach(function(e) {
+          if (e.isIntersecting) {
+            e.target.classList.add('in-view');
+            obs.unobserve(e.target);
+          }
+        });
+      }, { threshold: 0.08 });
+      sections.forEach(function(s, i) {
+        s.style.transitionDelay = (i * 0.07) + 's';
+        obs.observe(s);
+      });
+    }
+
+    // 4. Button ripple effect
+    function initRipple() {
+      document.querySelectorAll('.lp-cta-btn').forEach(function(btn) {
+        btn.addEventListener('click', function(e) {
+          var r = document.createElement('span');
+          r.className = 'ripple';
+          var rect = btn.getBoundingClientRect();
+          var size = Math.max(rect.width, rect.height);
+          r.style.cssText = 'width:' + size + 'px;height:' + size + 'px;left:' +
+            (e.clientX - rect.left - size / 2) + 'px;top:' +
+            (e.clientY - rect.top - size / 2) + 'px;';
+          btn.appendChild(r);
+          setTimeout(function() { r.remove(); }, 600);
+        });
+      });
+    }
+
+    // 5. 3D card tilt on kit cards
+    function initCardTilt() {
+      document.querySelectorAll('.lp-kit-card').forEach(function(card) {
+        card.addEventListener('mousemove', function(e) {
+          var rect = card.getBoundingClientRect();
+          var x = (e.clientX - rect.left) / rect.width - 0.5;
+          var y = (e.clientY - rect.top) / rect.height - 0.5;
+          card.style.transform = 'perspective(700px) rotateY(' + (x * 14) + 'deg) rotateX(' + (-y * 14) + 'deg) translateY(-3px) scale(1.02)';
+          card.style.boxShadow = '0 12px 32px rgba(108,99,255,0.18)';
+          card.style.transition = 'transform 0.08s, box-shadow 0.08s';
+        });
+        card.addEventListener('mouseleave', function() {
+          card.style.transform = '';
+          card.style.boxShadow = '';
+          card.style.transition = 'transform 0.3s, box-shadow 0.3s';
+        });
+      });
+    }
+
+    // 6. Stat number counter on scroll
+    function initStatCounters() {
+      var els = document.querySelectorAll('.lp-stat-big');
+      if (!els.length) return;
+      var obs = new IntersectionObserver(function(entries) {
+        entries.forEach(function(e) {
+          if (!e.isIntersecting) return;
+          var el = e.target;
+          var original = el.textContent.trim();
+          var match = original.match(/^([\d.]+)(.*)$/);
+          if (!match) return;
+          var target = parseFloat(match[1]);
+          var suffix = match[2];
+          var startTime = null;
+          var duration = 1200;
+          function step(ts) {
+            if (!startTime) startTime = ts;
+            var p = Math.min((ts - startTime) / duration, 1);
+            var eased = 1 - Math.pow(1 - p, 3);
+            el.textContent = Math.round(eased * target) + suffix;
+            if (p < 1) requestAnimationFrame(step);
+          }
+          requestAnimationFrame(step);
+          obs.unobserve(el);
+        });
+      }, { threshold: 0.6 });
+      els.forEach(function(el) { obs.observe(el); });
+    }
+
+    // 7. ATS bar ticker animation when in view
+    function initAtsTicker() {
+      var badBar  = document.getElementById('atsBarBad');
+      var goodBar = document.getElementById('atsBarGood');
+      var card = document.querySelector('.lp-demo-card');
+      if (!badBar || !goodBar || !card) return;
+      var fired = false;
+      var obs = new IntersectionObserver(function(entries) {
+        entries.forEach(function(e) {
+          if (!e.isIntersecting || fired) return;
+          fired = true;
+          setTimeout(function() { badBar.classList.add('anim-bad'); }, 200);
+          setTimeout(function() { goodBar.classList.add('anim-good'); }, 800);
+          obs.unobserve(card);
+        });
+      }, { threshold: 0.3 });
+      obs.observe(card);
+    }
+
+    // 8. Side nav dots
+    function initSideNav() {
+      var sections = Array.from(document.querySelectorAll('#step0 .lp-section, #step0 .lp-final-cta'));
+      var dots = Array.from(document.querySelectorAll('.side-dot'));
+      if (!sections.length || !dots.length) return;
+      dots.forEach(function(dot, i) {
+        dot.addEventListener('click', function() {
+          if (sections[i]) sections[i].scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+      });
+      var obs = new IntersectionObserver(function(entries) {
+        entries.forEach(function(e) {
+          var idx = sections.indexOf(e.target);
+          if (idx < 0 || !dots[idx]) return;
+          if (e.isIntersecting) dots[idx].classList.add('active');
+          else dots[idx].classList.remove('active');
+        });
+      }, { threshold: 0.4 });
+      sections.forEach(function(s) { obs.observe(s); });
+    }
+
+    // 9. Orb parallax on scroll
+    function initOrbParallax() {
+      var s0 = document.getElementById('step0');
+      if (!s0) return;
+      var orbs = s0.querySelectorAll('[class*="lp-orb"]');
+      if (!orbs.length) return;
+      window.addEventListener('scroll', function() {
+        var sy = window.scrollY;
+        orbs.forEach(function(orb, i) {
+          var dir = i % 2 === 0 ? 1 : -1;
+          orb.style.transform = 'translateY(' + (sy * 0.12 * dir) + 'px)';
+        });
+      }, { passive: true });
+    }
+
+    // Boot all interactive features
+    document.addEventListener('DOMContentLoaded', function() {
+      initTypewriter();
+      initScrollProgress();
+      initSectionReveal();
+      initRipple();
+      initCardTilt();
+      initStatCounters();
+      initAtsTicker();
+      initSideNav();
+      initOrbParallax();
+    });
+
   </script>
   <!-- Dark Mode Toggle -->
   <div class="dark-toggle" id="darkToggle" onclick="toggleDarkMode()" title="Toggle dark mode">🌙</div>
