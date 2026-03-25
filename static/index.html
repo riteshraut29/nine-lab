@@ -34,66 +34,159 @@
       }
 
       /* ─── Landing Page ───────────────────────────────────────────────── */
+      #step0 { overflow: hidden; }
+
+      /* Orb background blobs */
+      .lp-orb {
+        position: absolute; border-radius: 50%; filter: blur(60px);
+        pointer-events: none; z-index: 0; opacity: 0.55;
+        animation: orbFloat 8s ease-in-out infinite;
+      }
+      .lp-orb-1 { width: 260px; height: 260px; background: #c5c1ff; top: -60px; right: -80px; animation-delay: 0s; }
+      .lp-orb-2 { width: 180px; height: 180px; background: #a5f3fc; top: 120px; left: -60px; animation-delay: 3s; }
+      .lp-orb-3 { width: 120px; height: 120px; background: #fde68a; top: 300px; right: 20px; animation-delay: 5s; }
+      @keyframes orbFloat {
+        0%, 100% { transform: translateY(0px) scale(1); }
+        50% { transform: translateY(-20px) scale(1.05); }
+      }
+
+      .lp-inner { position: relative; z-index: 1; }
+
+      /* Nav */
       .lp-nav {
         display: flex; align-items: center; justify-content: space-between;
-        margin-bottom: 28px;
+        margin-bottom: 32px;
       }
       .lp-badge {
         display: inline-flex; align-items: center; gap: 5px;
         background: #fff8e6; border: 1px solid #fcd34d;
         color: #92400e; font-size: 11px; font-weight: 600;
-        padding: 4px 10px; border-radius: 20px; letter-spacing: 0.2px;
+        padding: 4px 10px; border-radius: 20px;
+        animation: badgePop 0.6s cubic-bezier(0.34,1.56,0.64,1) 0.3s both;
       }
+      @keyframes badgePop {
+        from { transform: scale(0.5); opacity: 0; }
+        to   { transform: scale(1);   opacity: 1; }
+      }
+
+      /* Hero */
       .lp-hero { margin-bottom: 28px; }
       .lp-hero-tag {
         display: inline-block;
         background: var(--purple-light); color: var(--purple);
         font-size: 11px; font-weight: 700; letter-spacing: 0.5px;
-        text-transform: uppercase; padding: 4px 10px; border-radius: 20px;
+        text-transform: uppercase; padding: 4px 12px; border-radius: 20px;
         margin-bottom: 14px;
+        animation: fadeUp 0.5s ease 0.1s both;
       }
       .lp-hero h1 {
         font-size: 30px; font-weight: 800; color: var(--text);
         line-height: 1.2; letter-spacing: -0.8px; margin-bottom: 12px;
+        animation: fadeUp 0.5s ease 0.2s both;
       }
-      .lp-hero h1 span { color: var(--purple); }
+      .lp-hero h1 .highlight {
+        color: var(--purple);
+        background: linear-gradient(135deg, #6c63ff, #a78bfa);
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
       .lp-hero p {
-        font-size: 15px; color: var(--text-muted); line-height: 1.6;
+        font-size: 14.5px; color: var(--text-muted); line-height: 1.65;
+        animation: fadeUp 0.5s ease 0.3s both;
       }
+      @keyframes fadeUp {
+        from { opacity: 0; transform: translateY(18px); }
+        to   { opacity: 1; transform: translateY(0); }
+      }
+
+      /* Stats */
       .lp-stats {
         display: grid; grid-template-columns: repeat(3, 1fr);
         gap: 10px; margin-bottom: 28px;
       }
       .lp-stat {
         background: white; border: 1px solid var(--border);
-        border-radius: 12px; padding: 14px 10px; text-align: center;
+        border-radius: 14px; padding: 16px 10px; text-align: center;
+        cursor: default; transition: all 0.25s cubic-bezier(0.34,1.56,0.64,1);
+        opacity: 0; transform: translateY(20px);
+      }
+      .lp-stat.revealed {
+        opacity: 1; transform: translateY(0);
+      }
+      .lp-stat:hover {
+        transform: translateY(-4px) scale(1.03);
+        box-shadow: 0 8px 30px rgba(108,99,255,0.15);
+        border-color: var(--purple);
       }
       .lp-stat-num {
-        font-size: 24px; font-weight: 800; color: var(--purple);
+        font-size: 26px; font-weight: 800; color: var(--purple);
         letter-spacing: -0.5px; line-height: 1;
       }
       .lp-stat-label {
-        font-size: 10.5px; color: var(--text-muted); margin-top: 4px;
+        font-size: 10.5px; color: var(--text-muted); margin-top: 5px;
         line-height: 1.4;
       }
+
+      /* ATS demo bar */
+      .lp-ats-demo {
+        background: white; border: 1px solid var(--border);
+        border-radius: 16px; padding: 18px 20px; margin-bottom: 20px;
+        opacity: 0; transform: translateY(16px); transition: all 0.5s ease;
+      }
+      .lp-ats-demo.revealed { opacity: 1; transform: translateY(0); }
+      .lp-ats-demo-title {
+        font-size: 11px; font-weight: 700; color: var(--text-muted);
+        text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 14px;
+      }
+      .lp-ats-row { margin-bottom: 10px; }
+      .lp-ats-row-top {
+        display: flex; justify-content: space-between; align-items: center;
+        margin-bottom: 6px;
+      }
+      .lp-ats-row-label { font-size: 12px; font-weight: 600; color: var(--text); }
+      .lp-ats-row-pct { font-size: 12px; font-weight: 700; }
+      .lp-ats-track {
+        height: 8px; background: var(--border); border-radius: 100px; overflow: hidden;
+      }
+      .lp-ats-fill {
+        height: 100%; border-radius: 100px; width: 0%;
+        transition: width 1.2s cubic-bezier(0.4,0,0.2,1);
+      }
+      .lp-ats-fill.before { background: #ef4444; }
+      .lp-ats-fill.after  { background: linear-gradient(90deg, #6c63ff, #22c55e); }
+      .lp-ats-arrow {
+        text-align: center; font-size: 20px; color: var(--text-muted);
+        margin: 4px 0; line-height: 1;
+      }
+
+      /* Kit items */
       .lp-what {
         background: white; border: 1px solid var(--border);
         border-radius: 16px; padding: 20px; margin-bottom: 22px;
+        opacity: 0; transform: translateY(16px); transition: all 0.5s ease;
       }
+      .lp-what.revealed { opacity: 1; transform: translateY(0); }
       .lp-what-title {
-        font-size: 13px; font-weight: 700; color: var(--text);
-        margin-bottom: 14px; text-transform: uppercase; letter-spacing: 0.4px;
+        font-size: 12px; font-weight: 700; color: var(--text-muted);
+        margin-bottom: 14px; text-transform: uppercase; letter-spacing: 0.5px;
       }
-      .lp-kit-items { display: flex; flex-direction: column; gap: 10px; }
+      .lp-kit-items { display: flex; flex-direction: column; gap: 8px; }
       .lp-kit-item {
         display: flex; align-items: flex-start; gap: 12px;
         padding: 12px; background: var(--bg); border-radius: 10px;
+        transition: all 0.2s cubic-bezier(0.34,1.56,0.64,1);
+        cursor: default;
+      }
+      .lp-kit-item:hover {
+        background: var(--purple-light);
+        transform: translateX(4px);
       }
       .lp-kit-icon {
-        width: 36px; height: 36px; border-radius: 10px;
+        width: 38px; height: 38px; border-radius: 10px;
         display: flex; align-items: center; justify-content: center;
-        font-size: 17px; flex-shrink: 0;
+        font-size: 18px; flex-shrink: 0; transition: transform 0.2s;
       }
+      .lp-kit-item:hover .lp-kit-icon { transform: scale(1.15) rotate(-5deg); }
       .lp-kit-icon.purple { background: var(--purple-light); }
       .lp-kit-icon.green  { background: #dcfce7; }
       .lp-kit-icon.blue   { background: #dbeafe; }
@@ -102,22 +195,24 @@
         font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 2px;
       }
       .lp-kit-info-sub { font-size: 12px; color: var(--text-muted); line-height: 1.4; }
-      .lp-how {
-        margin-bottom: 24px;
-      }
+
+      /* How it works */
+      .lp-how { margin-bottom: 24px; }
       .lp-how-title {
-        font-size: 13px; font-weight: 700; color: var(--text);
-        text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 14px;
+        font-size: 12px; font-weight: 700; color: var(--text-muted);
+        text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 16px;
       }
       .lp-steps { display: flex; flex-direction: column; gap: 0; }
       .lp-step {
         display: flex; gap: 14px; align-items: flex-start;
         position: relative;
+        opacity: 0; transform: translateX(-16px); transition: all 0.4s ease;
       }
+      .lp-step.revealed { opacity: 1; transform: translateX(0); }
       .lp-step:not(:last-child)::before {
         content: ''; position: absolute;
-        left: 15px; top: 32px; bottom: -8px;
-        width: 2px; background: var(--border);
+        left: 15px; top: 32px; width: 2px;
+        height: 36px; background: linear-gradient(to bottom, var(--purple), var(--border));
       }
       .lp-step-num {
         width: 32px; height: 32px; border-radius: 50%;
@@ -125,25 +220,41 @@
         font-size: 13px; font-weight: 700;
         display: flex; align-items: center; justify-content: center;
         flex-shrink: 0; position: relative; z-index: 1;
+        box-shadow: 0 4px 12px rgba(108,99,255,0.4);
+        transition: transform 0.2s; cursor: default;
       }
-      .lp-step-body { padding-bottom: 20px; }
+      .lp-step:hover .lp-step-num { transform: scale(1.2); }
+      .lp-step-body { padding-bottom: 22px; }
       .lp-step-title { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
       .lp-step-sub { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+
+      /* Award proof */
       .lp-proof {
         background: linear-gradient(135deg, #1e2761 0%, #3730a3 100%);
         border-radius: 16px; padding: 18px 20px; margin-bottom: 24px;
-        color: white;
+        color: white; position: relative; overflow: hidden;
+        opacity: 0; transform: translateY(16px); transition: all 0.5s ease;
+      }
+      .lp-proof.revealed { opacity: 1; transform: translateY(0); }
+      .lp-proof::before {
+        content: '🏆'; position: absolute; right: -8px; top: -10px;
+        font-size: 80px; opacity: 0.08; transform: rotate(15deg);
+        pointer-events: none;
       }
       .lp-proof-tag {
         font-size: 10px; font-weight: 700; letter-spacing: 1px;
-        text-transform: uppercase; color: #a5b4fc; margin-bottom: 6px;
+        text-transform: uppercase; color: #fde68a; margin-bottom: 6px;
+        display: flex; align-items: center; gap: 6px;
       }
-      .lp-proof-text { font-size: 14px; font-weight: 600; line-height: 1.4; margin-bottom: 4px; }
+      .lp-proof-dot { width: 6px; height: 6px; background: #fde68a; border-radius: 50%; animation: pulse 1.5s ease-in-out infinite; }
+      .lp-proof-text { font-size: 14px; font-weight: 700; line-height: 1.4; margin-bottom: 4px; }
       .lp-proof-sub { font-size: 12px; color: #c7d2fe; }
+
+      /* CTA */
       .lp-cta-section { margin-bottom: 8px; }
       .lp-cta-title {
-        font-size: 18px; font-weight: 800; color: var(--text);
-        text-align: center; margin-bottom: 6px; letter-spacing: -0.3px;
+        font-size: 20px; font-weight: 800; color: var(--text);
+        text-align: center; margin-bottom: 6px; letter-spacing: -0.5px;
       }
       .lp-cta-sub {
         font-size: 13px; color: var(--text-muted);
@@ -152,23 +263,45 @@
       .lp-options { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
       .lp-option {
         background: white; border: 1.5px solid var(--border);
-        border-radius: 14px; padding: 18px 14px; text-align: center;
-        cursor: pointer; transition: all 0.2s;
+        border-radius: 16px; padding: 20px 14px; text-align: center;
+        cursor: pointer; transition: all 0.25s cubic-bezier(0.34,1.56,0.64,1);
+        position: relative; overflow: hidden;
       }
-      .lp-option:hover, .lp-option:active {
-        border-color: var(--purple); transform: translateY(-2px);
-        box-shadow: 0 4px 20px rgba(108,99,255,0.15);
+      .lp-option::after {
+        content: ''; position: absolute; inset: 0;
+        background: radial-gradient(circle at center, rgba(108,99,255,0.15) 0%, transparent 70%);
+        opacity: 0; transition: opacity 0.3s;
       }
+      .lp-option:hover::after { opacity: 1; }
+      .lp-option:hover {
+        border-color: var(--purple); transform: translateY(-4px);
+        box-shadow: 0 8px 30px rgba(108,99,255,0.2);
+      }
+      .lp-option:active { transform: translateY(-1px); }
       .lp-option.primary {
-        background: var(--purple); border-color: var(--purple);
+        background: linear-gradient(135deg, #6c63ff, #8b5cf6);
+        border-color: transparent;
+        box-shadow: 0 4px 20px rgba(108,99,255,0.35);
+        animation: ctaPulse 3s ease-in-out infinite;
       }
-      .lp-option-icon { font-size: 26px; margin-bottom: 8px; }
-      .lp-option-title {
-        font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 3px;
+      .lp-option.primary:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 40px rgba(108,99,255,0.45);
+        animation: none;
       }
+      @keyframes ctaPulse {
+        0%, 100% { box-shadow: 0 4px 20px rgba(108,99,255,0.35); }
+        50% { box-shadow: 0 4px 32px rgba(108,99,255,0.55); }
+      }
+      .lp-option-icon {
+        font-size: 28px; margin-bottom: 8px; display: block;
+        transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+      }
+      .lp-option:hover .lp-option-icon { transform: scale(1.25) rotate(-8deg); }
+      .lp-option-title { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 3px; }
       .lp-option.primary .lp-option-title { color: white; }
       .lp-option-sub { font-size: 11px; color: var(--text-muted); }
-      .lp-option.primary .lp-option-sub { color: rgba(255,255,255,0.8); }
+      .lp-option.primary .lp-option-sub { color: rgba(255,255,255,0.75); }
       .lp-footer-note {
         text-align: center; font-size: 11.5px; color: var(--text-subtle);
       }
@@ -707,141 +840,169 @@
          STEP 0 — Landing Page
     ════════════════════════════════════════════════ -->
     <div id="step0">
+      <!-- Background orbs -->
+      <div class="lp-orb lp-orb-1"></div>
+      <div class="lp-orb lp-orb-2"></div>
+      <div class="lp-orb lp-orb-3"></div>
 
-      <!-- Welcome back banner -->
-      <div class="welcome-back-banner" id="welcomeBackBanner">
-        <div class="wb-title" id="wbTitle">Welcome back!</div>
-        <div class="wb-sub">You have a saved profile. Continue where you left off?</div>
-        <div class="wb-btns">
-          <button class="wb-btn-yes" onclick="useSavedProfile()">Yes, use it</button>
-          <button class="wb-btn-no" onclick="startFresh()">Start fresh</button>
+      <div class="lp-inner">
+        <!-- Welcome back banner -->
+        <div class="welcome-back-banner" id="welcomeBackBanner">
+          <div class="wb-title" id="wbTitle">Welcome back!</div>
+          <div class="wb-sub">You have a saved profile. Continue where you left off?</div>
+          <div class="wb-btns">
+            <button class="wb-btn-yes" onclick="useSavedProfile()">Yes, use it</button>
+            <button class="wb-btn-no" onclick="startFresh()">Start fresh</button>
+          </div>
         </div>
-      </div>
 
-      <!-- Nav -->
-      <div class="lp-nav">
-        <div class="brand">
-          <div class="brand-icon">9L</div>
-          <span class="brand-name">Nine Lab</span>
+        <!-- Nav -->
+        <div class="lp-nav">
+          <div class="brand">
+            <div class="brand-icon">9L</div>
+            <span class="brand-name">Nine Lab</span>
+          </div>
+          <div class="lp-badge">🏆 Best Research Paper 2026</div>
         </div>
-        <div class="lp-badge">🏆 Best Research Paper 2026</div>
-      </div>
 
-      <!-- Hero -->
-      <div class="lp-hero">
-        <div class="lp-hero-tag">Free for Indian Students</div>
-        <h1>Your resume is getting<br><span>rejected before</span> anyone reads it.</h1>
-        <p>75% of resumes are filtered out by ATS software before a human ever sees them. Nine Lab fixes that — using a research-backed 15-step framework to optimize your resume and generate your complete placement kit in 60 seconds.</p>
-      </div>
+        <!-- Hero -->
+        <div class="lp-hero">
+          <div class="lp-hero-tag">Free for Indian Students</div>
+          <h1>Your resume is getting<br><span class="highlight">rejected before</span> anyone reads it.</h1>
+          <p>75% of resumes are filtered by ATS before a human sees them. Nine Lab fixes that — 15-step research-backed framework, complete placement kit in 60 seconds.</p>
+        </div>
 
-      <!-- Stats -->
-      <div class="lp-stats">
-        <div class="lp-stat">
-          <div class="lp-stat-num">82%</div>
-          <div class="lp-stat-label">Avg ATS score after optimization</div>
+        <!-- Stats -->
+        <div class="lp-stats">
+          <div class="lp-stat" id="stat0">
+            <div class="lp-stat-num" data-target="82" data-suffix="%">0%</div>
+            <div class="lp-stat-label">Avg ATS score after</div>
+          </div>
+          <div class="lp-stat" id="stat1">
+            <div class="lp-stat-num" data-target="44" data-prefix="+">0</div>
+            <div class="lp-stat-label">Points improvement avg</div>
+          </div>
+          <div class="lp-stat" id="stat2">
+            <div class="lp-stat-num" data-target="60" data-suffix="s">0s</div>
+            <div class="lp-stat-label">Complete kit delivered</div>
+          </div>
         </div>
-        <div class="lp-stat">
-          <div class="lp-stat-num">+44</div>
-          <div class="lp-stat-label">Points improvement on average</div>
-        </div>
-        <div class="lp-stat">
-          <div class="lp-stat-num">60s</div>
-          <div class="lp-stat-label">Complete kit delivered</div>
-        </div>
-      </div>
 
-      <!-- What you get -->
-      <div class="lp-what">
-        <div class="lp-what-title">What you get — 4 PDFs, free</div>
-        <div class="lp-kit-items">
-          <div class="lp-kit-item">
-            <div class="lp-kit-icon purple">📄</div>
-            <div>
-              <div class="lp-kit-info-title">ATS-Optimized Resume</div>
-              <div class="lp-kit-info-sub">Tailored to the exact job description with keywords injected — ready to apply directly</div>
+        <!-- ATS demo -->
+        <div class="lp-ats-demo" id="lpAtsDemoCard">
+          <div class="lp-ats-demo-title">Live result example</div>
+          <div class="lp-ats-row">
+            <div class="lp-ats-row-top">
+              <div class="lp-ats-row-label">Before Nine Lab</div>
+              <div class="lp-ats-row-pct" style="color:#ef4444">38%</div>
+            </div>
+            <div class="lp-ats-track"><div class="lp-ats-fill before" id="atsBarBefore"></div></div>
+          </div>
+          <div class="lp-ats-arrow">↓</div>
+          <div class="lp-ats-row">
+            <div class="lp-ats-row-top">
+              <div class="lp-ats-row-label">After Nine Lab</div>
+              <div class="lp-ats-row-pct" style="color:#22c55e">82%</div>
+            </div>
+            <div class="lp-ats-track"><div class="lp-ats-fill after" id="atsBarAfter"></div></div>
+          </div>
+        </div>
+
+        <!-- What you get -->
+        <div class="lp-what" id="lpWhatCard">
+          <div class="lp-what-title">What you get — 4 PDFs, completely free</div>
+          <div class="lp-kit-items">
+            <div class="lp-kit-item">
+              <div class="lp-kit-icon purple">📄</div>
+              <div>
+                <div class="lp-kit-info-title">ATS-Optimized Resume</div>
+                <div class="lp-kit-info-sub">Keywords injected, format fixed — download and apply directly</div>
+              </div>
+            </div>
+            <div class="lp-kit-item">
+              <div class="lp-kit-icon green">📊</div>
+              <div>
+                <div class="lp-kit-info-title">Reality Report</div>
+                <div class="lp-kit-info-sub">Honest match score, your strengths, and exact gaps to fix</div>
+              </div>
+            </div>
+            <div class="lp-kit-item">
+              <div class="lp-kit-icon blue">🗺️</div>
+              <div>
+                <div class="lp-kit-info-title">Prep Plan</div>
+                <div class="lp-kit-info-sub">Study schedule and mock questions based on your skill gaps</div>
+              </div>
+            </div>
+            <div class="lp-kit-item">
+              <div class="lp-kit-icon orange">🏢</div>
+              <div>
+                <div class="lp-kit-info-title">Company Intelligence Report</div>
+                <div class="lp-kit-info-sub">Interview process, culture, salary, and what they look for</div>
+              </div>
             </div>
           </div>
-          <div class="lp-kit-item">
-            <div class="lp-kit-icon green">📊</div>
-            <div>
-              <div class="lp-kit-info-title">Reality Report</div>
-              <div class="lp-kit-info-sub">Honest match score, your strengths, and exact gaps to fix before applying</div>
+        </div>
+
+        <!-- How it works -->
+        <div class="lp-how">
+          <div class="lp-how-title">How it works</div>
+          <div class="lp-steps">
+            <div class="lp-step" id="lpStep0">
+              <div class="lp-step-num">1</div>
+              <div class="lp-step-body">
+                <div class="lp-step-title">Add your resume</div>
+                <div class="lp-step-sub">Upload a PDF or fill in details — takes 2 minutes</div>
+              </div>
             </div>
-          </div>
-          <div class="lp-kit-item">
-            <div class="lp-kit-icon blue">🗺️</div>
-            <div>
-              <div class="lp-kit-info-title">Prep Plan</div>
-              <div class="lp-kit-info-sub">Study schedule, mock questions, and resources based on your skill gaps</div>
+            <div class="lp-step" id="lpStep1">
+              <div class="lp-step-num">2</div>
+              <div class="lp-step-body">
+                <div class="lp-step-title">Paste the job description</div>
+                <div class="lp-step-sub">From LinkedIn, Naukri, or any job posting</div>
+              </div>
             </div>
-          </div>
-          <div class="lp-kit-item">
-            <div class="lp-kit-icon orange">🏢</div>
-            <div>
-              <div class="lp-kit-info-title">Company Intelligence Report</div>
-              <div class="lp-kit-info-sub">Interview process, culture, salary range, and what the company actually looks for</div>
+            <div class="lp-step" id="lpStep2">
+              <div class="lp-step-num">3</div>
+              <div class="lp-step-body">
+                <div class="lp-step-title">Download your complete kit</div>
+                <div class="lp-step-sub">4 tailored PDFs in 60 seconds — apply with confidence</div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- How it works -->
-      <div class="lp-how">
-        <div class="lp-how-title">How it works</div>
-        <div class="lp-steps">
-          <div class="lp-step">
-            <div class="lp-step-num">1</div>
-            <div class="lp-step-body">
-              <div class="lp-step-title">Add your resume</div>
-              <div class="lp-step-sub">Upload a PDF or fill in your details — takes 2 minutes</div>
+        <!-- Social proof -->
+        <div class="lp-proof" id="lpProofCard">
+          <div class="lp-proof-tag">
+            <div class="lp-proof-dot"></div>
+            Award-Winning Research
+          </div>
+          <div class="lp-proof-text">Best Research Paper — Kaveri ThinkFest 2026</div>
+          <div class="lp-proof-sub">15-step framework validated on 20+ student resumes · G.H. Raisoni College of Engineering, Pune</div>
+        </div>
+
+        <!-- CTA -->
+        <div class="lp-cta-section">
+          <div class="lp-cta-title">Ready to get shortlisted?</div>
+          <div class="lp-cta-sub">No account needed. Takes 2 minutes.</div>
+          <div class="lp-options">
+            <div class="lp-option primary" onclick="startUploadFlow()">
+              <span class="lp-option-icon">📄</span>
+              <div class="lp-option-title">Upload Resume</div>
+              <div class="lp-option-sub">We extract your info</div>
+              <input type="file" id="pdfUploadInput" accept=".pdf" style="display:none" onchange="handlePdfUpload(this.files[0])" />
+            </div>
+            <div class="lp-option" onclick="goToStep1()">
+              <span class="lp-option-icon">✏️</span>
+              <div class="lp-option-title">Fill in 2 mins</div>
+              <div class="lp-option-sub">Answer a few questions</div>
             </div>
           </div>
-          <div class="lp-step">
-            <div class="lp-step-num">2</div>
-            <div class="lp-step-body">
-              <div class="lp-step-title">Paste the job description</div>
-              <div class="lp-step-sub">From LinkedIn, Naukri, or any job posting</div>
-            </div>
-          </div>
-          <div class="lp-step">
-            <div class="lp-step-num">3</div>
-            <div class="lp-step-body">
-              <div class="lp-step-title">Download your complete kit</div>
-              <div class="lp-step-sub">4 tailored PDFs ready in 60 seconds — apply with confidence</div>
-            </div>
+          <div class="lp-footer-note">
+            No login required <span>·</span> Free to use <span>·</span> Your data stays in your browser
           </div>
         </div>
       </div>
-
-      <!-- Social proof -->
-      <div class="lp-proof">
-        <div class="lp-proof-tag">🏆 Award-Winning Research</div>
-        <div class="lp-proof-text">Best Research Paper — Kaveri ThinkFest 2026</div>
-        <div class="lp-proof-sub">15-step ATS optimization framework validated on 20+ student resumes at G.H. Raisoni College of Engineering, Pune</div>
-      </div>
-
-      <!-- CTA -->
-      <div class="lp-cta-section">
-        <div class="lp-cta-title">Ready to get shortlisted?</div>
-        <div class="lp-cta-sub">Choose how you want to start</div>
-        <div class="lp-options">
-          <div class="lp-option primary" onclick="startUploadFlow()">
-            <div class="lp-option-icon">📄</div>
-            <div class="lp-option-title">Upload Resume</div>
-            <div class="lp-option-sub">We extract your info</div>
-            <input type="file" id="pdfUploadInput" accept=".pdf" style="display:none" onchange="handlePdfUpload(this.files[0])" />
-          </div>
-          <div class="lp-option" onclick="goToStep1()">
-            <div class="lp-option-icon">✏️</div>
-            <div class="lp-option-title">Fill in 2 mins</div>
-            <div class="lp-option-sub">Answer a few questions</div>
-          </div>
-        </div>
-        <div class="lp-footer-note">
-          No login required <span>·</span> Free to use <span>·</span> Your data stays in your browser
-        </div>
-      </div>
-
     </div>
 
     <!-- ═══════════════════════════════════════════════
@@ -2083,6 +2244,97 @@
     } else {
       init();
     }
+
+    /* ─────────────────────────────────────────────────────────────────────────
+       LANDING PAGE INTERACTIONS
+    ───────────────────────────────────────────────────────────────────────── */
+    function animateCounter(el, target, prefix, suffix, duration) {
+      var start = 0;
+      var step = target / (duration / 16);
+      function tick() {
+        start = Math.min(start + step, target);
+        el.textContent = (prefix || '') + Math.round(start) + (suffix || '');
+        if (start < target) requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+    }
+
+    function initLandingAnimations() {
+      // Stats — staggered reveal + counter
+      var stats = document.querySelectorAll('.lp-stat');
+      stats.forEach(function(el, i) {
+        setTimeout(function() {
+          el.classList.add('revealed');
+          var numEl = el.querySelector('.lp-stat-num');
+          if (numEl) {
+            var target = parseInt(numEl.dataset.target || '0');
+            var prefix = numEl.dataset.prefix || '';
+            var suffix = numEl.dataset.suffix || '';
+            animateCounter(numEl, target, prefix, suffix, 1200);
+          }
+        }, 400 + i * 120);
+      });
+
+      // Scroll-reveal observer
+      var observer = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+          if (!entry.isIntersecting) return;
+          var el = entry.target;
+
+          // ATS bars
+          if (el.id === 'lpAtsDemoCard') {
+            el.classList.add('revealed');
+            setTimeout(function() {
+              var before = document.getElementById('atsBarBefore');
+              var after  = document.getElementById('atsBarAfter');
+              if (before) before.style.width = '38%';
+              setTimeout(function() {
+                if (after) after.style.width = '82%';
+              }, 400);
+            }, 200);
+          }
+
+          // Kit card
+          if (el.id === 'lpWhatCard') {
+            el.classList.add('revealed');
+          }
+
+          // Proof card
+          if (el.id === 'lpProofCard') {
+            el.classList.add('revealed');
+          }
+
+          // How-it-works steps stagger
+          if (el.classList.contains('lp-step')) {
+            var idx = parseInt(el.id.replace('lpStep','')) || 0;
+            setTimeout(function() {
+              el.classList.add('revealed');
+            }, idx * 150);
+          }
+
+          observer.unobserve(el);
+        });
+      }, { threshold: 0.15 });
+
+      var targets = ['lpAtsDemoCard','lpWhatCard','lpProofCard','lpStep0','lpStep1','lpStep2'];
+      targets.forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) observer.observe(el);
+      });
+    }
+
+    // Init landing animations when step 0 is shown
+    var _origGoToStep = goToStep;
+    goToStep = function(n) {
+      _origGoToStep(n);
+      if (n === 0) {
+        setTimeout(initLandingAnimations, 100);
+      }
+    };
+    // Also fire on initial load
+    document.addEventListener('DOMContentLoaded', function() {
+      setTimeout(initLandingAnimations, 200);
+    });
   </script>
   </body>
 </html>
