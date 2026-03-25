@@ -735,6 +735,92 @@
         .feedback-btns { gap: 8px; }
         .ats-bar-label { width: 100px; font-size: 12px; }
       }
+      /* ─── Dark Mode ─────────────────────────────────────────────────── */
+      body.dark-mode {
+        --text: #e2e8f0; --text-muted: #94a3b8; --text-subtle: #64748b;
+        --border: #2d3748; --bg: #0f172a; --bg-card: #1e293b;
+        --bg-subtle: #1a2336; --purple-light: #2d2b5e;
+      }
+      body.dark-mode #step0 { background: #0d1526; }
+      body.dark-mode .card,
+      body.dark-mode .lp-demo-card,
+      body.dark-mode .ats-highlight-card,
+      body.dark-mode .progress-card,
+      body.dark-mode .pdf-card,
+      body.dark-mode .feedback-card,
+      body.dark-mode .t-card,
+      body.dark-mode .share-section,
+      body.dark-mode .lp-kit-card,
+      body.dark-mode .activity-toast,
+      body.dark-mode .start-sheet,
+      body.dark-mode .kit-sheet,
+      body.dark-mode .welcome-back-banner,
+      body.dark-mode .mobile-gen-bar { background: #1e293b; border-color: #2d3748; }
+      body.dark-mode .lp-logo-badge { background: #1e293b; border-color: #2d3748; color: #94a3b8; }
+      body.dark-mode input,
+      body.dark-mode textarea,
+      body.dark-mode select { background: #0f172a; color: var(--text); border-color: #2d3748; }
+      body.dark-mode input::placeholder,
+      body.dark-mode textarea::placeholder { color: #4a5568; }
+      body.dark-mode .btn-outline { border-color: #2d3748; color: var(--text-muted); }
+      body.dark-mode .lp-cta-btn.outline { background: transparent; border-color: #6c63ff; }
+      body.dark-mode .lp-final-cta { background: #1a2336; }
+      body.dark-mode .lp-footer { color: #4a5568; }
+      body.dark-mode .download-btn { background: var(--purple-dark); }
+      body.dark-mode .copy-kit-btn { background: #1e293b; color: var(--text-muted); border-color: #2d3748; }
+      body.dark-mode .wb-btn-no { background: #1e293b; }
+      body.dark-mode .results-header h2 { color: var(--text); }
+
+      /* Dark mode toggle */
+      .dark-toggle {
+        position: fixed; top: 14px; right: 14px; z-index: 5000;
+        width: 38px; height: 38px; border-radius: 50%;
+        background: var(--bg-card); border: 1.5px solid var(--border);
+        cursor: pointer; font-size: 17px;
+        display: flex; align-items: center; justify-content: center;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.12);
+        transition: transform 0.2s, box-shadow 0.2s;
+        user-select: none;
+      }
+      .dark-toggle:hover { transform: scale(1.08); box-shadow: 0 4px 16px rgba(0,0,0,0.18); }
+
+      /* ─── Skeleton Loading ──────────────────────────────────────────── */
+      @keyframes shimmer {
+        0% { background-position: 200% 0; }
+        100% { background-position: -200% 0; }
+      }
+      .skeleton-loader { padding: 8px 0; }
+      .skeleton-line {
+        height: 12px; border-radius: 6px; margin-bottom: 10px;
+        background: linear-gradient(90deg, var(--border) 25%, var(--bg-subtle) 50%, var(--border) 75%);
+        background-size: 200% 100%;
+        animation: shimmer 1.6s infinite;
+      }
+      .skeleton-line.w-80 { width: 80%; }
+      .skeleton-line.w-60 { width: 60%; }
+      .skeleton-line.w-70 { width: 70%; }
+      .skeleton-line.w-45 { width: 45%; }
+      .skeleton-label { font-size: 12px; color: var(--text-muted); margin-top: 10px; text-align: center; }
+
+      /* ─── Company Pass Rate Hint ────────────────────────────────────── */
+      .company-hint {
+        font-size: 11.5px; margin-top: 6px; padding: 7px 10px;
+        border-radius: 8px; display: none; align-items: center; gap: 6px;
+        line-height: 1.4;
+      }
+      .company-hint.show { display: flex; }
+      .company-hint.good { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
+      .company-hint.warn { background: #fffbeb; color: #d97706; border: 1px solid #fde68a; }
+
+      /* ─── Keyboard shortcut hint ────────────────────────────────────── */
+      .kbd-hint {
+        font-size: 11px; color: var(--text-subtle); margin-top: 8px; text-align: center;
+      }
+      .kbd-hint kbd {
+        background: var(--bg-subtle); border: 1px solid var(--border);
+        border-radius: 4px; padding: 2px 5px; font-size: 10px; font-family: monospace;
+      }
+
       /* ─── Activity Toast ───────────────────────────────────────────────── */
       .activity-toast {
         position: fixed; bottom: 24px; left: 16px; z-index: 9000;
@@ -1265,12 +1351,16 @@
         </div>
       </div>
 
-      <!-- Loading state -->
+      <!-- Loading state — skeleton -->
       <div class="card" id="extractLoading" style="display:none;">
-        <div class="loading-row">
-          <div class="spinner"></div>
-          Extracting your resume...
+        <div class="skeleton-loader">
+          <div class="skeleton-line w-60"></div>
+          <div class="skeleton-line w-80"></div>
+          <div class="skeleton-line w-70"></div>
+          <div class="skeleton-line w-45"></div>
+          <div class="skeleton-line w-60"></div>
         </div>
+        <div class="skeleton-label">Reading your resume...</div>
       </div>
 
       <!-- Extracted text review -->
@@ -1352,7 +1442,8 @@
 
         <div class="form-group">
           <label class="form-label">Company Name <span class="opt">(recommended)</span></label>
-          <input type="text" id="companyInput" placeholder="e.g. Google, Infosys, Zomato..." maxlength="100" />
+          <input type="text" id="companyInput" placeholder="e.g. Google, Infosys, Zomato..." maxlength="100" oninput="updateCompanyHint(this.value)" />
+          <div class="company-hint" id="companyHint"></div>
           <p style="font-size:12px; color:var(--text-subtle); margin-top:6px;">We'll research this company for your prep report.</p>
         </div>
 
@@ -1369,6 +1460,7 @@
         <div class="error-box" id="step3Error" style="margin-top:16px;"></div>
 
         <button class="btn-primary" style="margin-top:20px;" onclick="handleGenerate()">Generate My Kit →</button>
+        <div class="kbd-hint">Press <kbd>Ctrl</kbd> + <kbd>Enter</kbd> to generate</div>
       </div>
     </div>
 
@@ -2654,6 +2746,117 @@
     });
 
     /* ─────────────────────────────────────────────────────────────────────────
+       DARK MODE
+    ───────────────────────────────────────────────────────────────────────── */
+    function toggleDarkMode() {
+      const isDark = document.body.classList.toggle('dark-mode');
+      localStorage.setItem('nlDarkMode', isDark ? '1' : '0');
+      document.getElementById('darkToggle').textContent = isDark ? '☀️' : '🌙';
+    }
+    (function initDarkMode() {
+      if (localStorage.getItem('nlDarkMode') === '1') {
+        document.body.classList.add('dark-mode');
+        const btn = document.getElementById('darkToggle');
+        if (btn) btn.textContent = '☀️';
+      }
+    })();
+
+    /* ─────────────────────────────────────────────────────────────────────────
+       KEYBOARD SHORTCUT — Ctrl/Cmd+Enter to generate
+    ───────────────────────────────────────────────────────────────────────── */
+    document.addEventListener('keydown', function(e) {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        const step3 = document.getElementById('step3');
+        if (step3 && step3.style.display !== 'none' && getComputedStyle(step3).display !== 'none') {
+          e.preventDefault();
+          handleGenerate();
+        }
+      }
+    });
+
+    /* ─────────────────────────────────────────────────────────────────────────
+       SOUND ON KIT READY (Web Audio API)
+    ───────────────────────────────────────────────────────────────────────── */
+    function playSuccessSound() {
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const notes = [523, 659, 784, 1047]; // C E G C — major chord arpeggio
+        notes.forEach((freq, i) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.connect(gain); gain.connect(ctx.destination);
+          osc.type = 'sine';
+          osc.frequency.value = freq;
+          const t = ctx.currentTime + i * 0.12;
+          gain.gain.setValueAtTime(0, t);
+          gain.gain.linearRampToValueAtTime(0.18, t + 0.04);
+          gain.gain.exponentialRampToValueAtTime(0.001, t + 0.4);
+          osc.start(t); osc.stop(t + 0.45);
+        });
+      } catch(e) { /* Audio not available */ }
+    }
+
+    /* ─────────────────────────────────────────────────────────────────────────
+       COMPANY PASS RATE HINTS
+    ───────────────────────────────────────────────────────────────────────── */
+    const COMPANY_THRESHOLDS = {
+      tcs: { min: 60, label: 'TCS shortlists above 60% ATS — you\'re on track ✓' },
+      infosys: { min: 62, label: 'Infosys typically needs 62%+ ATS match' },
+      wipro: { min: 58, label: 'Wipro shortlists above 58% ATS' },
+      accenture: { min: 65, label: 'Accenture needs 65%+ ATS — aim high' },
+      cognizant: { min: 60, label: 'Cognizant looks for 60%+ ATS match' },
+      google: { min: 80, label: 'Google is highly competitive — 80%+ ATS recommended' },
+      amazon: { min: 78, label: 'Amazon needs keyword-heavy resumes — 78%+ ATS' },
+      microsoft: { min: 75, label: 'Microsoft needs 75%+ ATS match' },
+      flipkart: { min: 70, label: 'Flipkart shortlists above 70% ATS' },
+      zomato: { min: 68, label: 'Zomato needs 68%+ ATS match' },
+      swiggy: { min: 67, label: 'Swiggy looks for 67%+ ATS match' },
+      capgemini: { min: 58, label: 'Capgemini shortlists above 58% ATS ✓' },
+      hcl: { min: 57, label: 'HCL shortlists above 57% ATS ✓' },
+      tech: { min: 62, label: 'Tech Mahindra needs 62%+ ATS match' },
+    };
+    function updateCompanyHint(val) {
+      const hint = document.getElementById('companyHint');
+      if (!hint) return;
+      const lower = val.toLowerCase().trim();
+      const match = Object.keys(COMPANY_THRESHOLDS).find(k => lower.includes(k));
+      if (match) {
+        const data = COMPANY_THRESHOLDS[match];
+        const isHard = data.min >= 70;
+        hint.className = 'company-hint show ' + (isHard ? 'warn' : 'good');
+        hint.innerHTML = (isHard ? '⚠️ ' : '✅ ') + data.label;
+      } else {
+        hint.className = 'company-hint';
+      }
+    }
+
+    /* ─────────────────────────────────────────────────────────────────────────
+       SCORE VS AVERAGE — shown below ATS result in step 5
+    ───────────────────────────────────────────────────────────────────────── */
+    const NL_AVG_SCORE = 63;
+    function showScoreVsAverage(score) {
+      const sub = document.querySelector('.ats-highlight-sub');
+      if (!sub || !score) return;
+      const diff = score - NL_AVG_SCORE;
+      if (diff > 0) {
+        sub.innerHTML = `Your resume has been optimized for this role &nbsp;·&nbsp; <span style="color:#16a34a;font-weight:700;">+${diff} above Nine Lab average</span>`;
+      } else if (diff === 0) {
+        sub.textContent = 'Your resume has been optimized — you matched the Nine Lab average';
+      } else {
+        sub.innerHTML = `Your resume has been optimized &nbsp;·&nbsp; <span style="color:#f59e0b;font-weight:600;">room to grow (avg: ${NL_AVG_SCORE}%)</span>`;
+      }
+    }
+
+    // Hook sound + score-vs-avg into showResults
+    var _origShowResults2 = showResults;
+    showResults = async function(files, jd, company, atsBefore, atsAfter) {
+      const result = await _origShowResults2.apply(this, arguments);
+      playSuccessSound();
+      if (atsAfter) showScoreVsAverage(atsAfter);
+      return result;
+    };
+
+    /* ─────────────────────────────────────────────────────────────────────────
        LIVE ACTIVITY FEED
     ───────────────────────────────────────────────────────────────────────── */
     const ACTIVITY_DATA = [
@@ -2811,6 +3014,9 @@
     document.addEventListener('DOMContentLoaded', initKitsCounter);
     initKitsCounter();
   </script>
+  <!-- Dark Mode Toggle -->
+  <div class="dark-toggle" id="darkToggle" onclick="toggleDarkMode()" title="Toggle dark mode">🌙</div>
+
   <!-- Activity Feed Toast -->
   <div class="activity-toast" id="activityToast">
     <div class="activity-toast-avatar" id="activityAvatar">PR</div>
