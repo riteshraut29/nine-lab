@@ -1417,112 +1417,141 @@
     /* ─────────────────────────────────────────────────────────────────────────
        STEP 1 — Manual form
     ───────────────────────────────────────────────────────────────────────── */
-    const KIT_PREVIEWS = {
+    const KIT_HTML = {
       resume: {
         title: '📄 Job-Ready Resume',
-        sections: [
-          { label: 'What it looks like', style: '', content:
-`RAHUL SHARMA
-Pune, MH | rahul@email.com | +91 98765 43210 | github.com/rahul
-
-SUMMARY
-Python Developer with 1 year of experience in Django and REST APIs,
-seeking Software Engineer role at TCS. Built 3 production-ready
-applications serving 10,000+ users.
-
-TECHNICAL SKILLS
-Languages:   Python, Java, SQL, JavaScript
-Frameworks:  Django, FastAPI, React
-Databases:   PostgreSQL, MongoDB, Redis
-Tools:       Git, Docker, Linux, AWS EC2` },
-          { label: 'What Nine Lab fixes', style: 'green', content:
-`✅ Keywords from JD injected exactly as written
-✅ Single-column layout (ATS-safe)
-✅ Section headers standardized (CAPS)
-✅ Every bullet: Action verb + Task + Number
-✅ Tech stack listed under each project
-✅ Education with CGPA properly labeled` }
-        ]
+        html: `
+          <div style="background:#f7f8fc;border-radius:12px;padding:16px;margin-bottom:14px;border:1px solid #e5e7eb;">
+            <div style="font-size:15px;font-weight:800;color:#1a1a2e;margin-bottom:2px;">Rahul Sharma</div>
+            <div style="font-size:10px;color:#64748b;margin-bottom:12px;">Pune, MH · rahul@email.com · +91 98765 43210 · github.com/rahul</div>
+            <div style="border-top:1.5px solid #6c63ff;margin-bottom:10px;"></div>
+            <div style="font-size:9px;font-weight:700;color:#6c63ff;letter-spacing:0.8px;margin-bottom:4px;">SUMMARY</div>
+            <div style="font-size:11px;color:#374151;line-height:1.5;margin-bottom:10px;">Python Developer with experience in Django and REST APIs, seeking Software Engineer role at TCS. Built 3 production apps serving 10,000+ users.</div>
+            <div style="font-size:9px;font-weight:700;color:#6c63ff;letter-spacing:0.8px;margin-bottom:6px;">TECHNICAL SKILLS</div>
+            <div style="font-size:11px;color:#374151;line-height:1.7;">
+              <span style="font-weight:600;">Languages:</span> Python, Java, SQL, JavaScript<br>
+              <span style="font-weight:600;">Frameworks:</span> Django, FastAPI, React<br>
+              <span style="font-weight:600;">Databases:</span> PostgreSQL, MongoDB, Redis<br>
+              <span style="font-weight:600;">Tools:</span> Git, Docker, Linux, AWS EC2
+            </div>
+          </div>
+          <div style="font-size:11px;font-weight:600;color:#374151;margin-bottom:8px;">What Nine Lab fixes automatically:</div>
+          <div style="display:flex;flex-direction:column;gap:6px;">
+            ${['Keywords from JD injected exactly','Single-column ATS-safe layout','Section headers standardized','Every bullet: Action + Task + Number','Tech stack under each project','Education with CGPA labeled'].map(t =>
+              `<div style="display:flex;align-items:center;gap:8px;background:#f0fdf4;border-radius:8px;padding:8px 10px;">
+                <span style="color:#22c55e;font-size:13px;">✓</span>
+                <span style="font-size:11px;color:#374151;">${t}</span>
+              </div>`).join('')}
+          </div>`
       },
       scorecard: {
         title: '📊 Resume Scorecard',
-        sections: [
-          { label: 'Sample scorecard output', style: '', content:
-`MATCH SCORE vs TCS SDE Role
-━━━━━━━━━━━━━━━━━━━━━━━━━━
-Overall Match:     82%  ████████░░
-Keyword Match:     91%  █████████░
-Tech Skills:       85%  ████████░░
-Format Score:     100%  ██████████
-
-MATCHED KEYWORDS
-✅ Python  ✅ REST API  ✅ Django
-✅ PostgreSQL  ✅ Git  ✅ Docker` },
-          { label: 'Gaps identified', style: 'green', content:
-`❌ Missing: "Agile methodology" — add to skills
-❌ Missing: "CI/CD" — mention in projects
-⚠️  Weak: Internship under wrong section
-⚠️  Weak: No quantified result in Project 2` }
-        ]
+        html: `
+          <div style="display:flex;align-items:center;gap:16px;background:#f7f8fc;border-radius:12px;padding:16px;margin-bottom:14px;">
+            <div style="text-align:center;flex-shrink:0;">
+              <svg width="72" height="72" viewBox="0 0 72 72">
+                <circle cx="36" cy="36" r="30" fill="none" stroke="#e5e7eb" stroke-width="7"/>
+                <circle cx="36" cy="36" r="30" fill="none" stroke="#6c63ff" stroke-width="7"
+                  stroke-dasharray="${2*Math.PI*30*0.82} ${2*Math.PI*30*(1-0.82)}"
+                  stroke-dashoffset="${2*Math.PI*30*0.25}" stroke-linecap="round"/>
+                <text x="36" y="40" text-anchor="middle" font-size="16" font-weight="800" fill="#1a1a2e">82%</text>
+              </svg>
+              <div style="font-size:10px;color:#64748b;margin-top:2px;">Overall Match</div>
+            </div>
+            <div style="flex:1;">
+              ${[['JD Keywords','91%',0.91,'#6c63ff'],['Tech Skills','85%',0.85,'#3b82f6'],['Content Quality','78%',0.78,'#22c55e'],['Format Score','100%',1.0,'#f59e0b']].map(([l,v,p,c]) =>
+                `<div style="margin-bottom:8px;">
+                  <div style="display:flex;justify-content:space-between;font-size:10px;font-weight:600;color:#374151;margin-bottom:3px;"><span>${l}</span><span>${v}</span></div>
+                  <div style="height:5px;background:#e5e7eb;border-radius:99px;overflow:hidden;">
+                    <div style="height:100%;width:${p*100}%;background:${c};border-radius:99px;"></div>
+                  </div>
+                </div>`).join('')}
+            </div>
+          </div>
+          <div style="margin-bottom:10px;">
+            <div style="font-size:11px;font-weight:700;color:#374151;margin-bottom:6px;">✅ Matched Keywords</div>
+            <div style="display:flex;flex-wrap:wrap;gap:5px;">
+              ${['Python','Django','REST API','PostgreSQL','Git','Docker','Linux'].map(k =>
+                `<span style="background:#f0fdf4;color:#16a34a;font-size:10px;font-weight:600;padding:3px 8px;border-radius:20px;border:1px solid #bbf7d0;">${k}</span>`).join('')}
+            </div>
+          </div>
+          <div>
+            <div style="font-size:11px;font-weight:700;color:#374151;margin-bottom:6px;">❌ Missing Keywords</div>
+            <div style="display:flex;flex-wrap:wrap;gap:5px;">
+              ${['Agile','CI/CD','Kubernetes'].map(k =>
+                `<span style="background:#fef2f2;color:#dc2626;font-size:10px;font-weight:600;padding:3px 8px;border-radius:20px;border:1px solid #fecaca;">${k}</span>`).join('')}
+            </div>
+          </div>`
       },
       prep: {
         title: '🗺️ Interview Prep Guide',
-        sections: [
-          { label: 'Sample study plan', style: 'blue', content:
-`WEEK 1 — Technical Foundation
-Day 1-2: DSA (Arrays, Strings) — LeetCode Easy
-Day 3-4: OOP Concepts + Java/Python revision
-Day 5-6: DBMS — SQL queries, normalization
-Day 7:   Mock test + review weak areas
-
-WEEK 2 — Role-Specific Prep
-Day 1-2: Django REST API deep dive
-Day 3-4: System Design basics
-Day 5:   TCS-specific past questions` },
-          { label: 'Likely interview questions', style: '', content:
-`1. Explain REST vs SOAP with example
-2. How does Django ORM work?
-3. Difference: SQL vs NoSQL — when to use?
-4. Write: Reverse a linked list
-5. What is Docker? Why use containers?
-6. Describe a project you built end-to-end` }
-        ]
+        html: `
+          <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px;">
+            ${[
+              {week:'Week 1',color:'#6c63ff',bg:'#f0efff',days:[['Day 1–2','DSA — Arrays, Strings (LeetCode Easy)'],['Day 3–4','OOP Concepts + Python revision'],['Day 5–6','DBMS — SQL queries, normalization'],['Day 7','Mock test + weak area review']]},
+              {week:'Week 2',color:'#3b82f6',bg:'#eff6ff',days:[['Day 1–2','Django REST API deep dive'],['Day 3–4','System Design basics'],['Day 5','TCS-specific past questions']]}
+            ].map(w => `
+              <div style="border-radius:12px;overflow:hidden;border:1px solid #e5e7eb;">
+                <div style="background:${w.color};padding:8px 12px;font-size:11px;font-weight:700;color:white;">${w.week}</div>
+                <div style="background:${w.bg};padding:10px 12px;">
+                  ${w.days.map(([d,t]) => `
+                    <div style="display:flex;gap:10px;margin-bottom:6px;align-items:flex-start;">
+                      <span style="font-size:9px;font-weight:700;color:${w.color};white-space:nowrap;margin-top:1px;min-width:44px;">${d}</span>
+                      <span style="font-size:11px;color:#374151;line-height:1.4;">${t}</span>
+                    </div>`).join('')}
+                </div>
+              </div>`).join('')}
+          </div>
+          <div style="font-size:11px;font-weight:700;color:#374151;margin-bottom:8px;">Likely interview questions</div>
+          <div style="display:flex;flex-direction:column;gap:6px;">
+            ${['Explain REST vs SOAP with an example','How does Django ORM work internally?','SQL vs NoSQL — when would you use each?','Write code: Reverse a linked list','What is Docker? Why use containers?','Describe a project you built end-to-end'].map((q,i) =>
+              `<div style="display:flex;gap:10px;align-items:flex-start;padding:8px 10px;background:#f7f8fc;border-radius:8px;">
+                <span style="background:#6c63ff;color:white;font-size:9px;font-weight:700;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${i+1}</span>
+                <span style="font-size:11px;color:#374151;line-height:1.4;">${q}</span>
+              </div>`).join('')}
+          </div>`
       },
       company: {
         title: '🏢 Company Cheat Sheet',
-        sections: [
-          { label: 'Sample — TCS Intelligence', style: 'amber', content:
-`COMPANY OVERVIEW
-TCS is India's largest IT company with 600,000+
-employees. Focus: consulting, outsourcing, digital.
-
-INTERVIEW PROCESS
-Round 1: TCS NQT (online aptitude + coding)
-Round 2: Technical Interview (DSA + projects)
-Round 3: Managerial (communication + fit)
-Round 4: HR (salary, joining, background)
-
-SALARY RANGE
-Fresher: ₹3.36 LPA (NQT) – ₹7 LPA (Ninja/Digital)` },
-          { label: 'What TCS looks for', style: '', content:
-`✅ Strong aptitude score (NQT cutoff: 65%+)
-✅ Clean communication — no jargon
-✅ 1 well-explained end-to-end project
-✅ Basics of DBMS, OS, CN
-✅ Consistent academic record (60%+ throughout)` }
-        ]
+        html: `
+          <div style="background:#1E2761;border-radius:12px;padding:14px;margin-bottom:12px;">
+            <div style="font-size:10px;font-weight:700;color:#fbbf24;letter-spacing:0.8px;margin-bottom:4px;">SAMPLE — TCS INTELLIGENCE</div>
+            <div style="font-size:12px;color:rgba(255,255,255,0.9);line-height:1.5;">India's largest IT company · 600,000+ employees · Focus: consulting, outsourcing, digital transformation</div>
+          </div>
+          <div style="font-size:11px;font-weight:700;color:#374151;margin-bottom:8px;">Interview Process</div>
+          <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px;">
+            ${[['1','TCS NQT','Online aptitude + coding test','#6c63ff'],['2','Technical','DSA + projects deep dive','#3b82f6'],['3','Managerial','Communication + culture fit','#22c55e'],['4','HR Round','Salary, joining, background','#f59e0b']].map(([n,t,d,c]) =>
+              `<div style="display:flex;gap:10px;align-items:center;padding:8px 10px;background:#f7f8fc;border-radius:8px;">
+                <div style="background:${c};color:white;font-size:10px;font-weight:700;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${n}</div>
+                <div><div style="font-size:11px;font-weight:700;color:#1a1a2e;">${t}</div><div style="font-size:10px;color:#64748b;">${d}</div></div>
+              </div>`).join('')}
+          </div>
+          <div style="display:flex;gap:8px;margin-bottom:12px;">
+            <div style="flex:1;background:#f0fdf4;border-radius:10px;padding:12px;text-align:center;">
+              <div style="font-size:10px;color:#16a34a;font-weight:700;margin-bottom:4px;">SALARY RANGE</div>
+              <div style="font-size:13px;font-weight:800;color:#1a1a2e;">₹3.36–7 LPA</div>
+              <div style="font-size:10px;color:#64748b;">NQT to Ninja/Digital</div>
+            </div>
+            <div style="flex:1;background:#fffbeb;border-radius:10px;padding:12px;text-align:center;">
+              <div style="font-size:10px;color:#d97706;font-weight:700;margin-bottom:4px;">NQT CUTOFF</div>
+              <div style="font-size:13px;font-weight:800;color:#1a1a2e;">65%+</div>
+              <div style="font-size:10px;color:#64748b;">Aptitude score needed</div>
+            </div>
+          </div>
+          <div style="font-size:11px;font-weight:700;color:#374151;margin-bottom:8px;">What TCS looks for</div>
+          ${['Strong aptitude score (NQT cutoff: 65%+)','Clean communication — no jargon','1 well-explained end-to-end project','Basics of DBMS, OS, Computer Networks','Consistent academic record (60%+ throughout)'].map(t =>
+            `<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;margin-bottom:5px;background:#f7f8fc;border-radius:8px;">
+              <span style="color:#22c55e;font-size:13px;">✓</span>
+              <span style="font-size:11px;color:#374151;">${t}</span>
+            </div>`).join('')}`
       }
     };
 
     function showKitPreview(type) {
-      const data = KIT_PREVIEWS[type];
+      const data = KIT_HTML[type];
       if (!data) return;
       document.getElementById('kitSheetTitle').textContent = data.title;
-      document.getElementById('kitSheetBody').innerHTML = data.sections.map(s => `
-        <div class="kit-preview-section">
-          <div class="kit-preview-label">${s.label}</div>
-          <div class="kit-preview-box ${s.style}">${s.content}</div>
-        </div>`).join('');
+      document.getElementById('kitSheetBody').innerHTML = data.html;
       document.getElementById('kitOverlay').classList.add('open');
     }
     function closeKitPreview(e) {
