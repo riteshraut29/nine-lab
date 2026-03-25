@@ -1408,12 +1408,28 @@ def run_pipeline(job_id: str, resume: str, jd: str, company: str):
         update("pdf", 92, "Generating Optimized Resume PDF...")
         resume_file = make_pdf_resume(job_id, company, resume_result)
 
+        # ── Extract Flashcards ────────────────────────────────────────────────
+        plan_text = plan_result.get("data", "")
+        tech_q = extract_section(plan_text, "TOP 10 TECHNICAL INTERVIEW QUESTIONS WITH ANSWERS") or \
+                 extract_section(plan_text, "TOP 10 TECHNICAL INTERVIEW QUESTIONS") or \
+                 extract_section(plan_text, "TECHNICAL QUESTIONS")
+        
+        flashcards = []
+        if tech_q:
+            for b in section_bullets(tech_q)[:5]:
+                parts = re.split(r'\?|\n|- |—|:|Answer:', b, maxsplit=1)
+                if len(parts) > 1:
+                    flashcards.append({"q": parts[0].strip() + "?", "a": parts[1].strip()})
+                else:
+                    flashcards.append({"q": "Interview Question", "a": b.strip()})
+
         jobs[job_id].update({
             "stage": "done",
             "progress": 100,
             "message": "Your placement kit is ready! Download your 4 PDFs below.",
             "ats_before": before_score,
             "ats_after": after_score,
+            "flashcards": flashcards,
             "files": {
                 "company": company_file,
                 "reality": reality_file,
