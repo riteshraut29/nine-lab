@@ -1509,6 +1509,12 @@ def run_pipeline(job_id: str, resume: str, jd: str, company: str):
                 "resume": resume_file,
             }
         })
+        # Update pitch_leads with ATS scores
+        for lead in pitch_leads:
+            if lead.get("job_id") == job_id:
+                lead["ats_before"] = before_score
+                lead["ats_after"] = after_score
+                break
 
     except Exception as e:
         jobs[job_id].update({
@@ -1907,6 +1913,95 @@ async def admin_dashboard(pwd: str = ""):
     <tr><th>#</th><th>Name</th><th>Email</th><th>Target Company</th><th>Time</th></tr>
     {rows if rows else '<tr><td colspan="5" style="padding:20px;text-align:center;color:#94A3B8;">No users yet — share ninelab.in!</td></tr>'}
   </table>
+</body></html>""")
+
+
+@app.get("/ninelab/live", response_class=HTMLResponse)
+async def live_dashboard():
+    """Live projector dashboard — shows real-time pitch day stats."""
+    total = len(pitch_leads)
+    # Company counts
+    company_counts: dict[str, int] = {}
+    scores = []
+    for lead in pitch_leads:
+        c = (lead.get("company") or "Unknown").strip()
+        if c:
+            company_counts[c] = company_counts.get(c, 0) + 1
+        if lead.get("ats_after"):
+            scores.append(lead["ats_after"])
+    top_companies = sorted(company_counts.items(), key=lambda x: x[1], reverse=True)[:6]
+    avg_score = round(sum(scores) / len(scores)) if scores else 0
+    max_score = max(scores) if scores else 0
+    company_bars = ""
+    max_count = top_companies[0][1] if top_companies else 1
+    colors = ["6C63FF","22C55E","F59E0B","EF4444","0EA5E9","A78BFA"]
+    for i, (name, count) in enumerate(top_companies):
+        pct = int(count / max_count * 100)
+        color = colors[i % len(colors)]
+        company_bars += f"""
+        <div style="margin-bottom:18px;">
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+            <span style="color:#fff;font-size:18px;font-weight:700;">{name}</span>
+            <span style="color:#{color};font-size:18px;font-weight:700;">{count} kit{'s' if count>1 else ''}</span>
+          </div>
+          <div style="background:#1A2035;border-radius:8px;height:12px;">
+            <div style="background:#{color};width:{pct}%;height:12px;border-radius:8px;transition:width 1s;"></div>
+          </div>
+        </div>"""
+    return HTMLResponse(f"""<!DOCTYPE html><html><head>
+<title>Nine Lab — Live</title>
+<meta charset="utf-8">
+<meta http-equiv="refresh" content="5">
+<style>
+  * {{ margin:0;padding:0;box-sizing:border-box; }}
+  body {{ background:#0A0E1A;font-family:'Segoe UI',sans-serif;min-height:100vh;padding:40px; }}
+  .header {{ text-align:center;margin-bottom:48px; }}
+  .logo {{ font-size:36px;font-weight:900;color:#6C63FF;letter-spacing:-1px; }}
+  .live-badge {{ display:inline-block;background:#EF4444;color:#fff;font-size:13px;font-weight:700;
+    padding:4px 12px;border-radius:20px;margin-left:12px;animation:pulse 1.5s infinite; }}
+  @keyframes pulse {{ 0%,100%{{opacity:1}}50%{{opacity:0.5}} }}
+  .tagline {{ color:#94A3B8;font-size:18px;margin-top:8px; }}
+  .stats {{ display:grid;grid-template-columns:repeat(4,1fr);gap:20px;margin-bottom:48px; }}
+  .stat-card {{ background:#1A2035;border-radius:16px;padding:28px;text-align:center;
+    border:1px solid #2A3050; }}
+  .stat-num {{ font-size:56px;font-weight:900;color:#6C63FF;line-height:1; }}
+  .stat-label {{ color:#94A3B8;font-size:14px;margin-top:8px;font-weight:500; }}
+  .section-title {{ color:#fff;font-size:22px;font-weight:700;margin-bottom:20px; }}
+  .companies {{ background:#1A2035;border-radius:16px;padding:32px;border:1px solid #2A3050; }}
+  .empty {{ color:#94A3B8;font-size:20px;text-align:center;padding:40px; }}
+  .footer {{ text-align:center;color:#94A3B8;font-size:14px;margin-top:40px; }}
+  .award {{ background:linear-gradient(135deg,#92400e,#b45309);border-radius:12px;
+    padding:12px 24px;display:inline-block;color:#FCD34D;font-weight:700;font-size:14px;margin-bottom:16px; }}
+</style></head><body>
+<div class="header">
+  <div class="award">🏆 Best Research Paper 2026 — Kaveri ThinkFest</div><br>
+  <span class="logo">Nine Lab</span>
+  <span class="live-badge">● LIVE</span>
+  <div class="tagline">India's AI Placement Platform — Pitch Day Session</div>
+</div>
+<div class="stats">
+  <div class="stat-card">
+    <div class="stat-num">{total}</div>
+    <div class="stat-label">Kits Generated</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-num" style="color:#22C55E;">{len(company_counts)}</div>
+    <div class="stat-label">Companies Targeted</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-num" style="color:#F59E0B;">{avg_score}%</div>
+    <div class="stat-label">Avg ATS Score</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-num" style="color:#A78BFA;">{max_score}%</div>
+    <div class="stat-label">Highest Score</div>
+  </div>
+</div>
+<div class="companies">
+  <div class="section-title">🎯 Companies Being Targeted Right Now</div>
+  {company_bars if company_bars else '<div class="empty">Waiting for first kit generation...<br><br>📱 Scan the QR code at ninelab.in</div>'}
+</div>
+<div class="footer">Auto-refreshes every 5 seconds · ninelab.in · Pitch Day 2026</div>
 </body></html>""")
 
 
