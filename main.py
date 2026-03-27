@@ -30,7 +30,24 @@ SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SERVICE_KEY", "")
 jobs: dict[str, dict] = {}
 executor = ThreadPoolExecutor(max_workers=8)
 user_daily_usage: dict[str, dict] = {}  # {user_id: {"date": "YYYY-MM-DD", "count": N}}
-pitch_leads: list[dict] = []  # tracks all pitch day users
+# ── Persistent leads storage ─────────────────────────────────────────────────
+LEADS_FILE = BASE_DIR / "pitch_leads.json"
+
+def _load_leads() -> list:
+    try:
+        if LEADS_FILE.exists():
+            return json.loads(LEADS_FILE.read_text())
+    except Exception:
+        pass
+    return []
+
+def _save_leads(leads: list):
+    try:
+        LEADS_FILE.write_text(json.dumps(leads, indent=2))
+    except Exception:
+        pass
+
+pitch_leads: list[dict] = _load_leads()  # persists across restarts
 
 # ── Supabase Auth helpers ─────────────────────────────────────────────────────
 
@@ -1509,12 +1526,13 @@ def run_pipeline(job_id: str, resume: str, jd: str, company: str):
                 "resume": resume_file,
             }
         })
-        # Update pitch_leads with ATS scores
+        # Update pitch_leads with ATS scores and persist
         for lead in pitch_leads:
             if lead.get("job_id") == job_id:
                 lead["ats_before"] = before_score
                 lead["ats_after"] = after_score
                 break
+        _save_leads(pitch_leads)
 
     except Exception as e:
         jobs[job_id].update({
@@ -1840,8 +1858,10 @@ async def generate(req: GenerateRequest, request: Request,
         "email": req.email or "",
         "company": req.company,
         "time": time.strftime("%H:%M:%S"),
+        "date": time.strftime("%d %b %Y"),
         "job_id": job_id,
     })
+    _save_leads(pitch_leads)
 
     if is_authenticated:
         today = date.today().isoformat()
@@ -1919,8 +1939,12 @@ async def admin_dashboard(pwd: str = ""):
 @app.get("/ninelab/live", response_class=HTMLResponse)
 async def live_dashboard():
     """Live projector dashboard — shows real-time pitch day stats."""
-    total = len(pitch_leads)
-    # Company counts
+    today = time.strftime("%d %b %Y")
+    total_all = len(pitch_leads)
+    today_leads = [l for l in pitch_leads if l.get("date") == today]
+    total_today = len(today_leads)
+
+    # Company counts (all time)
     company_counts: dict[str, int] = {}
     scores = []
     for lead in pitch_leads:
@@ -1961,7 +1985,10 @@ async def live_dashboard():
     padding:4px 12px;border-radius:20px;margin-left:12px;animation:pulse 1.5s infinite; }}
   @keyframes pulse {{ 0%,100%{{opacity:1}}50%{{opacity:0.5}} }}
   .tagline {{ color:#94A3B8;font-size:18px;margin-top:8px; }}
-  .stats {{ display:grid;grid-template-columns:repeat(4,1fr);gap:20px;margin-bottom:48px; }}
+  .stats {{ display:grid;grid-template-columns:repeat(4,1fr);gap:20px;margin-bottom:32px; }}
+  .today-strip {{ background:linear-gradient(135deg,#6C63FF22,#6C63FF11);border:1px solid #6C63FF44;
+    border-radius:12px;padding:16px 24px;text-align:center;margin-bottom:32px;color:#94A3B8;font-size:15px; }}
+  .today-strip span {{ color:#6C63FF;font-weight:700;font-size:20px; }}
   .stat-card {{ background:#1A2035;border-radius:16px;padding:28px;text-align:center;
     border:1px solid #2A3050; }}
   .stat-num {{ font-size:56px;font-weight:900;color:#6C63FF;line-height:1; }}
@@ -1981,12 +2008,12 @@ async def live_dashboard():
 </div>
 <div class="stats">
   <div class="stat-card">
-    <div class="stat-num">{total}</div>
-    <div class="stat-label">Kits Generated</div>
+    <div class="stat-num">{total_all}</div>
+    <div class="stat-label">Total Kits Ever</div>
   </div>
   <div class="stat-card">
-    <div class="stat-num" style="color:#22C55E;">{len(company_counts)}</div>
-    <div class="stat-label">Companies Targeted</div>
+    <div class="stat-num" style="color:#22C55E;">{total_today}</div>
+    <div class="stat-label">Kits Today</div>
   </div>
   <div class="stat-card">
     <div class="stat-num" style="color:#F59E0B;">{avg_score}%</div>
@@ -1996,6 +2023,10 @@ async def live_dashboard():
     <div class="stat-num" style="color:#A78BFA;">{max_score}%</div>
     <div class="stat-label">Highest Score</div>
   </div>
+</div>
+<div class="today-strip">
+  <span>{total_today}</span> kits generated today · <span>{len(company_counts)}</span> unique companies targeted · <span>{total_all}</span> total since launch
+</div>
 </div>
 <div class="companies">
   <div class="section-title">🎯 Companies Being Targeted Right Now</div>
