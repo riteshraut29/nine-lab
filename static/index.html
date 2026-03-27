@@ -2606,7 +2606,7 @@
         const resp = await fetch(`${BASE}/generate`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ resume: assembledResume, jd, company })
+          body: JSON.stringify({ resume: assembledResume, jd, company, name: profileData?.name || '', email: profileData?.email || '' })
         });
         const data = await resp.json();
 
@@ -3320,7 +3320,8 @@
     function startActivityFeed() {
       setTimeout(() => { showActivityToast(); setInterval(showActivityToast, 10000); }, 4000);
     }
-    document.addEventListener('DOMContentLoaded', startActivityFeed);
+    // Activity feed disabled — removed fake notifications
+    // document.addEventListener('DOMContentLoaded', startActivityFeed);
 
     /* ─────────────────────────────────────────────────────────────────────────
        CONFETTI

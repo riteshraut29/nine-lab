@@ -30,6 +30,7 @@ SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SERVICE_KEY", "")
 jobs: dict[str, dict] = {}
 executor = ThreadPoolExecutor(max_workers=8)
 user_daily_usage: dict[str, dict] = {}  # {user_id: {"date": "YYYY-MM-DD", "count": N}}
+pitch_leads: list[dict] = []  # tracks all pitch day users
 
 # ── Supabase Auth helpers ─────────────────────────────────────────────────────
 
@@ -1522,6 +1523,8 @@ class GenerateRequest(BaseModel):
     resume: str
     jd: str
     company: str
+    name: Optional[str] = None
+    email: Optional[str] = None
 
 class ATSScoreRequest(BaseModel):
     resume: str
@@ -1821,7 +1824,18 @@ async def generate(req: GenerateRequest, request: Request,
         "message": "⏳ Starting your placement pipeline...",
         "files": None,
         "created_at": time.time(),
+        "user_name": req.name or "Anonymous",
+        "user_email": req.email or "",
+        "company": req.company,
     }
+    # Track for admin dashboard
+    pitch_leads.append({
+        "name": req.name or "Anonymous",
+        "email": req.email or "",
+        "company": req.company,
+        "time": time.strftime("%H:%M:%S"),
+        "job_id": job_id,
+    })
 
     if is_authenticated:
         today = date.today().isoformat()
@@ -1843,6 +1857,57 @@ async def status(job_id: str):
     if job_id not in jobs:
         raise HTTPException(404, detail="Job not found. Shayad expire ho gaya.")
     return JSONResponse(jobs[job_id])
+
+
+@app.get("/ninelab/admin", response_class=HTMLResponse)
+async def admin_dashboard(pwd: str = ""):
+    if pwd != "ninelab2026":
+        return HTMLResponse("""
+        <html><body style="background:#0A0E1A;color:white;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;">
+        <div style="text-align:center;">
+          <h2 style="color:#6C63FF;">Nine Lab Admin</h2>
+          <form method="get">
+            <input name="pwd" type="password" placeholder="Password" style="padding:12px;border-radius:8px;border:1px solid #6C63FF;background:#1A2035;color:white;font-size:16px;margin-right:8px;" autofocus/>
+            <button type="submit" style="padding:12px 24px;background:#6C63FF;color:white;border:none;border-radius:8px;font-size:16px;cursor:pointer;">Enter</button>
+          </form>
+        </div></body></html>""")
+
+    total = len(pitch_leads)
+    rows = ""
+    for i, lead in enumerate(reversed(pitch_leads), 1):
+        rows += f"""<tr style="border-bottom:1px solid #1A2035;">
+          <td style="padding:12px;color:#94A3B8;">{i}</td>
+          <td style="padding:12px;font-weight:700;">{lead['name']}</td>
+          <td style="padding:12px;color:#6C63FF;">{lead['email']}</td>
+          <td style="padding:12px;color:#22c55e;">{lead['company']}</td>
+          <td style="padding:12px;color:#94A3B8;">{lead['time']}</td>
+        </tr>"""
+
+    return HTMLResponse(f"""<!DOCTYPE html>
+<html><head><title>Nine Lab Admin</title>
+<meta http-equiv="refresh" content="30">
+<style>
+  body{{background:#0A0E1A;color:white;font-family:sans-serif;margin:0;padding:24px;}}
+  h1{{color:#6C63FF;margin-bottom:4px;}}
+  .stat{{display:inline-block;background:#1A2035;border-radius:12px;padding:20px 32px;margin:8px;text-align:center;}}
+  .stat-num{{font-size:48px;font-weight:900;color:#6C63FF;}}
+  .stat-label{{color:#94A3B8;font-size:14px;margin-top:4px;}}
+  table{{width:100%;border-collapse:collapse;margin-top:24px;background:#1A2035;border-radius:12px;overflow:hidden;}}
+  th{{background:#6C63FF;padding:14px;text-align:left;font-size:14px;}}
+</style></head>
+<body>
+  <h1>Nine Lab — Pitch Day Dashboard</h1>
+  <p style="color:#94A3B8;margin-bottom:16px;">Auto-refreshes every 30 seconds · Password protected</p>
+  <div>
+    <div class="stat"><div class="stat-num">{total}</div><div class="stat-label">Total Users Today</div></div>
+    <div class="stat"><div class="stat-num">{len([l for l in pitch_leads if l['email']])}</div><div class="stat-label">Emails Captured</div></div>
+    <div class="stat"><div class="stat-num">{len(set(l['company'] for l in pitch_leads if l['company']))}</div><div class="stat-label">Unique Companies Targeted</div></div>
+  </div>
+  <table>
+    <tr><th>#</th><th>Name</th><th>Email</th><th>Target Company</th><th>Time</th></tr>
+    {rows if rows else '<tr><td colspan="5" style="padding:20px;text-align:center;color:#94A3B8;">No users yet — share ninelab.in!</td></tr>'}
+  </table>
+</body></html>""")
 
 
 @app.get("/ninelab/pdf/{filename}")
