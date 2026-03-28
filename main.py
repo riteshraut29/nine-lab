@@ -1938,201 +1938,463 @@ async def admin_dashboard(pwd: str = ""):
 
 @app.get("/ninelab/college-demo", response_class=HTMLResponse)
 async def college_demo():
-    """College director demo dashboard — GH Raisoni College of Engineering Pune."""
+    """College director interactive dashboard — GH Raisoni College of Engineering Pune."""
     return HTMLResponse("""<!DOCTYPE html>
 <html><head>
-<title>Nine Lab — GH Raisoni College of Engineering Pune</title>
+<title>Nine Lab — GH Raisoni College of Engineering, Pune</title>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
 body{background:#0A0E1A;font-family:'Segoe UI',sans-serif;color:#fff;min-height:100vh;}
-.topbar{background:#1A2035;padding:14px 32px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #2A3050;}
-.logo{font-size:22px;font-weight:900;color:#6C63FF;}
-.college-name{color:#fff;font-size:15px;font-weight:600;}
-.live-badge{background:#22C55E;color:#fff;font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;animation:pulse 2s infinite;}
+::-webkit-scrollbar{width:6px;} ::-webkit-scrollbar-track{background:#0A0E1A;} ::-webkit-scrollbar-thumb{background:#6C63FF;border-radius:3px;}
+.topbar{background:#1A2035;padding:14px 32px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #2A3050;position:sticky;top:0;z-index:100;}
+.logo{font-size:22px;font-weight:900;color:#6C63FF;letter-spacing:-1px;}
+.college-name{color:#E2E8F0;font-size:14px;font-weight:600;}
+.topbar-right{display:flex;align-items:center;gap:12px;}
+.demo-badge{background:#22C55E;color:#fff;font-size:11px;font-weight:700;padding:4px 12px;border-radius:20px;animation:pulse 2s infinite;}
+.notif{background:#EF4444;color:#fff;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;cursor:pointer;position:relative;}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.6}}
-.container{padding:32px;}
-.award{background:linear-gradient(135deg,#78350f,#b45309);border-radius:10px;padding:10px 20px;display:inline-block;color:#FCD34D;font-weight:700;font-size:13px;margin-bottom:24px;}
-.page-title{font-size:28px;font-weight:900;margin-bottom:4px;}
-.page-sub{color:#94A3B8;font-size:14px;margin-bottom:32px;}
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:32px;}
-.stat-card{background:#1A2035;border-radius:14px;padding:24px;border:1px solid #2A3050;text-align:center;}
-.stat-num{font-size:44px;font-weight:900;color:#6C63FF;line-height:1;}
-.stat-num.green{color:#22C55E;}
-.stat-num.amber{color:#F59E0B;}
-.stat-num.red{color:#EF4444;}
-.stat-label{color:#94A3B8;font-size:13px;margin-top:6px;}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px;}
-.card{background:#1A2035;border-radius:14px;padding:24px;border:1px solid #2A3050;}
-.card-title{font-size:16px;font-weight:700;margin-bottom:18px;color:#fff;}
-.branch-row{display:flex;align-items:center;margin-bottom:14px;gap:12px;}
-.branch-name{width:130px;font-size:13px;color:#E2E8F0;}
+.tabs{background:#1A2035;padding:0 32px;display:flex;gap:0;border-bottom:1px solid #2A3050;}
+.tab{padding:14px 24px;font-size:14px;font-weight:600;color:#94A3B8;cursor:pointer;border-bottom:2px solid transparent;transition:all 0.2s;}
+.tab:hover{color:#fff;}
+.tab.active{color:#6C63FF;border-bottom-color:#6C63FF;}
+.tab-content{display:none;} .tab-content.active{display:block;}
+.container{padding:28px 32px;}
+.award{background:linear-gradient(135deg,#78350f,#b45309);border-radius:10px;padding:8px 18px;display:inline-flex;align-items:center;gap:8px;color:#FCD34D;font-weight:700;font-size:13px;margin-bottom:20px;}
+.page-title{font-size:26px;font-weight:900;margin-bottom:4px;}
+.page-sub{color:#94A3B8;font-size:13px;margin-bottom:24px;}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;}
+.stat-card{background:#1A2035;border-radius:14px;padding:22px;border:1px solid #2A3050;text-align:center;cursor:pointer;transition:all 0.2s;}
+.stat-card:hover{border-color:#6C63FF;transform:translateY(-2px);}
+.stat-card.active-filter{border-color:#6C63FF;box-shadow:0 0 20px #6C63FF33;}
+.stat-num{font-size:40px;font-weight:900;line-height:1;}
+.stat-label{color:#94A3B8;font-size:12px;margin-top:6px;}
+.stat-delta{font-size:11px;margin-top:4px;}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px;margin-bottom:20px;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:20px;}
+.card{background:#1A2035;border-radius:14px;padding:22px;border:1px solid #2A3050;}
+.card-title{font-size:15px;font-weight:700;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;}
+.card-badge{font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;background:#6C63FF22;color:#6C63FF;}
+.branch-row{display:flex;align-items:center;margin-bottom:12px;gap:10px;cursor:pointer;padding:6px 8px;border-radius:8px;transition:background 0.2s;}
+.branch-row:hover{background:#2A3050;}
+.branch-row.selected{background:#6C63FF22;}
+.branch-name{width:120px;font-size:13px;}
 .branch-bar-bg{flex:1;background:#0A0E1A;border-radius:6px;height:8px;}
-.branch-bar{height:8px;border-radius:6px;transition:width 1s;}
-.branch-pct{width:40px;font-size:13px;font-weight:700;text-align:right;}
-.company-row{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid #2A3050;}
-.company-row:last-child{border-bottom:none;}
-.company-name{font-size:14px;font-weight:600;}
-.company-count{background:#6C63FF22;color:#6C63FF;padding:4px 12px;border-radius:20px;font-size:13px;font-weight:700;}
-.skill-row{margin-bottom:16px;}
-.skill-header{display:flex;justify-content:space-between;margin-bottom:6px;}
-.skill-name{font-size:13px;color:#E2E8F0;}
-.skill-gap{font-size:12px;color:#EF4444;font-weight:600;}
+.branch-bar{height:8px;border-radius:6px;transition:width 1s ease;}
+.branch-pct{width:38px;font-size:12px;font-weight:700;text-align:right;}
+.company-row{display:flex;justify-content:space-between;align-items:center;padding:10px 8px;border-radius:8px;cursor:pointer;transition:background 0.2s;}
+.company-row:hover{background:#2A3050;}
+.company-count{background:#6C63FF22;color:#6C63FF;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700;}
+.skill-row{margin-bottom:14px;}
+.skill-header{display:flex;justify-content:space-between;margin-bottom:5px;}
+.skill-name{font-size:13px;}
+.skill-gap{font-size:11px;color:#EF4444;font-weight:700;}
 .skill-bar-bg{background:#0A0E1A;border-radius:6px;height:8px;position:relative;}
-.skill-bar-demand{height:8px;border-radius:6px;background:#EF444444;position:absolute;top:0;left:0;}
-.skill-bar-have{height:8px;border-radius:6px;background:#6C63FF;position:absolute;top:0;left:0;}
-.legend{display:flex;gap:16px;margin-bottom:12px;}
-.legend-item{display:flex;align-items:center;gap:6px;font-size:12px;color:#94A3B8;}
-.legend-dot{width:10px;height:10px;border-radius:50%;}
+.skill-bar-demand{height:8px;border-radius:6px;background:#EF444433;position:absolute;top:0;}
+.skill-bar-have{height:8px;border-radius:6px;background:#6C63FF;position:absolute;top:0;transition:width 1s;}
+.search-box{width:100%;background:#0A0E1A;border:1px solid #2A3050;border-radius:8px;padding:10px 14px;color:#fff;font-size:13px;margin-bottom:14px;outline:none;}
+.search-box:focus{border-color:#6C63FF;}
+.filter-row{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;}
+.filter-btn{padding:5px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid #2A3050;background:transparent;color:#94A3B8;transition:all 0.2s;}
+.filter-btn:hover{border-color:#6C63FF;color:#6C63FF;}
+.filter-btn.active{background:#6C63FF;color:#fff;border-color:#6C63FF;}
 table{width:100%;border-collapse:collapse;}
-th{text-align:left;color:#94A3B8;font-size:12px;padding:10px 12px;border-bottom:1px solid #2A3050;font-weight:600;}
-td{padding:12px;font-size:13px;border-bottom:1px solid #1A2035;}
+th{text-align:left;color:#94A3B8;font-size:11px;padding:10px 12px;border-bottom:1px solid #2A3050;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;}
+td{padding:11px 12px;font-size:13px;border-bottom:1px solid #1E2840;}
+tr:hover td{background:#1E2840;}
 .badge{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;}
 .badge.ready{background:#22C55E22;color:#22C55E;}
 .badge.work{background:#F59E0B22;color:#F59E0B;}
 .badge.placed{background:#6C63FF22;color:#6C63FF;}
 .badge.interview{background:#0EA5E922;color:#0EA5E9;}
-.footer{text-align:center;padding:32px;color:#94A3B8;font-size:13px;}
-.cta-strip{background:linear-gradient(135deg,#6C63FF22,#6C63FF11);border:1px solid #6C63FF44;border-radius:14px;padding:20px 28px;display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;}
-.cta-text{font-size:15px;color:#E2E8F0;}
-.cta-text span{color:#6C63FF;font-weight:700;}
-.cta-btn{background:#6C63FF;color:#fff;border:none;padding:10px 24px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;}
-@media(max-width:768px){.stats{grid-template-columns:repeat(2,1fr);}.grid2{grid-template-columns:1fr;}}
+.cta-strip{background:linear-gradient(135deg,#6C63FF22,#6C63FF11);border:1px solid #6C63FF44;border-radius:14px;padding:18px 24px;display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;}
+.cta-btn{background:#6C63FF;color:#fff;border:none;padding:10px 22px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;transition:opacity 0.2s;}
+.cta-btn:hover{opacity:0.85;}
+.alert-card{background:#EF444411;border:1px solid #EF444444;border-radius:10px;padding:14px 18px;margin-bottom:10px;display:flex;gap:12px;align-items:flex-start;}
+.alert-icon{font-size:18px;margin-top:1px;}
+.alert-title{font-size:13px;font-weight:700;color:#FCA5A5;margin-bottom:2px;}
+.alert-sub{font-size:12px;color:#94A3B8;}
+.event-card{background:#0A0E1A;border-radius:10px;padding:14px;margin-bottom:10px;display:flex;gap:14px;align-items:center;}
+.event-date{background:#6C63FF;color:#fff;border-radius:8px;padding:8px 12px;text-align:center;min-width:52px;}
+.event-day{font-size:22px;font-weight:900;line-height:1;}
+.event-month{font-size:10px;font-weight:600;opacity:0.8;}
+.event-info h4{font-size:14px;font-weight:700;margin-bottom:2px;}
+.event-info p{font-size:12px;color:#94A3B8;}
+.event-badge{margin-left:auto;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;}
+.chart-container{position:relative;height:220px;}
+.footer{text-align:center;padding:24px;color:#94A3B8;font-size:12px;border-top:1px solid #1A2035;margin-top:12px;}
+@media(max-width:900px){.stats{grid-template-columns:repeat(2,1fr);}.grid3{grid-template-columns:1fr;}.grid2{grid-template-columns:1fr;}}
 </style></head><body>
 
+<!-- TOP BAR -->
 <div class="topbar">
   <div class="logo">Nine Lab</div>
   <div class="college-name">GH Raisoni College of Engineering, Pune</div>
-  <div class="live-badge">● DEMO</div>
+  <div class="topbar-right">
+    <div class="notif" title="3 alerts" onclick="document.querySelector('[data-tab=alerts]').click()">3</div>
+    <div class="demo-badge">● DEMO</div>
+  </div>
 </div>
 
+<!-- TABS -->
+<div class="tabs">
+  <div class="tab active" data-tab="overview" onclick="switchTab(this,'overview')">📊 Overview</div>
+  <div class="tab" data-tab="branches" onclick="switchTab(this,'branches')">📚 Branches</div>
+  <div class="tab" data-tab="students" onclick="switchTab(this,'students')">👥 Students</div>
+  <div class="tab" data-tab="companies" onclick="switchTab(this,'companies')">🏢 Companies</div>
+  <div class="tab" data-tab="skills" onclick="switchTab(this,'skills')">⚡ Skill Gaps</div>
+  <div class="tab" data-tab="alerts" onclick="switchTab(this,'alerts')">🔔 Alerts <span style="background:#EF4444;color:#fff;border-radius:10px;padding:1px 6px;font-size:10px;margin-left:4px;">3</span></div>
+</div>
+
+<!-- ═══════════ TAB 1: OVERVIEW ═══════════ -->
+<div class="tab-content active" id="tab-overview">
 <div class="container">
   <div class="award">🏆 Best Research Paper 2026 — Kaveri ThinkFest (IEEE)</div>
   <div class="page-title">Placement Intelligence Dashboard</div>
-  <div class="page-sub">AI-powered placement readiness for your students — updated in real time</div>
+  <div class="page-sub">AI-powered readiness tracking for all 1,247 students — session: 2025–26</div>
 
-  <!-- Top Stats -->
   <div class="stats">
-    <div class="stat-card">
-      <div class="stat-num">1,247</div>
+    <div class="stat-card" onclick="switchTabById('branches')">
+      <div class="stat-num" style="color:#6C63FF;" id="cnt1">0</div>
       <div class="stat-label">Total Students</div>
+      <div class="stat-delta" style="color:#22C55E;">↑ 12% vs last year</div>
+    </div>
+    <div class="stat-card" onclick="switchTabById('students')">
+      <div class="stat-num" style="color:#22C55E;" id="cnt2">0</div>
+      <div class="stat-label">Kits Generated</div>
+      <div class="stat-delta" style="color:#22C55E;">71% adoption rate</div>
     </div>
     <div class="stat-card">
-      <div class="stat-num green">892</div>
-      <div class="stat-label">Kits Generated (71%)</div>
+      <div class="stat-num" style="color:#F59E0B;" id="cnt3">0</div>
+      <div class="stat-label">Interview Ready</div>
+      <div class="stat-delta" style="color:#F59E0B;">51% of total</div>
     </div>
-    <div class="stat-card">
-      <div class="stat-num amber">634</div>
-      <div class="stat-label">Interview Ready (51%)</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-num" style="color:#A78BFA;">423</div>
-      <div class="stat-label">Placed This Season (34%)</div>
+    <div class="stat-card" onclick="switchTabById('companies')">
+      <div class="stat-num" style="color:#A78BFA;" id="cnt4">0</div>
+      <div class="stat-label">Placed This Season</div>
+      <div class="stat-delta" style="color:#22C55E;">↑ 8% vs last year</div>
     </div>
   </div>
 
-  <!-- CTA Strip -->
   <div class="cta-strip">
-    <div class="cta-text">
-      <span>287 students</span> still need placement support — Nine Lab can prepare them in 60 seconds each.
-    </div>
+    <div style="font-size:14px;color:#E2E8F0;"><span style="color:#6C63FF;font-weight:700;">355 students</span> still need placement support — Nine Lab prepares each one in 60 seconds.</div>
     <button class="cta-btn" onclick="window.open('https://ninelab.in','_blank')">Try Nine Lab Free →</button>
   </div>
 
-  <!-- Branch + Companies -->
+  <div class="grid3">
+    <div class="card">
+      <div class="card-title">Placement Trend <span class="card-badge">6 months</span></div>
+      <div class="chart-container"><canvas id="trendChart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Status Breakdown</div>
+      <div class="chart-container"><canvas id="statusChart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">ATS Score Distribution</div>
+      <div class="chart-container"><canvas id="atsChart"></canvas></div>
+    </div>
+  </div>
+
   <div class="grid2">
     <div class="card">
-      <div class="card-title">📚 Branch-wise Placement Readiness</div>
-      <div class="branch-row">
+      <div class="card-title">📚 Branch Readiness</div>
+      <div class="branch-row selected" onclick="switchTabById('branches')">
         <div class="branch-name">Computer Science</div>
         <div class="branch-bar-bg"><div class="branch-bar" style="width:78%;background:#6C63FF;"></div></div>
         <div class="branch-pct" style="color:#6C63FF;">78%</div>
       </div>
-      <div class="branch-row">
+      <div class="branch-row" onclick="switchTabById('branches')">
         <div class="branch-name">Information Tech</div>
         <div class="branch-bar-bg"><div class="branch-bar" style="width:71%;background:#22C55E;"></div></div>
         <div class="branch-pct" style="color:#22C55E;">71%</div>
       </div>
-      <div class="branch-row">
+      <div class="branch-row" onclick="switchTabById('branches')">
         <div class="branch-name">Electronics</div>
         <div class="branch-bar-bg"><div class="branch-bar" style="width:52%;background:#0EA5E9;"></div></div>
         <div class="branch-pct" style="color:#0EA5E9;">52%</div>
       </div>
-      <div class="branch-row">
+      <div class="branch-row" onclick="switchTabById('branches')">
         <div class="branch-name">Mechanical</div>
         <div class="branch-bar-bg"><div class="branch-bar" style="width:45%;background:#F59E0B;"></div></div>
         <div class="branch-pct" style="color:#F59E0B;">45%</div>
       </div>
-      <div class="branch-row">
+      <div class="branch-row" onclick="switchTabById('branches')">
         <div class="branch-name">Civil</div>
         <div class="branch-bar-bg"><div class="branch-bar" style="width:38%;background:#EF4444;"></div></div>
         <div class="branch-pct" style="color:#EF4444;">38%</div>
       </div>
     </div>
-
     <div class="card">
-      <div class="card-title">🏢 Companies Targeting Your Students</div>
-      <div class="company-row"><div class="company-name">TCS</div><div class="company-count">145 students</div></div>
-      <div class="company-row"><div class="company-name">Infosys</div><div class="company-count">123 students</div></div>
-      <div class="company-row"><div class="company-name">Wipro</div><div class="company-count">98 students</div></div>
-      <div class="company-row"><div class="company-name">Accenture</div><div class="company-count">87 students</div></div>
-      <div class="company-row"><div class="company-name">L&T Technology</div><div class="company-count">54 students</div></div>
-      <div class="company-row"><div class="company-name">Persistent Systems</div><div class="company-count">43 students</div></div>
+      <div class="card-title">🏢 Top Companies This Season</div>
+      <div class="company-row" onclick="switchTabById('companies')"><span style="font-size:14px;font-weight:600;">TCS</span><span class="company-count">145 students</span></div>
+      <div class="company-row" onclick="switchTabById('companies')"><span style="font-size:14px;font-weight:600;">Infosys</span><span class="company-count">123 students</span></div>
+      <div class="company-row" onclick="switchTabById('companies')"><span style="font-size:14px;font-weight:600;">Wipro</span><span class="company-count">98 students</span></div>
+      <div class="company-row" onclick="switchTabById('companies')"><span style="font-size:14px;font-weight:600;">Accenture</span><span class="company-count">87 students</span></div>
+      <div class="company-row" onclick="switchTabById('companies')"><span style="font-size:14px;font-weight:600;">Persistent Systems</span><span class="company-count">43 students</span></div>
     </div>
   </div>
+</div>
+</div>
 
-  <!-- Skill Gap + Student Table -->
+<!-- ═══════════ TAB 2: BRANCHES ═══════════ -->
+<div class="tab-content" id="tab-branches">
+<div class="container">
+  <div class="page-title" style="margin-bottom:20px;">Branch-wise Analysis</div>
+  <div class="stats">
+    <div class="stat-card"><div class="stat-num" style="color:#6C63FF;">340</div><div class="stat-label">CS — 78% Ready</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:#22C55E;">222</div><div class="stat-label">IT — 71% Ready</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:#F59E0B;">280</div><div class="stat-label">Mechanical — 45%</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:#EF4444;">210</div><div class="stat-label">Civil — 38% Ready</div></div>
+  </div>
   <div class="grid2">
     <div class="card">
-      <div class="card-title">⚡ Skill Demand vs Current Level</div>
-      <div class="legend">
-        <div class="legend-item"><div class="legend-dot" style="background:#EF444444;border:1px solid #EF4444;"></div>Market Demand</div>
-        <div class="legend-item"><div class="legend-dot" style="background:#6C63FF;"></div>Students Have It</div>
-      </div>
-      <div class="skill-row">
-        <div class="skill-header"><span class="skill-name">Communication Skills</span><span class="skill-gap">Gap: 37%</span></div>
-        <div class="skill-bar-bg"><div class="skill-bar-demand" style="width:89%;"></div><div class="skill-bar-have" style="width:52%;"></div></div>
-      </div>
-      <div class="skill-row">
-        <div class="skill-header"><span class="skill-name">Python / Coding</span><span class="skill-gap">Gap: 28%</span></div>
-        <div class="skill-bar-bg"><div class="skill-bar-demand" style="width:73%;"></div><div class="skill-bar-have" style="width:45%;"></div></div>
-      </div>
-      <div class="skill-row">
-        <div class="skill-header"><span class="skill-name">Data Structures</span><span class="skill-gap">Gap: 29%</span></div>
-        <div class="skill-bar-bg"><div class="skill-bar-demand" style="width:67%;"></div><div class="skill-bar-have" style="width:38%;"></div></div>
-      </div>
-      <div class="skill-row">
-        <div class="skill-header"><span class="skill-name">SQL / Database</span><span class="skill-gap">Gap: 23%</span></div>
-        <div class="skill-bar-bg"><div class="skill-bar-demand" style="width:71%;"></div><div class="skill-bar-have" style="width:48%;"></div></div>
-      </div>
-      <div class="skill-row">
-        <div class="skill-header"><span class="skill-name">Resume Writing</span><span class="skill-gap">Gap: 44%</span></div>
-        <div class="skill-bar-bg"><div class="skill-bar-demand" style="width:95%;"></div><div class="skill-bar-have" style="width:51%;"></div></div>
-      </div>
+      <div class="card-title">Placement by Branch <span class="card-badge">2025-26</span></div>
+      <div class="chart-container"><canvas id="branchChart"></canvas></div>
     </div>
-
     <div class="card">
-      <div class="card-title">👥 Student Readiness (Sample)</div>
-      <table>
-        <tr><th>Student</th><th>ATS Score</th><th>Target</th><th>Status</th></tr>
-        <tr><td>CS Student, Yr4</td><td style="color:#22C55E;">82%</td><td>TCS</td><td><span class="badge placed">Placed</span></td></tr>
-        <tr><td>IT Student, Yr4</td><td style="color:#0EA5E9;">76%</td><td>Infosys</td><td><span class="badge interview">Interview</span></td></tr>
-        <tr><td>CS Student, Yr4</td><td style="color:#6C63FF;">71%</td><td>Wipro</td><td><span class="badge ready">Ready</span></td></tr>
-        <tr><td>Mech Student, Yr4</td><td style="color:#F59E0B;">48%</td><td>L&T</td><td><span class="badge work">Needs Work</span></td></tr>
-        <tr><td>Civil Student, Yr4</td><td style="color:#F59E0B;">41%</td><td>L&T</td><td><span class="badge work">Needs Work</span></td></tr>
-        <tr><td>EC Student, Yr4</td><td style="color:#22C55E;">79%</td><td>Accenture</td><td><span class="badge placed">Placed</span></td></tr>
-        <tr><td>IT Student, Yr4</td><td style="color:#6C63FF;">68%</td><td>Persistent</td><td><span class="badge ready">Ready</span></td></tr>
-        <tr><td>CS Student, Yr4</td><td style="color:#EF4444;">34%</td><td>TCS</td><td><span class="badge work">Needs Work</span></td></tr>
-      </table>
+      <div class="card-title">Year-wise Readiness</div>
+      <div class="chart-container"><canvas id="yearChart"></canvas></div>
     </div>
   </div>
-
+  <div class="card">
+    <div class="card-title">Detailed Branch Metrics</div>
+    <table>
+      <tr><th>Branch</th><th>Students</th><th>Kits Generated</th><th>Avg ATS Score</th><th>Placed</th><th>Readiness</th></tr>
+      <tr><td>Computer Science</td><td>340</td><td>298 (88%)</td><td style="color:#22C55E;">74%</td><td>142</td><td><span class="badge placed">78% Ready</span></td></tr>
+      <tr><td>Information Tech</td><td>222</td><td>187 (84%)</td><td style="color:#22C55E;">71%</td><td>98</td><td><span class="badge placed">71% Ready</span></td></tr>
+      <tr><td>Electronics</td><td>195</td><td>142 (73%)</td><td style="color:#0EA5E9;">62%</td><td>67</td><td><span class="badge interview">52% Ready</span></td></tr>
+      <tr><td>Mechanical</td><td>280</td><td>178 (64%)</td><td style="color:#F59E0B;">51%</td><td>74</td><td><span class="badge work">45% Ready</span></td></tr>
+      <tr><td>Civil</td><td>210</td><td>87 (41%)</td><td style="color:#EF4444;">43%</td><td>42</td><td><span class="badge work">38% Ready</span></td></tr>
+    </table>
+  </div>
+</div>
 </div>
 
-<div class="footer">
-  Nine Lab · ninelab.in · AI Placement Intelligence · Students always free · © 2026
+<!-- ═══════════ TAB 3: STUDENTS ═══════════ -->
+<div class="tab-content" id="tab-students">
+<div class="container">
+  <div class="page-title" style="margin-bottom:20px;">Student Readiness Tracker</div>
+  <input type="text" class="search-box" placeholder="🔍  Search by branch, company, or status..." oninput="filterStudents(this.value)">
+  <div class="filter-row">
+    <button class="filter-btn active" onclick="setFilter(this,'all')">All (1,247)</button>
+    <button class="filter-btn" onclick="setFilter(this,'placed')">✅ Placed (423)</button>
+    <button class="filter-btn" onclick="setFilter(this,'interview')">🎯 In Interview (211)</button>
+    <button class="filter-btn" onclick="setFilter(this,'ready')">⚡ Ready (200)</button>
+    <button class="filter-btn" onclick="setFilter(this,'work')">⚠️ Needs Work (413)</button>
+  </div>
+  <div class="card">
+    <table id="studentTable">
+      <tr><th>Student</th><th>Branch</th><th>ATS Score</th><th>Target Company</th><th>Kit</th><th>Status</th></tr>
+      <tr data-status="placed"><td>Student #CS-047</td><td>CS</td><td style="color:#22C55E;">82%</td><td>TCS</td><td>✅</td><td><span class="badge placed">Placed</span></td></tr>
+      <tr data-status="interview"><td>Student #IT-023</td><td>IT</td><td style="color:#0EA5E9;">76%</td><td>Infosys</td><td>✅</td><td><span class="badge interview">Interview</span></td></tr>
+      <tr data-status="placed"><td>Student #CS-112</td><td>CS</td><td style="color:#22C55E;">79%</td><td>Wipro</td><td>✅</td><td><span class="badge placed">Placed</span></td></tr>
+      <tr data-status="ready"><td>Student #IT-067</td><td>IT</td><td style="color:#6C63FF;">71%</td><td>Accenture</td><td>✅</td><td><span class="badge ready">Ready</span></td></tr>
+      <tr data-status="work"><td>Student #ME-034</td><td>Mech</td><td style="color:#F59E0B;">48%</td><td>L&T</td><td>✅</td><td><span class="badge work">Needs Work</span></td></tr>
+      <tr data-status="work"><td>Student #CV-019</td><td>Civil</td><td style="color:#EF4444;">34%</td><td>L&T Tech</td><td>❌</td><td><span class="badge work">Needs Work</span></td></tr>
+      <tr data-status="interview"><td>Student #EC-088</td><td>EC</td><td style="color:#0EA5E9;">68%</td><td>Persistent</td><td>✅</td><td><span class="badge interview">Interview</span></td></tr>
+      <tr data-status="placed"><td>Student #CS-203</td><td>CS</td><td style="color:#22C55E;">85%</td><td>Google</td><td>✅</td><td><span class="badge placed">Placed</span></td></tr>
+      <tr data-status="ready"><td>Student #IT-091</td><td>IT</td><td style="color:#6C63FF;">66%</td><td>Cognizant</td><td>✅</td><td><span class="badge ready">Ready</span></td></tr>
+      <tr data-status="work"><td>Student #ME-077</td><td>Mech</td><td style="color:#F59E0B;">52%</td><td>Tata Motors</td><td>✅</td><td><span class="badge work">Needs Work</span></td></tr>
+    </table>
+  </div>
+</div>
 </div>
 
+<!-- ═══════════ TAB 4: COMPANIES ═══════════ -->
+<div class="tab-content" id="tab-companies">
+<div class="container">
+  <div class="page-title" style="margin-bottom:20px;">Company Intelligence</div>
+  <div class="grid2">
+    <div class="card">
+      <div class="card-title">Companies Hiring This Season <span class="card-badge">14 active</span></div>
+      <div class="company-row"><span style="font-weight:700;">TCS</span><div style="display:flex;gap:8px;align-items:center;"><span style="font-size:12px;color:#94A3B8;">Min ATS: 60%</span><span class="company-count">145 applied</span></div></div>
+      <div class="company-row"><span style="font-weight:700;">Infosys</span><div style="display:flex;gap:8px;align-items:center;"><span style="font-size:12px;color:#94A3B8;">Min ATS: 65%</span><span class="company-count">123 applied</span></div></div>
+      <div class="company-row"><span style="font-weight:700;">Wipro</span><div style="display:flex;gap:8px;align-items:center;"><span style="font-size:12px;color:#94A3B8;">Min ATS: 62%</span><span class="company-count">98 applied</span></div></div>
+      <div class="company-row"><span style="font-weight:700;">Accenture</span><div style="display:flex;gap:8px;align-items:center;"><span style="font-size:12px;color:#94A3B8;">Min ATS: 68%</span><span class="company-count">87 applied</span></div></div>
+      <div class="company-row"><span style="font-weight:700;">L&T Technology</span><div style="display:flex;gap:8px;align-items:center;"><span style="font-size:12px;color:#94A3B8;">Min ATS: 55%</span><span class="company-count">54 applied</span></div></div>
+      <div class="company-row"><span style="font-weight:700;">Persistent Systems</span><div style="display:flex;gap:8px;align-items:center;"><span style="font-size:12px;color:#94A3B8;">Min ATS: 70%</span><span class="company-count">43 applied</span></div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">📅 Upcoming Campus Visits</div>
+      <div class="event-card">
+        <div class="event-date"><div class="event-day">02</div><div class="event-month">APR</div></div>
+        <div class="event-info"><h4>TCS NQT Drive</h4><p>All branches eligible · 450 seats</p></div>
+        <span class="event-badge" style="background:#22C55E22;color:#22C55E;">Confirmed</span>
+      </div>
+      <div class="event-card">
+        <div class="event-date" style="background:#0EA5E9;"><div class="event-day">08</div><div class="event-month">APR</div></div>
+        <div class="event-info"><h4>Infosys InfyTQ</h4><p>CS & IT only · 200 seats</p></div>
+        <span class="event-badge" style="background:#0EA5E922;color:#0EA5E9;">Scheduled</span>
+      </div>
+      <div class="event-card">
+        <div class="event-date" style="background:#F59E0B;"><div class="event-day">15</div><div class="event-month">APR</div></div>
+        <div class="event-info"><h4>L&T Technology</h4><p>Mech, Civil, EC · 150 seats</p></div>
+        <span class="event-badge" style="background:#F59E0B22;color:#F59E0B;">Tentative</span>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Selection Rate by Company</div>
+    <div class="chart-container" style="height:260px;"><canvas id="companyChart"></canvas></div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════ TAB 5: SKILLS ═══════════ -->
+<div class="tab-content" id="tab-skills">
+<div class="container">
+  <div class="page-title" style="margin-bottom:8px;">Skill Gap Analysis</div>
+  <div class="page-sub" style="margin-bottom:20px;">Market demand vs your students' current skill level</div>
+  <div class="grid2">
+    <div class="card">
+      <div class="card-title">Critical Gaps <span class="card-badge" style="background:#EF444422;color:#EF4444;">Action Needed</span></div>
+      <div style="display:flex;gap:8px;margin-bottom:16px;">
+        <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:#94A3B8;"><div style="width:10px;height:10px;border-radius:2px;background:#EF444444;border:1px solid #EF4444;"></div>Market Demand</div>
+        <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:#94A3B8;"><div style="width:10px;height:10px;border-radius:2px;background:#6C63FF;"></div>Students Have</div>
+      </div>
+      <div class="skill-row"><div class="skill-header"><span class="skill-name">Resume Writing</span><span class="skill-gap">⚠️ Gap: 44%</span></div><div class="skill-bar-bg"><div class="skill-bar-demand" style="width:95%;"></div><div class="skill-bar-have" style="width:51%;"></div></div></div>
+      <div class="skill-row"><div class="skill-header"><span class="skill-name">Communication</span><span class="skill-gap">⚠️ Gap: 37%</span></div><div class="skill-bar-bg"><div class="skill-bar-demand" style="width:89%;"></div><div class="skill-bar-have" style="width:52%;"></div></div></div>
+      <div class="skill-row"><div class="skill-header"><span class="skill-name">Python / Coding</span><span class="skill-gap">Gap: 28%</span></div><div class="skill-bar-bg"><div class="skill-bar-demand" style="width:73%;"></div><div class="skill-bar-have" style="width:45%;"></div></div></div>
+      <div class="skill-row"><div class="skill-header"><span class="skill-name">Data Structures</span><span class="skill-gap">Gap: 29%</span></div><div class="skill-bar-bg"><div class="skill-bar-demand" style="width:67%;"></div><div class="skill-bar-have" style="width:38%;"></div></div></div>
+      <div class="skill-row"><div class="skill-header"><span class="skill-name">SQL / Database</span><span class="skill-gap">Gap: 23%</span></div><div class="skill-bar-bg"><div class="skill-bar-demand" style="width:71%;"></div><div class="skill-bar-have" style="width:48%;"></div></div></div>
+      <div class="skill-row"><div class="skill-header"><span class="skill-name">System Design</span><span class="skill-gap">Gap: 41%</span></div><div class="skill-bar-bg"><div class="skill-bar-demand" style="width:62%;"></div><div class="skill-bar-have" style="width:21%;"></div></div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Skill Radar</div>
+      <div class="chart-container" style="height:280px;"><canvas id="radarChart"></canvas></div>
+    </div>
+  </div>
+  <div class="card" style="background:linear-gradient(135deg,#6C63FF15,#6C63FF08);border-color:#6C63FF33;">
+    <div class="card-title">💡 Nine Lab's Solution</div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:8px;">
+      <div style="text-align:center;padding:16px;background:#0A0E1A;border-radius:10px;"><div style="font-size:28px;margin-bottom:8px;">📄</div><div style="font-size:13px;font-weight:700;">ATS Resume</div><div style="font-size:11px;color:#94A3B8;margin-top:4px;">Fixes resume gaps instantly</div></div>
+      <div style="text-align:center;padding:16px;background:#0A0E1A;border-radius:10px;"><div style="font-size:28px;margin-bottom:8px;">📊</div><div style="font-size:13px;font-weight:700;">Score Report</div><div style="font-size:11px;color:#94A3B8;margin-top:4px;">Shows exact skill gaps</div></div>
+      <div style="text-align:center;padding:16px;background:#0A0E1A;border-radius:10px;"><div style="font-size:28px;margin-bottom:8px;">🗺️</div><div style="font-size:13px;font-weight:700;">Prep Guide</div><div style="font-size:11px;color:#94A3B8;margin-top:4px;">Personalized study plan</div></div>
+      <div style="text-align:center;padding:16px;background:#0A0E1A;border-radius:10px;"><div style="font-size:28px;margin-bottom:8px;">🏢</div><div style="font-size:13px;font-weight:700;">Company Intel</div><div style="font-size:11px;color:#94A3B8;margin-top:4px;">Interview rounds & culture</div></div>
+    </div>
+    <div style="text-align:center;margin-top:16px;">
+      <button class="cta-btn" onclick="window.open('https://ninelab.in','_blank')">Try Free for Your Students →</button>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════ TAB 6: ALERTS ═══════════ -->
+<div class="tab-content" id="tab-alerts">
+<div class="container">
+  <div class="page-title" style="margin-bottom:20px;">🔔 Action Alerts</div>
+  <div class="alert-card">
+    <div class="alert-icon">🚨</div>
+    <div><div class="alert-title">413 students need urgent placement support</div><div class="alert-sub">ATS score below 60% — at risk of being rejected before interview. Nine Lab can fix this in 60 seconds each.</div></div>
+  </div>
+  <div class="alert-card">
+    <div class="alert-icon">⚠️</div>
+    <div><div class="alert-title">TCS NQT drive in 5 days — 167 students not ready</div><div class="alert-sub">Min ATS required: 60%. 167 students currently below threshold. Generate kits immediately.</div></div>
+  </div>
+  <div class="alert-card">
+    <div class="alert-icon">📉</div>
+    <div><div class="alert-title">Civil branch at 38% readiness — lowest in college</div><div class="alert-sub">Only 87/210 students have generated kits. Bulk generation recommended before April drives.</div></div>
+  </div>
+  <div style="margin-top:24px;">
+    <button class="cta-btn" onclick="window.open('https://ninelab.in','_blank')">Generate Bulk Kits for All Students →</button>
+  </div>
+</div>
+</div>
+
+<div class="footer">Nine Lab · ninelab.in · AI Placement Intelligence · Students always free · Colleges pay ₹200/student/year · © 2026</div>
+
+<script>
+// ── Tab switching ──────────────────────────────────────────────
+function switchTab(el, tab) {
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('tab-'+tab).classList.add('active');
+  if(tab==='overview') initOverviewCharts();
+  if(tab==='branches') initBranchCharts();
+  if(tab==='companies') initCompanyChart();
+  if(tab==='skills') initSkillsChart();
+}
+function switchTabById(tab) {
+  const el = document.querySelector('[data-tab='+tab+']');
+  if(el) switchTab(el, tab);
+}
+
+// ── Animated counters ──────────────────────────────────────────
+function animateCount(id, target, duration=1200) {
+  const el = document.getElementById(id);
+  if(!el) return;
+  let start=0, step=target/60;
+  const timer = setInterval(()=>{
+    start = Math.min(start+step, target);
+    el.textContent = Math.floor(start).toLocaleString();
+    if(start>=target) clearInterval(timer);
+  }, duration/60);
+}
+setTimeout(()=>{
+  animateCount('cnt1',1247); animateCount('cnt2',892);
+  animateCount('cnt3',634);  animateCount('cnt4',423);
+},300);
+
+// ── Student filter ─────────────────────────────────────────────
+function setFilter(btn, status) {
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('#studentTable tr[data-status]').forEach(r=>{
+    r.style.display = (status==='all'||r.dataset.status===status)?'':'none';
+  });
+}
+function filterStudents(val) {
+  val = val.toLowerCase();
+  document.querySelectorAll('#studentTable tr[data-status]').forEach(r=>{
+    r.style.display = r.textContent.toLowerCase().includes(val)?'':'none';
+  });
+}
+
+// ── Charts ─────────────────────────────────────────────────────
+const C = { purple:'#6C63FF', green:'#22C55E', amber:'#F59E0B', red:'#EF4444', blue:'#0EA5E9', violet:'#A78BFA', grid:'#2A3050', text:'#94A3B8' };
+
+function initOverviewCharts() {
+  const t = document.getElementById('trendChart');
+  if(!t || t._done) return; t._done=true;
+  new Chart(t, {type:'line', data:{labels:['Oct','Nov','Dec','Jan','Feb','Mar'],datasets:[{label:'Placed',data:[42,78,115,198,312,423],borderColor:C.purple,backgroundColor:C.purple+'22',fill:true,tension:0.4},{label:'Ready',data:[120,180,260,380,520,634],borderColor:C.green,backgroundColor:'transparent',tension:0.4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:C.text,font:{size:11}}}},scales:{x:{ticks:{color:C.text},grid:{color:C.grid}},y:{ticks:{color:C.text},grid:{color:C.grid}}}}});
+
+  const s = document.getElementById('statusChart');
+  if(!s || s._done) return; s._done=true;
+  new Chart(s, {type:'doughnut', data:{labels:['Placed','In Interview','Ready','Needs Work'],datasets:[{data:[423,211,200,413],backgroundColor:[C.purple,C.blue,C.green,C.amber],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:C.text,font:{size:11},padding:10}}}}});
+
+  const a = document.getElementById('atsChart');
+  if(!a || a._done) return; a._done=true;
+  new Chart(a, {type:'bar', data:{labels:['0-40%','40-55%','55-65%','65-75%','75-85%','85%+'],datasets:[{label:'Students',data:[134,279,312,287,178,57],backgroundColor:[C.red,C.amber,C.amber+'99',C.blue,C.green,C.purple]}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:C.text,font:{size:10}},grid:{color:C.grid}},y:{ticks:{color:C.text},grid:{color:C.grid}}}}});
+}
+
+function initBranchCharts() {
+  const b = document.getElementById('branchChart');
+  if(!b || b._done) return; b._done=true;
+  new Chart(b, {type:'bar', data:{labels:['CS','IT','EC','Mech','Civil'],datasets:[{label:'Total',data:[340,222,195,280,210],backgroundColor:C.purple+'44'},{label:'Placed',data:[142,98,67,74,42],backgroundColor:C.green}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:C.text}}},scales:{x:{ticks:{color:C.text},grid:{color:C.grid}},y:{ticks:{color:C.text},grid:{color:C.grid}}}}});
+
+  const y = document.getElementById('yearChart');
+  if(!y || y._done) return; y._done=true;
+  new Chart(y, {type:'bar', data:{labels:['1st Year','2nd Year','3rd Year','4th Year'],datasets:[{label:'Readiness %',data:[18,34,52,78],backgroundColor:[C.red,C.amber,C.blue,C.green]}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{ticks:{color:C.text,callback:v=>v+'%'},grid:{color:C.grid},max:100},y:{ticks:{color:C.text},grid:{color:C.grid}}}}});
+}
+
+function initCompanyChart() {
+  const c = document.getElementById('companyChart');
+  if(!c || c._done) return; c._done=true;
+  new Chart(c, {type:'bar', data:{labels:['TCS','Infosys','Wipro','Accenture','L&T','Persistent'],datasets:[{label:'Applied',data:[145,123,98,87,54,43],backgroundColor:C.purple+'66'},{label:'Selected',data:[89,71,54,43,28,21],backgroundColor:C.green}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:C.text}}},scales:{x:{ticks:{color:C.text},grid:{color:C.grid}},y:{ticks:{color:C.text},grid:{color:C.grid}}}}});
+}
+
+function initSkillsChart() {
+  const r = document.getElementById('radarChart');
+  if(!r || r._done) return; r._done=true;
+  new Chart(r, {type:'radar', data:{labels:['Resume Writing','Communication','Python','DSA','SQL','System Design'],datasets:[{label:'Market Demand',data:[95,89,73,67,71,62],borderColor:C.red,backgroundColor:C.red+'22',pointBackgroundColor:C.red},{label:'Students Have',data:[51,52,45,38,48,21],borderColor:C.purple,backgroundColor:C.purple+'22',pointBackgroundColor:C.purple}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:C.text,font:{size:11}}}},scales:{r:{ticks:{display:false},grid:{color:C.grid},pointLabels:{color:C.text,font:{size:11}},suggestedMin:0,suggestedMax:100}}}});
+}
+
+// Init overview charts on load
+window.addEventListener('load', ()=>{ setTimeout(initOverviewCharts, 400); });
+</script>
 </body></html>""")
 
 
