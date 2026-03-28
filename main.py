@@ -1936,6 +1936,206 @@ async def admin_dashboard(pwd: str = ""):
 </body></html>""")
 
 
+@app.get("/ninelab/college-demo", response_class=HTMLResponse)
+async def college_demo():
+    """College director demo dashboard — GH Raisoni College of Engineering Pune."""
+    return HTMLResponse("""<!DOCTYPE html>
+<html><head>
+<title>Nine Lab — GH Raisoni College of Engineering Pune</title>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#0A0E1A;font-family:'Segoe UI',sans-serif;color:#fff;min-height:100vh;}
+.topbar{background:#1A2035;padding:14px 32px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #2A3050;}
+.logo{font-size:22px;font-weight:900;color:#6C63FF;}
+.college-name{color:#fff;font-size:15px;font-weight:600;}
+.live-badge{background:#22C55E;color:#fff;font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.6}}
+.container{padding:32px;}
+.award{background:linear-gradient(135deg,#78350f,#b45309);border-radius:10px;padding:10px 20px;display:inline-block;color:#FCD34D;font-weight:700;font-size:13px;margin-bottom:24px;}
+.page-title{font-size:28px;font-weight:900;margin-bottom:4px;}
+.page-sub{color:#94A3B8;font-size:14px;margin-bottom:32px;}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:32px;}
+.stat-card{background:#1A2035;border-radius:14px;padding:24px;border:1px solid #2A3050;text-align:center;}
+.stat-num{font-size:44px;font-weight:900;color:#6C63FF;line-height:1;}
+.stat-num.green{color:#22C55E;}
+.stat-num.amber{color:#F59E0B;}
+.stat-num.red{color:#EF4444;}
+.stat-label{color:#94A3B8;font-size:13px;margin-top:6px;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px;}
+.card{background:#1A2035;border-radius:14px;padding:24px;border:1px solid #2A3050;}
+.card-title{font-size:16px;font-weight:700;margin-bottom:18px;color:#fff;}
+.branch-row{display:flex;align-items:center;margin-bottom:14px;gap:12px;}
+.branch-name{width:130px;font-size:13px;color:#E2E8F0;}
+.branch-bar-bg{flex:1;background:#0A0E1A;border-radius:6px;height:8px;}
+.branch-bar{height:8px;border-radius:6px;transition:width 1s;}
+.branch-pct{width:40px;font-size:13px;font-weight:700;text-align:right;}
+.company-row{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid #2A3050;}
+.company-row:last-child{border-bottom:none;}
+.company-name{font-size:14px;font-weight:600;}
+.company-count{background:#6C63FF22;color:#6C63FF;padding:4px 12px;border-radius:20px;font-size:13px;font-weight:700;}
+.skill-row{margin-bottom:16px;}
+.skill-header{display:flex;justify-content:space-between;margin-bottom:6px;}
+.skill-name{font-size:13px;color:#E2E8F0;}
+.skill-gap{font-size:12px;color:#EF4444;font-weight:600;}
+.skill-bar-bg{background:#0A0E1A;border-radius:6px;height:8px;position:relative;}
+.skill-bar-demand{height:8px;border-radius:6px;background:#EF444444;position:absolute;top:0;left:0;}
+.skill-bar-have{height:8px;border-radius:6px;background:#6C63FF;position:absolute;top:0;left:0;}
+.legend{display:flex;gap:16px;margin-bottom:12px;}
+.legend-item{display:flex;align-items:center;gap:6px;font-size:12px;color:#94A3B8;}
+.legend-dot{width:10px;height:10px;border-radius:50%;}
+table{width:100%;border-collapse:collapse;}
+th{text-align:left;color:#94A3B8;font-size:12px;padding:10px 12px;border-bottom:1px solid #2A3050;font-weight:600;}
+td{padding:12px;font-size:13px;border-bottom:1px solid #1A2035;}
+.badge{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;}
+.badge.ready{background:#22C55E22;color:#22C55E;}
+.badge.work{background:#F59E0B22;color:#F59E0B;}
+.badge.placed{background:#6C63FF22;color:#6C63FF;}
+.badge.interview{background:#0EA5E922;color:#0EA5E9;}
+.footer{text-align:center;padding:32px;color:#94A3B8;font-size:13px;}
+.cta-strip{background:linear-gradient(135deg,#6C63FF22,#6C63FF11);border:1px solid #6C63FF44;border-radius:14px;padding:20px 28px;display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;}
+.cta-text{font-size:15px;color:#E2E8F0;}
+.cta-text span{color:#6C63FF;font-weight:700;}
+.cta-btn{background:#6C63FF;color:#fff;border:none;padding:10px 24px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;}
+@media(max-width:768px){.stats{grid-template-columns:repeat(2,1fr);}.grid2{grid-template-columns:1fr;}}
+</style></head><body>
+
+<div class="topbar">
+  <div class="logo">Nine Lab</div>
+  <div class="college-name">GH Raisoni College of Engineering, Pune</div>
+  <div class="live-badge">● DEMO</div>
+</div>
+
+<div class="container">
+  <div class="award">🏆 Best Research Paper 2026 — Kaveri ThinkFest (IEEE)</div>
+  <div class="page-title">Placement Intelligence Dashboard</div>
+  <div class="page-sub">AI-powered placement readiness for your students — updated in real time</div>
+
+  <!-- Top Stats -->
+  <div class="stats">
+    <div class="stat-card">
+      <div class="stat-num">1,247</div>
+      <div class="stat-label">Total Students</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num green">892</div>
+      <div class="stat-label">Kits Generated (71%)</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num amber">634</div>
+      <div class="stat-label">Interview Ready (51%)</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" style="color:#A78BFA;">423</div>
+      <div class="stat-label">Placed This Season (34%)</div>
+    </div>
+  </div>
+
+  <!-- CTA Strip -->
+  <div class="cta-strip">
+    <div class="cta-text">
+      <span>287 students</span> still need placement support — Nine Lab can prepare them in 60 seconds each.
+    </div>
+    <button class="cta-btn" onclick="window.open('https://ninelab.in','_blank')">Try Nine Lab Free →</button>
+  </div>
+
+  <!-- Branch + Companies -->
+  <div class="grid2">
+    <div class="card">
+      <div class="card-title">📚 Branch-wise Placement Readiness</div>
+      <div class="branch-row">
+        <div class="branch-name">Computer Science</div>
+        <div class="branch-bar-bg"><div class="branch-bar" style="width:78%;background:#6C63FF;"></div></div>
+        <div class="branch-pct" style="color:#6C63FF;">78%</div>
+      </div>
+      <div class="branch-row">
+        <div class="branch-name">Information Tech</div>
+        <div class="branch-bar-bg"><div class="branch-bar" style="width:71%;background:#22C55E;"></div></div>
+        <div class="branch-pct" style="color:#22C55E;">71%</div>
+      </div>
+      <div class="branch-row">
+        <div class="branch-name">Electronics</div>
+        <div class="branch-bar-bg"><div class="branch-bar" style="width:52%;background:#0EA5E9;"></div></div>
+        <div class="branch-pct" style="color:#0EA5E9;">52%</div>
+      </div>
+      <div class="branch-row">
+        <div class="branch-name">Mechanical</div>
+        <div class="branch-bar-bg"><div class="branch-bar" style="width:45%;background:#F59E0B;"></div></div>
+        <div class="branch-pct" style="color:#F59E0B;">45%</div>
+      </div>
+      <div class="branch-row">
+        <div class="branch-name">Civil</div>
+        <div class="branch-bar-bg"><div class="branch-bar" style="width:38%;background:#EF4444;"></div></div>
+        <div class="branch-pct" style="color:#EF4444;">38%</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🏢 Companies Targeting Your Students</div>
+      <div class="company-row"><div class="company-name">TCS</div><div class="company-count">145 students</div></div>
+      <div class="company-row"><div class="company-name">Infosys</div><div class="company-count">123 students</div></div>
+      <div class="company-row"><div class="company-name">Wipro</div><div class="company-count">98 students</div></div>
+      <div class="company-row"><div class="company-name">Accenture</div><div class="company-count">87 students</div></div>
+      <div class="company-row"><div class="company-name">L&T Technology</div><div class="company-count">54 students</div></div>
+      <div class="company-row"><div class="company-name">Persistent Systems</div><div class="company-count">43 students</div></div>
+    </div>
+  </div>
+
+  <!-- Skill Gap + Student Table -->
+  <div class="grid2">
+    <div class="card">
+      <div class="card-title">⚡ Skill Demand vs Current Level</div>
+      <div class="legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#EF444444;border:1px solid #EF4444;"></div>Market Demand</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#6C63FF;"></div>Students Have It</div>
+      </div>
+      <div class="skill-row">
+        <div class="skill-header"><span class="skill-name">Communication Skills</span><span class="skill-gap">Gap: 37%</span></div>
+        <div class="skill-bar-bg"><div class="skill-bar-demand" style="width:89%;"></div><div class="skill-bar-have" style="width:52%;"></div></div>
+      </div>
+      <div class="skill-row">
+        <div class="skill-header"><span class="skill-name">Python / Coding</span><span class="skill-gap">Gap: 28%</span></div>
+        <div class="skill-bar-bg"><div class="skill-bar-demand" style="width:73%;"></div><div class="skill-bar-have" style="width:45%;"></div></div>
+      </div>
+      <div class="skill-row">
+        <div class="skill-header"><span class="skill-name">Data Structures</span><span class="skill-gap">Gap: 29%</span></div>
+        <div class="skill-bar-bg"><div class="skill-bar-demand" style="width:67%;"></div><div class="skill-bar-have" style="width:38%;"></div></div>
+      </div>
+      <div class="skill-row">
+        <div class="skill-header"><span class="skill-name">SQL / Database</span><span class="skill-gap">Gap: 23%</span></div>
+        <div class="skill-bar-bg"><div class="skill-bar-demand" style="width:71%;"></div><div class="skill-bar-have" style="width:48%;"></div></div>
+      </div>
+      <div class="skill-row">
+        <div class="skill-header"><span class="skill-name">Resume Writing</span><span class="skill-gap">Gap: 44%</span></div>
+        <div class="skill-bar-bg"><div class="skill-bar-demand" style="width:95%;"></div><div class="skill-bar-have" style="width:51%;"></div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">👥 Student Readiness (Sample)</div>
+      <table>
+        <tr><th>Student</th><th>ATS Score</th><th>Target</th><th>Status</th></tr>
+        <tr><td>CS Student, Yr4</td><td style="color:#22C55E;">82%</td><td>TCS</td><td><span class="badge placed">Placed</span></td></tr>
+        <tr><td>IT Student, Yr4</td><td style="color:#0EA5E9;">76%</td><td>Infosys</td><td><span class="badge interview">Interview</span></td></tr>
+        <tr><td>CS Student, Yr4</td><td style="color:#6C63FF;">71%</td><td>Wipro</td><td><span class="badge ready">Ready</span></td></tr>
+        <tr><td>Mech Student, Yr4</td><td style="color:#F59E0B;">48%</td><td>L&T</td><td><span class="badge work">Needs Work</span></td></tr>
+        <tr><td>Civil Student, Yr4</td><td style="color:#F59E0B;">41%</td><td>L&T</td><td><span class="badge work">Needs Work</span></td></tr>
+        <tr><td>EC Student, Yr4</td><td style="color:#22C55E;">79%</td><td>Accenture</td><td><span class="badge placed">Placed</span></td></tr>
+        <tr><td>IT Student, Yr4</td><td style="color:#6C63FF;">68%</td><td>Persistent</td><td><span class="badge ready">Ready</span></td></tr>
+        <tr><td>CS Student, Yr4</td><td style="color:#EF4444;">34%</td><td>TCS</td><td><span class="badge work">Needs Work</span></td></tr>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer">
+  Nine Lab · ninelab.in · AI Placement Intelligence · Students always free · © 2026
+</div>
+
+</body></html>""")
+
+
 @app.get("/ninelab/live", response_class=HTMLResponse)
 async def live_dashboard():
     """Live projector dashboard — shows real-time pitch day stats."""
