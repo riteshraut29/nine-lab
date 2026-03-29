@@ -1965,15 +1965,7 @@
         <div class="info-box" style="margin-bottom:16px;">
           💡 Don't have a JD yet? You can also paste the role title and key skills.
         </div>
-
-        <div class="divider"></div>
-
-        <div class="form-group">
-          <label class="form-label">Company Name <span class="opt">(recommended)</span></label>
-          <input type="text" id="companyInput" placeholder="e.g. Google, Infosys, Zomato..." maxlength="100" oninput="updateCompanyHint(this.value)" />
-          <div class="company-hint" id="companyHint"></div>
-          <p style="font-size:12px; color:var(--text-subtle); margin-top:6px;">We'll research this company for your prep report.</p>
-        </div>
+        <input type="hidden" id="companyInput" value="" />
 
         <!-- ATS Score collapsible -->
         <div class="ats-toggle-header" onclick="toggleATSSection()">
@@ -2748,7 +2740,7 @@
       currentCompany = job.company_type;
       // Pre-fill JD textarea and company field
       document.getElementById('jdInput').value = job.jd;
-      document.getElementById('companyInput').value = job.company_type;
+      document.getElementById('companyInput').value = '';
       // Trigger word count update
       const wcEvent = new Event('input');
       document.getElementById('jdInput').dispatchEvent(wcEvent);
@@ -3166,12 +3158,16 @@
     ───────────────────────────────────────────────────────────────────────── */
     async function handleGenerate() {
       const jd = document.getElementById('jdInput').value.trim();
-      const company = document.getElementById('companyInput').value.trim();
 
       if (!jd) { showStepError('step3Error', 'Please paste the job description.'); return; }
       clearStepError('step3Error');
 
-      // Store for apply links — use AI match title if available, else extract from JD first line
+      // Auto-extract company name from JD text
+      const companyMatch = jd.match(/(?:at|@|by|for|company[:\s]+|employer[:\s]+)\s*([A-Z][A-Za-z0-9&\s\.\-]{1,30})/);
+      const company = (companyMatch ? companyMatch[1].trim() : '') ;
+      document.getElementById('companyInput').value = company;
+
+      // Store for apply links
       currentCompany = company;
       if (!currentJobTitle) {
         currentJobTitle = jd.split('\n')[0].replace(/[^a-zA-Z0-9 ]/g, '').trim().slice(0, 60) || 'Software Developer';
