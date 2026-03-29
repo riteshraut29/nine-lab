@@ -786,6 +786,20 @@
       .apply-board-name { font-size:14px; font-weight:700; color:var(--text); }
       .apply-board-hint { font-size:12px; color:var(--text-muted); margin-top:1px; }
       .apply-board-arrow { font-size:16px; color:var(--text-subtle); }
+      /* Real job cards */
+      .apply-section-label { font-size:11px; font-weight:700; color:var(--text-subtle); text-transform:uppercase; letter-spacing:0.6px; padding:14px 20px 4px; }
+      .apply-job-card { display:flex; flex-direction:column; gap:6px; padding:14px 16px; border-radius:12px; border:1.5px solid var(--border); background:var(--bg-card); transition:border-color 0.15s, box-shadow 0.15s; }
+      .apply-job-card:hover { border-color:var(--purple); box-shadow:0 2px 10px rgba(108,99,255,0.1); }
+      .apply-job-card-top { display:flex; align-items:flex-start; justify-content:space-between; gap:8px; }
+      .apply-job-title { font-size:13px; font-weight:700; color:var(--text); flex:1; }
+      .apply-source-badge { font-size:10px; font-weight:700; padding:2px 8px; border-radius:20px; background:var(--purple-light); color:var(--purple); white-space:nowrap; flex-shrink:0; }
+      .apply-job-snippet { font-size:12px; color:var(--text-muted); line-height:1.5; }
+      .apply-job-footer { display:flex; align-items:center; justify-content:flex-end; }
+      .apply-job-btn { font-size:13px; font-weight:700; color:white; background:var(--purple); border:none; border-radius:8px; padding:7px 14px; cursor:pointer; text-decoration:none; transition:opacity 0.15s; display:inline-block; }
+      .apply-job-btn:hover { opacity:0.88; }
+      .apply-job-btn.applied { background:var(--success); pointer-events:none; }
+      .apply-cta-badge { display:inline-flex; align-items:center; justify-content:center; background:rgba(255,255,255,0.25); color:white; font-size:11px; font-weight:700; border-radius:12px; padding:1px 7px; margin-left:8px; }
+      .apply-spinner-row { display:flex; align-items:center; gap:10px; padding:20px 20px 10px; font-size:14px; color:var(--text-muted); }
       body.dark-mode .apply-sheet { background:#1a2035; }
       body.dark-mode .apply-sheet-handle { background:#2d3748; }
 
@@ -2028,8 +2042,9 @@
 
       <!-- Apply CTA -->
       <div class="apply-cta-wrap">
-        <button class="apply-cta-btn" onclick="openApplySheet()">
+        <button class="apply-cta-btn" id="applyCTABtn" onclick="openApplySheet()">
           🚀 Apply for this Job
+          <span class="apply-cta-badge" id="appliedCountBadge" style="display:none;">0 applied</span>
         </button>
       </div>
 
@@ -2150,6 +2165,30 @@
 
     function clearProfile() {
       localStorage.removeItem(PROFILE_KEY);
+    }
+
+    /* ─────────────────────────────────────────────────────────────────────────
+       APPLICATION TRACKER — localStorage only
+    ───────────────────────────────────────────────────────────────────────── */
+    const APPLIED_KEY = 'nl_applied_jobs';
+
+    function getAppliedJobs() {
+      try { return JSON.parse(localStorage.getItem(APPLIED_KEY) || '[]'); } catch(e) { return []; }
+    }
+    function saveAppliedJob(url, title, company) {
+      const list = getAppliedJobs();
+      if (list.some(j => j.url === url)) return;
+      list.push({ url, title, company, applied_at: Date.now() });
+      localStorage.setItem(APPLIED_KEY, JSON.stringify(list));
+      updateAppliedBadge();
+    }
+    function isApplied(url) { return getAppliedJobs().some(j => j.url === url); }
+    function updateAppliedBadge() {
+      const count = getAppliedJobs().length;
+      const b = document.getElementById('appliedCountBadge');
+      if (!b) return;
+      b.style.display = count > 0 ? 'inline-flex' : 'none';
+      b.textContent = count + ' applied';
     }
 
     /* ─────────────────────────────────────────────────────────────────────────
@@ -2433,48 +2472,75 @@
       document.getElementById('viewerOverlay').classList.remove('open');
     }
 
-    function openApplySheet() {
+    async function openApplySheet() {
       const title = currentJobTitle || 'Software Developer';
       const company = currentCompany || '';
-      const q = encodeURIComponent(title + (company ? ' ' + company : ''));
-      const titleOnly = encodeURIComponent(title);
-
-      const boards = [
-        {
-          name: 'LinkedIn',
-          hint: 'Most used for product & MNC roles',
-          emoji: '💼',
-          bg: '#0A66C2',
-          url: `https://www.linkedin.com/jobs/search/?keywords=${q}&location=India`
-        },
-        {
-          name: 'Naukri',
-          hint: 'Best for IT & Indian companies',
-          emoji: '🔍',
-          bg: '#FF7555',
-          url: `https://www.naukri.com/${titleOnly.toLowerCase().replace(/%20/g,'-')}-jobs`
-        },
-        {
-          name: 'Internshala',
-          hint: 'Great for freshers & internships',
-          emoji: '🎓',
-          bg: '#00A86B',
-          url: `https://internshala.com/jobs/${titleOnly.toLowerCase().replace(/%20/g,'-')}-jobs/`
-        },
-        {
-          name: 'Indeed India',
-          hint: 'Wide listings across all sectors',
-          emoji: '🌐',
-          bg: '#2164F3',
-          url: `https://in.indeed.com/jobs?q=${q}&l=India`
-        },
-      ];
 
       document.getElementById('applySheetSub').textContent =
         title + (company ? ' · ' + company : '');
 
+      // Open sheet immediately with spinner — don't make user wait
       const list = document.getElementById('applyBoardsList');
-      list.innerHTML = boards.map(b => `
+      list.innerHTML = `
+        <div class="apply-spinner-row">
+          <div class="spinner"></div>
+          Searching for real openings...
+        </div>`;
+      document.getElementById('applyOverlay').classList.add('open');
+
+      // Fetch real job listings from Tavily in background
+      let realJobs = [];
+      try {
+        const resp = await fetch(`${BASE}/real-jobs?${new URLSearchParams({ title, company })}`);
+        if (resp.ok) realJobs = (await resp.json()).jobs || [];
+      } catch(e) { /* fall through to boards-only view */ }
+
+      renderApplySheet(list, title, company, realJobs);
+    }
+
+    function renderApplySheet(list, title, company, realJobs) {
+      const q = encodeURIComponent(title + (company ? ' ' + company : ''));
+      const titleSlug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+
+      const fallbackBoards = [
+        { name:'LinkedIn',     hint:'Most used for product & MNC roles',  emoji:'💼', bg:'#0A66C2', url:`https://www.linkedin.com/jobs/search/?keywords=${q}&location=India` },
+        { name:'Naukri',       hint:'Best for IT & Indian companies',      emoji:'🔍', bg:'#FF7555', url:`https://www.naukri.com/${titleSlug}-jobs` },
+        { name:'Internshala',  hint:'Great for freshers & internships',    emoji:'🎓', bg:'#00A86B', url:`https://internshala.com/jobs/${titleSlug}-jobs/` },
+        { name:'Indeed India', hint:'Wide listings across all sectors',    emoji:'🌐', bg:'#2164F3', url:`https://in.indeed.com/jobs?q=${q}&l=India` },
+      ];
+
+      let html = '';
+
+      if (realJobs.length > 0) {
+        html += `<div class="apply-section-label">Live Openings Found</div>`;
+        realJobs.forEach((job, i) => {
+          const applied = isApplied(job.url);
+          html += `
+            <div class="apply-job-card">
+              <div class="apply-job-card-top">
+                <div class="apply-job-title">${escHtml(job.title)}</div>
+                <span class="apply-source-badge">${escHtml(job.source)}</span>
+              </div>
+              ${job.snippet ? `<div class="apply-job-snippet">${escHtml(job.snippet)}</div>` : ''}
+              <div class="apply-job-footer">
+                <a class="apply-job-btn${applied ? ' applied' : ''}"
+                   id="apply-btn-${i}"
+                   href="${applied ? '#' : escHtml(job.url)}"
+                   target="${applied ? '_self' : '_blank'}" rel="noopener"
+                   data-url="${escHtml(job.url)}"
+                   data-title="${escHtml(job.title)}"
+                   data-company="${escHtml(company)}"
+                   data-index="${i}"
+                   onclick="return handleApplyClick(this)">
+                  ${applied ? 'Applied ✓' : 'Apply →'}
+                </a>
+              </div>
+            </div>`;
+        });
+      }
+
+      html += `<div class="apply-section-label">${realJobs.length > 0 ? 'Search Manually' : 'Find Jobs On'}</div>`;
+      html += fallbackBoards.map(b => `
         <a class="apply-board-btn" href="${b.url}" target="_blank" rel="noopener">
           <div class="apply-board-logo" style="background:${b.bg}20;">${b.emoji}</div>
           <div class="apply-board-info">
@@ -2482,10 +2548,20 @@
             <div class="apply-board-hint">${b.hint}</div>
           </div>
           <div class="apply-board-arrow">↗</div>
-        </a>
-      `).join('');
+        </a>`).join('');
 
-      document.getElementById('applyOverlay').classList.add('open');
+      list.innerHTML = html;
+    }
+
+    function handleApplyClick(el) {
+      const url = el.dataset.url;
+      if (!url || isApplied(url)) return false; // already applied, block nav
+      saveAppliedJob(url, el.dataset.title, el.dataset.company);
+      el.textContent = 'Applied ✓';
+      el.classList.add('applied');
+      el.href = '#';
+      el.target = '_self';
+      return true; // let browser open the URL in new tab
     }
 
     function closeApplySheet() {
@@ -3473,6 +3549,8 @@
       goToStep(0);
       // Show welcome-back banner if saved profile exists
       checkWelcomeBack();
+      // Restore applied jobs badge count
+      updateAppliedBadge();
     }
 
     // Run after DOM is ready

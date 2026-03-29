@@ -179,6 +179,23 @@ def tavily_search(query: str, retries: int = 1) -> list[dict]:
             else:
                 raise e
 
+# ── Job board domain detector (used by /real-jobs) ───────────────────────────
+
+_JOB_BOARD_DOMAINS = {
+    "linkedin.com/jobs": "LinkedIn", "linkedin.com/job": "LinkedIn",
+    "naukri.com": "Naukri", "internshala.com": "Internshala",
+    "indeed.in": "Indeed", "in.indeed.com": "Indeed",
+    "foundit.in": "Foundit", "glassdoor.co.in": "Glassdoor",
+    "glassdoor.com": "Glassdoor", "shine.com": "Shine",
+}
+
+def _detect_job_board(url: str):
+    url_lower = url.lower()
+    for domain, source in _JOB_BOARD_DOMAINS.items():
+        if domain in url_lower:
+            return source
+    return None
+
 # ── Text helpers ──────────────────────────────────────────────────────────────
 
 def strip_md(text: str) -> str:
@@ -1870,6 +1887,47 @@ Return exactly 4 objects."""
             {"title": "Backend Engineer", "company_type": "Fintech", "skills": ["Java", "Spring Boot", "MySQL", "Microservices"], "jd": "Design and build high-performance backend systems for our payment platform. Work in an agile team to deliver reliable, scalable services.", "why": "Strong programming fundamentals fit backend engineering roles well."},
             {"title": "Associate Software Engineer", "company_type": "IT Services", "skills": ["Java", "SQL", "Problem Solving", "Communication"], "jd": "Work on client projects across domains. You'll develop, test, and maintain software solutions while learning from senior engineers.", "why": "Good entry-level opportunity matching your academic and project background."},
         ]})
+
+
+@app.get("/ninelab/real-jobs")
+async def real_jobs(title: str = "", company: str = ""):
+    """Search Tavily for actual job postings matching title and company."""
+    if not TAVILY_API_KEY:
+        return JSONResponse({"jobs": []})
+    title = title.strip()[:80]
+    company = company.strip()[:60]
+    if not title:
+        return JSONResponse({"jobs": []})
+
+    query_a = f'"{title}" job opening apply 2025 India'
+    query_b = f'{company + " " if company else ""}{title} hiring site:linkedin.com OR site:naukri.com OR site:internshala.com OR site:foundit.in'
+
+    raw = []
+    for q in [query_a, query_b]:
+        try:
+            raw.extend(tavily_search(q, retries=1))
+        except Exception:
+            pass
+
+    seen, jobs = set(), []
+    for r in raw:
+        url = r.get("url", "")
+        if not url or url in seen:
+            continue
+        source = _detect_job_board(url)
+        if not source:
+            continue
+        seen.add(url)
+        jobs.append({
+            "title": r.get("title", title)[:100],
+            "url": url,
+            "source": source,
+            "snippet": (r.get("content") or "")[:200].strip(),
+        })
+        if len(jobs) >= 5:
+            break
+
+    return JSONResponse({"jobs": jobs})
 
 
 @app.get("/", response_class=RedirectResponse)
