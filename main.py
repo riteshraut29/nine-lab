@@ -26,6 +26,7 @@ TAVILY_API_KEY = os.getenv("TAVILY_API_KEY", "")
 SUPABASE_URL = os.getenv("SUPABASE_URL", "")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY", "")
 SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SERVICE_KEY", "")
+JSEARCH_API_KEY = os.getenv("JSEARCH_API_KEY", "d478886deemshee1d5a113b51de6p1d199ajsnee586dc31325")
 
 jobs: dict[str, dict] = {}
 executor = ThreadPoolExecutor(max_workers=8)
@@ -1889,45 +1890,91 @@ Return exactly 4 objects."""
         ]})
 
 
+def _fetch_jsearch_jobs(title: str, company: str) -> list[dict]:
+    """Fetch real job/internship listings from JSearch (LinkedIn/Indeed/Glassdoor)."""
+    if not JSEARCH_API_KEY:
+        return []
+    import httpx
+    try:
+        query = f"{title} India"
+        r = httpx.get(
+            "https://jsearch.p.rapidapi.com/search",
+            headers={
+                "x-rapidapi-key": JSEARCH_API_KEY,
+                "x-rapidapi-host": "jsearch.p.rapidapi.com",
+            },
+            params={"query": query, "page": "1", "num_pages": "1", "date_posted": "month"},
+            timeout=8,
+        )
+        if r.status_code != 200:
+            return []
+        out = []
+        for job in r.json().get("data", [])[:8]:
+            url = job.get("job_apply_link") or job.get("job_google_link", "")
+            if not url:
+                continue
+            pub = (job.get("job_publisher") or "").lower()
+            source = "LinkedIn" if "linkedin" in pub else \
+                     "Indeed"   if "indeed"   in pub else \
+                     "Glassdoor"if "glassdoor"in pub else \
+                     (job.get("job_publisher") or "Job Board")
+            title_raw = job.get("job_title") or title
+            is_intern = "intern" in title_raw.lower()
+            out.append({
+                "title":   title_raw[:100],
+                "company": (job.get("employer_name") or "")[:60],
+                "url":     url,
+                "source":  source,
+                "type":    "internship" if is_intern else "job",
+                "snippet": (job.get("job_description") or "")[:200].strip(),
+            })
+        return out
+    except Exception:
+        return []
+
+
 @app.get("/ninelab/real-jobs")
-async def real_jobs(title: str = "", company: str = ""):
-    """Search Tavily for actual job postings matching title and company."""
-    if not TAVILY_API_KEY:
-        return JSONResponse({"jobs": []})
-    title = title.strip()[:80]
+async def real_jobs(title: str = "", company: str = "", type: str = "both"):
+    """Fetch real job listings from JSearch; Tavily as last-resort fallback."""
+    title   = title.strip()[:80]
     company = company.strip()[:60]
     if not title:
-        return JSONResponse({"jobs": []})
+        return JSONResponse({"jobs": [], "internships": []})
 
-    query_a = f'"{title}" job opening apply 2025 India'
-    query_b = f'{company + " " if company else ""}{title} hiring site:linkedin.com OR site:naukri.com OR site:internshala.com OR site:foundit.in'
+    raw = _fetch_jsearch_jobs(title, company)
 
-    raw = []
-    for q in [query_a, query_b]:
+    # Tavily fallback only if JSearch unavailable
+    if not raw and TAVILY_API_KEY:
         try:
-            raw.extend(tavily_search(q, retries=1))
+            for r in tavily_search(f'"{title}" job apply 2025 India', retries=0):
+                url = r.get("url", "")
+                source = _detect_job_board(url) if url else None
+                if source:
+                    raw.append({
+                        "title":   r.get("title", title)[:100],
+                        "company": "",
+                        "url":     url,
+                        "source":  source,
+                        "type":    "job",
+                        "snippet": (r.get("content") or "")[:200].strip(),
+                    })
         except Exception:
             pass
 
-    seen, jobs = set(), []
+    seen, result_jobs, result_interns = set(), [], []
     for r in raw:
         url = r.get("url", "")
         if not url or url in seen:
             continue
-        source = _detect_job_board(url)
-        if not source:
-            continue
         seen.add(url)
-        jobs.append({
-            "title": r.get("title", title)[:100],
-            "url": url,
-            "source": source,
-            "snippet": (r.get("content") or "")[:200].strip(),
-        })
-        if len(jobs) >= 5:
-            break
+        if r.get("type") == "internship":
+            if len(result_interns) < 5:
+                result_interns.append(r)
+        else:
+            if len(result_jobs) < 5:
+                result_jobs.append(r)
 
-    return JSONResponse({"jobs": jobs})
+    return JSONResponse({"jobs": result_jobs, "internships": result_interns})
 
 
 @app.get("/", response_class=RedirectResponse)

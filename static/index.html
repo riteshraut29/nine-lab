@@ -800,6 +800,10 @@
       .apply-job-btn.applied { background:var(--success); pointer-events:none; }
       .apply-cta-badge { display:inline-flex; align-items:center; justify-content:center; background:rgba(255,255,255,0.25); color:white; font-size:11px; font-weight:700; border-radius:12px; padding:1px 7px; margin-left:8px; }
       .apply-spinner-row { display:flex; align-items:center; gap:10px; padding:20px 20px 10px; font-size:14px; color:var(--text-muted); }
+      .apply-tabs { display:flex; gap:8px; }
+      .apply-tab { flex:1; padding:9px; border:1.5px solid var(--border); border-radius:10px; background:var(--bg-card); font-size:13px; font-weight:600; cursor:pointer; color:var(--text-muted); transition:all 0.15s; }
+      .apply-tab.active { background:var(--purple-light); border-color:var(--purple); color:var(--purple); }
+      .apply-job-meta { font-size:11px; color:var(--text-muted); margin-top:2px; display:flex; align-items:center; gap:4px; flex-wrap:wrap; }
       body.dark-mode .apply-sheet { background:#1a2035; }
       body.dark-mode .apply-sheet-handle { background:#2d3748; }
 
@@ -2488,58 +2492,54 @@
         </div>`;
       document.getElementById('applyOverlay').classList.add('open');
 
-      // Fetch real job listings from Tavily in background
-      let realJobs = [];
+      // Fetch real job + internship listings from JSearch
+      let jobs = [], internships = [];
       try {
-        const resp = await fetch(`${BASE}/real-jobs?${new URLSearchParams({ title, company })}`);
-        if (resp.ok) realJobs = (await resp.json()).jobs || [];
+        const resp = await fetch(`${BASE}/real-jobs?${new URLSearchParams({ title, company, type: 'both' })}`);
+        if (resp.ok) {
+          const data = await resp.json();
+          jobs        = data.jobs        || [];
+          internships = data.internships || [];
+        }
       } catch(e) { /* fall through to boards-only view */ }
 
-      renderApplySheet(list, title, company, realJobs);
+      renderApplySheet(list, title, company, jobs, internships);
     }
 
-    function renderApplySheet(list, title, company, realJobs) {
-      const q = encodeURIComponent(title + (company ? ' ' + company : ''));
+    function renderApplySheet(list, title, company, jobs, internships) {
+      const q         = encodeURIComponent(title + (company ? ' ' + company : ''));
       const titleSlug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
 
       const fallbackBoards = [
-        { name:'LinkedIn',     hint:'Most used for product & MNC roles',  emoji:'💼', bg:'#0A66C2', url:`https://www.linkedin.com/jobs/search/?keywords=${q}&location=India` },
-        { name:'Naukri',       hint:'Best for IT & Indian companies',      emoji:'🔍', bg:'#FF7555', url:`https://www.naukri.com/${titleSlug}-jobs` },
-        { name:'Internshala',  hint:'Great for freshers & internships',    emoji:'🎓', bg:'#00A86B', url:`https://internshala.com/jobs/${titleSlug}-jobs/` },
-        { name:'Indeed India', hint:'Wide listings across all sectors',    emoji:'🌐', bg:'#2164F3', url:`https://in.indeed.com/jobs?q=${q}&l=India` },
+        { name:'LinkedIn',    hint:'Most used for product & MNC roles', emoji:'💼', bg:'#0A66C2', url:`https://www.linkedin.com/jobs/search/?keywords=${q}&location=India` },
+        { name:'Naukri',      hint:'Best for IT & Indian companies',     emoji:'🔍', bg:'#FF7555', url:`https://www.naukri.com/${titleSlug}-jobs` },
+        { name:'Internshala', hint:'Great for freshers & internships',   emoji:'🎓', bg:'#00A86B', url:`https://internshala.com/jobs/${titleSlug}-jobs/` },
+        { name:'Indeed India',hint:'Wide listings across all sectors',   emoji:'🌐', bg:'#2164F3', url:`https://in.indeed.com/jobs?q=${q}&l=India` },
       ];
 
+      const hasJobs    = jobs.length > 0;
+      const hasInterns = internships.length > 0;
       let html = '';
 
-      if (realJobs.length > 0) {
+      if (hasJobs || hasInterns) {
         html += `<div class="apply-section-label">Live Openings Found</div>`;
-        realJobs.forEach((job, i) => {
-          const applied = isApplied(job.url);
+
+        // Tabs — only show if both types exist
+        if (hasJobs && hasInterns) {
           html += `
-            <div class="apply-job-card">
-              <div class="apply-job-card-top">
-                <div class="apply-job-title">${escHtml(job.title)}</div>
-                <span class="apply-source-badge">${escHtml(job.source)}</span>
-              </div>
-              ${job.snippet ? `<div class="apply-job-snippet">${escHtml(job.snippet)}</div>` : ''}
-              <div class="apply-job-footer">
-                <a class="apply-job-btn${applied ? ' applied' : ''}"
-                   id="apply-btn-${i}"
-                   href="${applied ? '#' : escHtml(job.url)}"
-                   target="${applied ? '_self' : '_blank'}" rel="noopener"
-                   data-url="${escHtml(job.url)}"
-                   data-title="${escHtml(job.title)}"
-                   data-company="${escHtml(company)}"
-                   data-index="${i}"
-                   onclick="return handleApplyClick(this)">
-                  ${applied ? 'Applied ✓' : 'Apply →'}
-                </a>
-              </div>
-            </div>`;
-        });
+            <div class="apply-tabs" style="padding:0 20px 12px;">
+              <button class="apply-tab active" id="applyTabJobs"    onclick="switchApplyTab('jobs')">💼 Jobs (${jobs.length})</button>
+              <button class="apply-tab"        id="applyTabInterns" onclick="switchApplyTab('internships')">🎓 Internships (${internships.length})</button>
+            </div>
+            <div id="applyJobsList">${_buildJobCards(jobs, 'j')}</div>
+            <div id="applyInternsList" style="display:none;">${_buildJobCards(internships, 'i')}</div>`;
+        } else {
+          html += _buildJobCards(hasJobs ? jobs : internships, 'r');
+        }
       }
 
-      html += `<div class="apply-section-label">${realJobs.length > 0 ? 'Search Manually' : 'Find Jobs On'}</div>`;
+      html += `<div class="apply-section-label" style="margin-top:${hasJobs||hasInterns?'16':'0'}px;">${hasJobs||hasInterns ? 'Search Manually' : 'Find Jobs On'}</div>`;
+      html += `<div style="display:flex;flex-direction:column;gap:8px;padding:0 20px;">`;
       html += fallbackBoards.map(b => `
         <a class="apply-board-btn" href="${b.url}" target="_blank" rel="noopener">
           <div class="apply-board-logo" style="background:${b.bg}20;">${b.emoji}</div>
@@ -2549,8 +2549,50 @@
           </div>
           <div class="apply-board-arrow">↗</div>
         </a>`).join('');
+      html += `</div>`;
 
       list.innerHTML = html;
+    }
+
+    function _buildJobCards(list, prefix) {
+      return list.map((job, i) => {
+        const applied = isApplied(job.url);
+        return `
+          <div class="apply-job-card" style="margin:0 20px 8px;padding:14px;">
+            <div class="apply-job-card-top">
+              <div>
+                <div class="apply-job-title">${escHtml(job.title)}</div>
+                ${job.company ? `<div class="apply-job-meta">${escHtml(job.company)} · <span class="apply-source-badge" style="font-size:10px;">${escHtml(job.source)}</span></div>` : `<span class="apply-source-badge">${escHtml(job.source)}</span>`}
+              </div>
+            </div>
+            ${job.snippet ? `<div class="apply-job-snippet" style="margin-top:6px;">${escHtml(job.snippet.slice(0,160))}...</div>` : ''}
+            <div class="apply-job-footer" style="margin-top:10px;">
+              <a class="apply-job-btn${applied ? ' applied' : ''}"
+                 id="apply-btn-${prefix}-${i}"
+                 href="${applied ? '#' : escHtml(job.url)}"
+                 target="${applied ? '_self' : '_blank'}" rel="noopener"
+                 data-url="${escHtml(job.url)}"
+                 data-title="${escHtml(job.title)}"
+                 data-company="${escHtml(job.company || '')}"
+                 onclick="return handleApplyClick(this)">
+                ${applied ? 'Applied ✓' : 'Apply →'}
+              </a>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    function switchApplyTab(which) {
+      const jobsList    = document.getElementById('applyJobsList');
+      const internsList = document.getElementById('applyInternsList');
+      const tabJobs     = document.getElementById('applyTabJobs');
+      const tabInterns  = document.getElementById('applyTabInterns');
+      if (!jobsList || !internsList) return;
+      const showJobs = which === 'jobs';
+      jobsList.style.display    = showJobs ? 'block' : 'none';
+      internsList.style.display = showJobs ? 'none'  : 'block';
+      tabJobs.classList.toggle('active',    showJobs);
+      tabInterns.classList.toggle('active', !showJobs);
     }
 
     function handleApplyClick(el) {
