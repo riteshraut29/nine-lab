@@ -753,6 +753,42 @@
       .pdf-card-actions { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
 
       /* PDF Viewer Modal */
+      /* Apply Sheet */
+      .apply-cta-wrap { margin: 20px 0 4px; }
+      .apply-cta-btn {
+        width: 100%; padding: 16px; border-radius: 14px; border: none; cursor: pointer;
+        background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+        color: #fff; font-size: 16px; font-weight: 700; letter-spacing: 0.2px;
+        display: flex; align-items: center; justify-content: center; gap: 8px;
+        box-shadow: 0 4px 16px rgba(22,163,74,0.3); transition: opacity 0.15s, transform 0.1s;
+      }
+      .apply-cta-btn:hover { opacity: 0.92; transform: translateY(-1px); }
+      .apply-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:9998; align-items:flex-end; }
+      .apply-overlay.open { display:flex; animation:fadeIn 0.2s ease; }
+      .apply-sheet {
+        background:#fff; border-radius:24px 24px 0 0; width:100%; padding:0 0 32px;
+        animation:slideUp 0.25s cubic-bezier(0.34,1.2,0.64,1);
+      }
+      .apply-sheet-handle { width:40px; height:4px; background:#e2e8f0; border-radius:2px; margin:12px auto 0; }
+      .apply-sheet-header { padding:16px 20px 4px; display:flex; justify-content:space-between; align-items:flex-start; }
+      .apply-sheet-title { font-size:17px; font-weight:700; color:var(--text); }
+      .apply-sheet-sub { font-size:12px; color:var(--text-muted); margin-top:2px; }
+      .apply-sheet-close { background:none; border:none; font-size:20px; color:var(--text-muted); cursor:pointer; padding:0; line-height:1; }
+      .apply-boards { display:flex; flex-direction:column; gap:10px; padding:16px 20px 0; }
+      .apply-board-btn {
+        display:flex; align-items:center; gap:14px; padding:14px 16px;
+        border-radius:12px; border:1.5px solid var(--border); background:var(--bg-card);
+        text-decoration:none; cursor:pointer; transition:border-color 0.15s, box-shadow 0.15s;
+      }
+      .apply-board-btn:hover { border-color:var(--purple); box-shadow:0 2px 10px rgba(108,99,255,0.1); }
+      .apply-board-logo { width:36px; height:36px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0; }
+      .apply-board-info { flex:1; }
+      .apply-board-name { font-size:14px; font-weight:700; color:var(--text); }
+      .apply-board-hint { font-size:12px; color:var(--text-muted); margin-top:1px; }
+      .apply-board-arrow { font-size:16px; color:var(--text-subtle); }
+      body.dark-mode .apply-sheet { background:#1a2035; }
+      body.dark-mode .apply-sheet-handle { background:#2d3748; }
+
       .viewer-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:9999; align-items:flex-end; }
       .viewer-overlay.open { display:flex; animation:fadeIn 0.2s ease; }
       .viewer-sheet { background:#fff; border-radius:24px 24px 0 0; width:100%; max-height:90vh; display:flex; flex-direction:column; animation:slideUp 0.25s cubic-bezier(0.34,1.2,0.64,1); }
@@ -1990,6 +2026,30 @@
         </div>
       </div>
 
+      <!-- Apply CTA -->
+      <div class="apply-cta-wrap">
+        <button class="apply-cta-btn" onclick="openApplySheet()">
+          🚀 Apply for this Job
+        </button>
+      </div>
+
+      <!-- Apply Bottom Sheet -->
+      <div class="apply-overlay" id="applyOverlay" onclick="if(event.target===this)closeApplySheet()">
+        <div class="apply-sheet">
+          <div class="apply-sheet-handle"></div>
+          <div class="apply-sheet-header">
+            <div>
+              <div class="apply-sheet-title">Apply now</div>
+              <div class="apply-sheet-sub" id="applySheetSub">Choose a platform to apply</div>
+            </div>
+            <button class="apply-sheet-close" onclick="closeApplySheet()">✕</button>
+          </div>
+          <div class="apply-boards" id="applyBoardsList">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+      </div>
+
       <!-- PDF Viewer Modal -->
       <div class="viewer-overlay" id="viewerOverlay" onclick="if(event.target===this)closeViewer()">
         <div class="viewer-sheet">
@@ -2045,6 +2105,8 @@
     let pollInterval = null;     // setInterval handle
     let assembledResume = "";    // the built resume text passed to /generate
     let lastATSResult = null;    // cached ATS result from step 3
+    let currentCompany = "";     // company name for apply links
+    let currentJobTitle = "";    // job title for apply links
     let roleCount = 0;           // how many role blocks have been added
 
     // Profile data (mirrors form fields)
@@ -2370,6 +2432,65 @@
     function closeViewer() {
       document.getElementById('viewerOverlay').classList.remove('open');
     }
+
+    function openApplySheet() {
+      const title = currentJobTitle || 'Software Developer';
+      const company = currentCompany || '';
+      const q = encodeURIComponent(title + (company ? ' ' + company : ''));
+      const titleOnly = encodeURIComponent(title);
+
+      const boards = [
+        {
+          name: 'LinkedIn',
+          hint: 'Most used for product & MNC roles',
+          emoji: '💼',
+          bg: '#0A66C2',
+          url: `https://www.linkedin.com/jobs/search/?keywords=${q}&location=India`
+        },
+        {
+          name: 'Naukri',
+          hint: 'Best for IT & Indian companies',
+          emoji: '🔍',
+          bg: '#FF7555',
+          url: `https://www.naukri.com/${titleOnly.toLowerCase().replace(/%20/g,'-')}-jobs`
+        },
+        {
+          name: 'Internshala',
+          hint: 'Great for freshers & internships',
+          emoji: '🎓',
+          bg: '#00A86B',
+          url: `https://internshala.com/jobs/${titleOnly.toLowerCase().replace(/%20/g,'-')}-jobs/`
+        },
+        {
+          name: 'Indeed India',
+          hint: 'Wide listings across all sectors',
+          emoji: '🌐',
+          bg: '#2164F3',
+          url: `https://in.indeed.com/jobs?q=${q}&l=India`
+        },
+      ];
+
+      document.getElementById('applySheetSub').textContent =
+        title + (company ? ' · ' + company : '');
+
+      const list = document.getElementById('applyBoardsList');
+      list.innerHTML = boards.map(b => `
+        <a class="apply-board-btn" href="${b.url}" target="_blank" rel="noopener">
+          <div class="apply-board-logo" style="background:${b.bg}20;">${b.emoji}</div>
+          <div class="apply-board-info">
+            <div class="apply-board-name">${b.name}</div>
+            <div class="apply-board-hint">${b.hint}</div>
+          </div>
+          <div class="apply-board-arrow">↗</div>
+        </a>
+      `).join('');
+
+      document.getElementById('applyOverlay').classList.add('open');
+    }
+
+    function closeApplySheet() {
+      document.getElementById('applyOverlay').classList.remove('open');
+    }
     function closeStartOptions(e) {
       if (!e || e.target === document.getElementById('startOverlay')) {
         document.getElementById('startOverlay').classList.remove('open');
@@ -2445,6 +2566,9 @@
     function useJDMatch(index) {
       const job = window._jdMatches && window._jdMatches[index];
       if (!job) return;
+      // Store for apply links
+      currentJobTitle = job.title;
+      currentCompany = job.company_type;
       // Pre-fill JD textarea and company field
       document.getElementById('jdInput').value = job.jd;
       document.getElementById('companyInput').value = job.company_type;
@@ -2869,6 +2993,12 @@
 
       if (!jd) { showStepError('step3Error', 'Please paste the job description.'); return; }
       clearStepError('step3Error');
+
+      // Store for apply links — use AI match title if available, else extract from JD first line
+      currentCompany = company;
+      if (!currentJobTitle) {
+        currentJobTitle = jd.split('\n')[0].replace(/[^a-zA-Z0-9 ]/g, '').trim().slice(0, 60) || 'Software Developer';
+      }
 
       goToStep(4);
 
