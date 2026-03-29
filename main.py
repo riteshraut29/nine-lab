@@ -2004,8 +2004,7 @@ async def generate(req: GenerateRequest, request: Request,
         raise HTTPException(400, detail="Please provide your resume.")
     if not req.jd.strip():
         raise HTTPException(400, detail="Please provide the job description.")
-    if len(req.company.strip()) < 2:
-        raise HTTPException(400, detail="Please enter the company name.")
+    # company name is optional — auto-extracted from JD if not provided
 
     if not GEMINI_API_KEY and not GROQ_API_KEY:
         raise HTTPException(400, detail="No AI API key configured. Add GROQ_API_KEY or GEMINI_API_KEY.")
