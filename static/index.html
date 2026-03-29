@@ -633,6 +633,69 @@
       .pipe-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
       .pipe-dot.spinning { animation: spin 1s linear infinite; }
 
+      /* ─── Step 2.5: AI Job Matches ─────────────────────────────────── */
+      #step2b { display: none; }
+      .jd-match-grid { display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px; }
+      .jd-match-card {
+        background: var(--bg-card);
+        border: 1.5px solid var(--border);
+        border-radius: 14px;
+        padding: 16px;
+        cursor: pointer;
+        transition: border-color 0.15s, box-shadow 0.15s, transform 0.1s;
+        position: relative;
+      }
+      .jd-match-card:hover {
+        border-color: var(--purple);
+        box-shadow: 0 4px 16px rgba(108,99,255,0.13);
+        transform: translateY(-1px);
+      }
+      .jd-match-card.selected {
+        border-color: var(--purple);
+        background: var(--purple-light);
+      }
+      .jd-match-title {
+        font-size: 15px; font-weight: 700; margin-bottom: 3px; color: var(--text);
+      }
+      .jd-match-type {
+        font-size: 11px; color: var(--text-muted); font-weight: 500;
+        text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px;
+      }
+      .jd-match-skills {
+        display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px;
+      }
+      .jd-skill-chip {
+        background: var(--bg-subtle); border: 1px solid var(--border);
+        border-radius: 100px; font-size: 11px; padding: 3px 10px; color: var(--text-muted); font-weight: 500;
+      }
+      .jd-match-why {
+        font-size: 12px; color: var(--purple); font-weight: 600;
+        display: flex; align-items: flex-start; gap: 4px; line-height: 1.4;
+      }
+      .jd-use-btn {
+        position: absolute; right: 14px; top: 50%;
+        transform: translateY(-50%);
+        background: var(--purple); color: #fff;
+        border: none; border-radius: 8px;
+        font-size: 12px; font-weight: 700;
+        padding: 6px 12px; cursor: pointer;
+        white-space: nowrap; transition: opacity 0.15s;
+      }
+      .jd-use-btn:hover { opacity: 0.85; }
+      .jd-loading-state { text-align: center; padding: 40px 0; }
+      .jd-loading-spinner {
+        width: 36px; height: 36px; border: 3px solid var(--purple-light);
+        border-top-color: var(--purple); border-radius: 50%;
+        animation: spin 0.8s linear infinite; margin: 0 auto 14px;
+      }
+      .jd-loading-text { font-size: 14px; color: var(--text-muted); font-weight: 500; }
+      .jd-skip-link {
+        display: block; text-align: center; margin-top: 8px;
+        font-size: 13px; color: var(--text-muted); cursor: pointer;
+        text-decoration: underline; text-underline-offset: 3px;
+      }
+      .jd-skip-link:hover { color: var(--purple); }
+
       /* ─── Step 5: Results ───────────────────────────────────────────── */
       #step5 { display: none; }
       .results-header { text-align: center; margin-bottom: 28px; }
@@ -1710,7 +1773,54 @@
         <a class="edit-profile-link" onclick="goToStep(1)">Edit profile</a>
       </div>
 
-      <button class="btn-primary" onclick="goToStep(3)">This looks right →</button>
+      <button class="btn-primary" onclick="goToFindJobs()">Find matching jobs →</button>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════
+         STEP 2.5 — AI Job Matches
+    ════════════════════════════════════════════════ -->
+    <div id="step2b">
+      <div class="step-header">
+        <button class="back-btn" onclick="goToStep(2)" title="Back">←</button>
+        <div>
+          <div class="step-breadcrumb">
+            <div class="step-crumb done"></div>
+            <div class="step-crumb active"></div>
+            <div class="step-crumb"></div>
+            <span class="step-crumb-label">Step 2 of 3</span>
+          </div>
+          <div class="step-title">Jobs that fit your profile</div>
+        </div>
+      </div>
+
+      <!-- Loading state -->
+      <div id="jdLoadingState" class="jd-loading-state">
+        <div class="jd-loading-spinner"></div>
+        <div class="jd-loading-text">AI is finding your best matches...</div>
+        <div style="font-size:12px;color:var(--text-subtle);margin-top:6px;">Takes 5–10 seconds</div>
+      </div>
+
+      <!-- Results state -->
+      <div id="jdMatchResults" style="display:none;">
+        <p style="font-size:13px;color:var(--text-muted);margin-bottom:14px;line-height:1.5;">
+          Based on your profile, here are 4 roles you're well-suited for. Tap one to use it, or add your own.
+        </p>
+        <div class="jd-match-grid" id="jdMatchGrid">
+          <!-- Cards rendered by JS -->
+        </div>
+        <button class="btn-outline" style="width:100%;margin-top:4px;" onclick="goToStep(3)">
+          + Add my own JD instead
+        </button>
+        <span class="jd-skip-link" onclick="goToStep(3)">Skip this step</span>
+      </div>
+
+      <!-- Error state -->
+      <div id="jdMatchError" style="display:none;">
+        <div class="info-box" style="margin-bottom:16px;">
+          Could not load job suggestions. You can still paste your own JD below.
+        </div>
+        <button class="btn-primary" onclick="goToStep(3)">Add my own JD →</button>
+      </div>
     </div>
 
     <!-- ═══════════════════════════════════════════════
@@ -1943,7 +2053,7 @@
     /* ─────────────────────────────────────────────────────────────────────────
        STEP NAVIGATION
     ───────────────────────────────────────────────────────────────────────── */
-    const STEPS = ['step0','step1','step1b','step2','step3','step4','step5'];
+    const STEPS = ['step0','step1','step1b','step2','step2b','step3','step4','step5'];
 
     function showStep(id) {
       STEPS.forEach(s => document.getElementById(s).style.display = 'none');
@@ -1951,9 +2061,9 @@
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    // goToStep uses numeric mapping: 0=step0, 1=step1, 1.5=step1b, 2=step2, 3=step3, 4=step4, 5=step5
+    // goToStep uses numeric mapping: 0=step0, 1=step1, 1.5=step1b, 2=step2, 2.5=step2b, 3=step3, 4=step4, 5=step5
     function goToStep(n) {
-      const map = { 0: 'step0', 1: 'step1', 1.5: 'step1b', 2: 'step2', 3: 'step3', 4: 'step4', 5: 'step5' };
+      const map = { 0: 'step0', 1: 'step1', 1.5: 'step1b', 2: 'step2', 2.5: 'step2b', 3: 'step3', 4: 'step4', 5: 'step5' };
       if (map[n]) {
         currentStep = n;
         showStep(map[n]);
@@ -2278,6 +2388,75 @@
       initExpFields();
       initSkillChips();
       goToStep(1);
+    }
+
+    /* ─── Step 2.5 — AI Job Matches ─────────────────────────────────────── */
+    async function goToFindJobs() {
+      goToStep(2.5);
+      // Reset to loading state
+      document.getElementById('jdLoadingState').style.display = 'block';
+      document.getElementById('jdMatchResults').style.display = 'none';
+      document.getElementById('jdMatchError').style.display = 'none';
+
+      try {
+        const resp = await fetch(`${BASE}/find-jds`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ resume: assembledResume || '' })
+        });
+        if (!resp.ok) throw new Error('Bad response');
+        const data = await resp.json();
+        renderJDMatches(data.jobs || []);
+      } catch (e) {
+        document.getElementById('jdLoadingState').style.display = 'none';
+        document.getElementById('jdMatchError').style.display = 'block';
+      }
+    }
+
+    function renderJDMatches(jobs) {
+      document.getElementById('jdLoadingState').style.display = 'none';
+      const grid = document.getElementById('jdMatchGrid');
+      grid.innerHTML = '';
+
+      jobs.forEach((job, i) => {
+        const skillsHtml = (job.skills || [])
+          .map(s => `<span class="jd-skill-chip">${escHtml(s)}</span>`)
+          .join('');
+
+        const card = document.createElement('div');
+        card.className = 'jd-match-card';
+        card.innerHTML = `
+          <div style="padding-right:80px;">
+            <div class="jd-match-title">${escHtml(job.title)}</div>
+            <div class="jd-match-type">${escHtml(job.company_type)}</div>
+            <div class="jd-match-skills">${skillsHtml}</div>
+            <div class="jd-match-why">✦ ${escHtml(job.why)}</div>
+          </div>
+          <button class="jd-use-btn" onclick="useJDMatch(${i})">Use this →</button>
+        `;
+        grid.appendChild(card);
+      });
+
+      // Store for later use
+      window._jdMatches = jobs;
+      document.getElementById('jdMatchResults').style.display = 'block';
+    }
+
+    function useJDMatch(index) {
+      const job = window._jdMatches && window._jdMatches[index];
+      if (!job) return;
+      // Pre-fill JD textarea and company field
+      document.getElementById('jdInput').value = job.jd;
+      document.getElementById('companyInput').value = job.company_type;
+      // Trigger word count update
+      const wcEvent = new Event('input');
+      document.getElementById('jdInput').dispatchEvent(wcEvent);
+      // Highlight selected card
+      document.querySelectorAll('.jd-match-card').forEach((c, i) => {
+        c.classList.toggle('selected', i === index);
+      });
+      // Go to JD step after short delay so user sees selection
+      setTimeout(() => goToStep(3), 180);
     }
 
     // Initialize one default role block if none exist

@@ -1807,6 +1807,71 @@ async def extract_resume(file: UploadFile = File(...)):
         raise HTTPException(500, detail=f"Error reading PDF: {str(e)}")
 
 
+class FindJDsRequest(BaseModel):
+    resume: str
+
+@app.post("/ninelab/find-jds")
+async def find_matching_jds(req: FindJDsRequest):
+    """Given a user's resume/profile text, return 4 AI-matched job descriptions."""
+    profile = req.resume[:3000]  # cap context
+    prompt = f"""You are a career advisor. Based on this candidate profile, suggest 4 realistic job roles they should apply for.
+
+CANDIDATE PROFILE:
+{profile}
+
+Return ONLY a valid JSON array of 4 objects. No markdown, no explanation.
+Each object must have exactly these fields:
+- "title": job role title (e.g. "Backend Developer", "Data Analyst")
+- "company_type": type of company (e.g. "Product Startup", "MNC", "Consultancy", "Fintech")
+- "skills": array of 4–5 key skills required (strings)
+- "jd": a realistic 150-word job description for this role
+- "why": one sentence explaining why this matches the candidate
+
+Example format:
+[
+  {{
+    "title": "Backend Developer",
+    "company_type": "Product Startup",
+    "skills": ["Python", "FastAPI", "PostgreSQL", "REST APIs"],
+    "jd": "We are looking for...",
+    "why": "Your Python and API experience directly matches this role."
+  }}
+]
+
+Return exactly 4 objects."""
+
+    try:
+        raw = gemini_call(prompt, temperature=0.7)
+        # Strip markdown fences if present
+        raw = re.sub(r'```(?:json)?', '', raw).strip().strip('`').strip()
+        start = raw.find('[')
+        end = raw.rfind(']') + 1
+        if start == -1 or end == 0:
+            raise ValueError("No JSON array found")
+        jobs_data = json.loads(raw[start:end])
+        if not isinstance(jobs_data, list):
+            raise ValueError("Not a list")
+        # Validate and sanitize
+        clean = []
+        for j in jobs_data[:4]:
+            clean.append({
+                "title": str(j.get("title", "Software Developer")),
+                "company_type": str(j.get("company_type", "Tech Company")),
+                "skills": [str(s) for s in j.get("skills", [])[:5]],
+                "jd": str(j.get("jd", ""))[:500],
+                "why": str(j.get("why", ""))[:200],
+            })
+        return JSONResponse({"jobs": clean})
+    except Exception as e:
+        # Fallback: return generic suggestions
+        return JSONResponse({"jobs": [
+            {"title": "Software Developer", "company_type": "Product Startup", "skills": ["Python", "JavaScript", "REST APIs", "Git"], "jd": "Join our team to build scalable web applications. You will design and implement backend services, work with frontend teams, and deploy on cloud infrastructure.", "why": "Your technical skills match a typical full-stack developer role."},
+            {"title": "Data Analyst", "company_type": "MNC", "skills": ["Python", "SQL", "Excel", "Data Visualization"], "jd": "We are looking for a data analyst to help interpret data and turn it into information that can offer ways to improve our business.", "why": "Analytical and technical skills make you a strong data analyst candidate."},
+            {"title": "Backend Engineer", "company_type": "Fintech", "skills": ["Java", "Spring Boot", "MySQL", "Microservices"], "jd": "Design and build high-performance backend systems for our payment platform. Work in an agile team to deliver reliable, scalable services.", "why": "Strong programming fundamentals fit backend engineering roles well."},
+            {"title": "Associate Software Engineer", "company_type": "IT Services", "skills": ["Java", "SQL", "Problem Solving", "Communication"], "jd": "Work on client projects across domains. You'll develop, test, and maintain software solutions while learning from senior engineers.", "why": "Good entry-level opportunity matching your academic and project background."},
+        ]})
+
+
 @app.get("/", response_class=RedirectResponse)
 async def root_redirect():
     return RedirectResponse(url="/ninelab/", status_code=302)
