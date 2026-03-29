@@ -1524,6 +1524,12 @@ def run_pipeline(job_id: str, resume: str, jd: str, company: str):
                 "reality": reality_file,
                 "plan": plan_file,
                 "resume": resume_file,
+            },
+            "texts": {
+                "scorecard": analysis_text[:8000] if analysis_text else "",
+                "prep": plan_result.get("data", "")[:8000],
+                "resume": resume_result.get("data", "")[:8000],
+                "company": company_report_result.get("data", "")[:8000],
             }
         })
         # Update pitch_leads with ATS scores and persist

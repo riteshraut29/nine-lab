@@ -677,6 +677,32 @@
         transition: background 0.15s; flex-shrink: 0;
       }
       .download-btn:hover { background: var(--purple-dark); }
+      .view-btn {
+        display: inline-flex; align-items: center; gap: 5px;
+        background: transparent; color: var(--purple);
+        border: 1.5px solid var(--purple);
+        padding: 7px 14px; border-radius: 8px;
+        font-size: 13px; font-weight: 600;
+        cursor: pointer; white-space: nowrap;
+        transition: all 0.15s; flex-shrink: 0;
+      }
+      .view-btn:hover { background: var(--purple-light); }
+      .pdf-card-actions { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
+
+      /* PDF Viewer Modal */
+      .viewer-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:9999; align-items:flex-end; }
+      .viewer-overlay.open { display:flex; animation:fadeIn 0.2s ease; }
+      .viewer-sheet { background:#fff; border-radius:24px 24px 0 0; width:100%; max-height:90vh; display:flex; flex-direction:column; animation:slideUp 0.25s cubic-bezier(0.34,1.2,0.64,1); }
+      .viewer-header { padding:16px 20px 12px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #f0f0f0; flex-shrink:0; }
+      .viewer-title { font-size:15px; font-weight:700; color:#1a1a2e; }
+      .viewer-actions { display:flex; gap:8px; align-items:center; }
+      .viewer-dl-btn { background:var(--purple); color:#fff; border:none; padding:7px 16px; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; }
+      .viewer-close { background:none; border:none; font-size:22px; color:#94a3b8; cursor:pointer; padding:0 4px; }
+      .viewer-body { overflow-y:auto; padding:20px; flex:1; }
+      body.dark-mode .viewer-sheet { background:#1a2035; }
+      body.dark-mode .viewer-header { border-color:#2d3748; }
+      body.dark-mode .viewer-title { color:#fff; }
+      body.dark-mode .view-btn { border-color:var(--purple); color:var(--purple); }
 
       /* Feedback section */
       .feedback-card {
@@ -1808,7 +1834,10 @@
               <div class="pdf-desc">Your ATS match %, skill gaps, and exact fixes needed</div>
             </div>
           </div>
-          <a href="#" class="download-btn" id="dlReality">↓ Download</a>
+          <div class="pdf-card-actions">
+            <button class="view-btn" onclick="viewReport('scorecard')">👁 View</button>
+            <a href="#" class="download-btn" id="dlReality">↓ Download</a>
+          </div>
         </div>
         <div class="pdf-card">
           <div class="pdf-card-left">
@@ -1818,7 +1847,10 @@
               <div class="pdf-desc">Study plan, likely questions, and resources for this role</div>
             </div>
           </div>
-          <a href="#" class="download-btn" id="dlPlan">↓ Download</a>
+          <div class="pdf-card-actions">
+            <button class="view-btn" onclick="viewReport('prep')">👁 View</button>
+            <a href="#" class="download-btn" id="dlPlan">↓ Download</a>
+          </div>
         </div>
         <div class="pdf-card highlight">
           <div class="pdf-card-left">
@@ -1828,7 +1860,10 @@
               <div class="pdf-desc">Keywords injected, format fixed, ready to apply directly</div>
             </div>
           </div>
-          <a href="#" class="download-btn" id="dlResume">↓ Download</a>
+          <div class="pdf-card-actions">
+            <button class="view-btn" onclick="viewReport('resume')">👁 View</button>
+            <a href="#" class="download-btn" id="dlResume">↓ Download</a>
+          </div>
         </div>
         <div class="pdf-card">
           <div class="pdf-card-left">
@@ -1838,7 +1873,24 @@
               <div class="pdf-desc">Interview rounds, what they test, salary range, and culture</div>
             </div>
           </div>
-          <a href="#" class="download-btn" id="dlCompany">↓ Download</a>
+          <div class="pdf-card-actions">
+            <button class="view-btn" onclick="viewReport('company')">👁 View</button>
+            <a href="#" class="download-btn" id="dlCompany">↓ Download</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- PDF Viewer Modal -->
+      <div class="viewer-overlay" id="viewerOverlay" onclick="if(event.target===this)closeViewer()">
+        <div class="viewer-sheet">
+          <div class="viewer-header">
+            <div class="viewer-title" id="viewerTitle">Report</div>
+            <div class="viewer-actions">
+              <button class="viewer-dl-btn" id="viewerDlBtn">↓ Download</button>
+              <button class="viewer-close" onclick="closeViewer()">✕</button>
+            </div>
+          </div>
+          <div class="viewer-body" id="viewerBody"></div>
         </div>
       </div>
 
@@ -2168,6 +2220,45 @@
 
     function showStartOptions() {
       document.getElementById('startOverlay').classList.add('open');
+    }
+
+    // ── PDF Viewer ─────────────────────────────────────────────────────────
+    const VIEWER_CONFIG = {
+      scorecard: { title: '📊 Resume Scorecard', dlId: 'dlReality' },
+      prep:      { title: '🗺️ Interview Prep Guide', dlId: 'dlPlan' },
+      resume:    { title: '✨ Job-Ready Resume', dlId: 'dlResume' },
+      company:   { title: '🏢 Company Cheat Sheet', dlId: 'dlCompany' },
+    };
+
+    function viewReport(type) {
+      const cfg = VIEWER_CONFIG[type];
+      if (!cfg) return;
+      document.getElementById('viewerTitle').textContent = cfg.title;
+
+      // Wire download button to the same href as the card's download link
+      const dlBtn = document.getElementById('viewerDlBtn');
+      const dlLink = document.getElementById(cfg.dlId);
+      dlBtn.onclick = () => { if (dlLink && dlLink.href && dlLink.href !== '#') window.open(dlLink.href, '_blank'); };
+
+      // Build content from stored report text
+      const body = document.getElementById('viewerBody');
+      const text = window._reportTexts && window._reportTexts[type];
+
+      if (!text) {
+        body.innerHTML = `<div style="text-align:center;padding:40px;color:#94a3b8;">
+          <div style="font-size:40px;margin-bottom:12px;">⏳</div>
+          <div style="font-size:15px;font-weight:600;">Generate your kit first</div>
+          <div style="font-size:13px;margin-top:8px;">Complete the form above to see your personalized report here.</div>
+        </div>`;
+      } else {
+        body.innerHTML = `<div style="white-space:pre-wrap;font-family:'Segoe UI',sans-serif;font-size:13.5px;line-height:1.75;color:var(--text);">${escHtml(text)}</div>`;
+      }
+
+      document.getElementById('viewerOverlay').classList.add('open');
+    }
+
+    function closeViewer() {
+      document.getElementById('viewerOverlay').classList.remove('open');
     }
     function closeStartOptions(e) {
       if (!e || e.target === document.getElementById('startOverlay')) {
@@ -2684,7 +2775,7 @@
 
           if (data.stage === 'done') {
             clearInterval(pollInterval);
-            showResults(data.files, jd, company, data.ats_before, data.ats_after, data.flashcards);
+            showResults(data.files, jd, company, data.ats_before, data.ats_after, data.flashcards, data.texts);
           } else if (data.stage === 'error') {
             clearInterval(pollInterval);
             goToStep(3);
@@ -2697,7 +2788,14 @@
     /* ─────────────────────────────────────────────────────────────────────────
        STEP 5 — Show Results
     ───────────────────────────────────────────────────────────────────────── */
-    async function showResults(files, jd, company, atsBefore, atsAfter, flashcards) {
+    async function showResults(files, jd, company, atsBefore, atsAfter, flashcards, texts) {
+      // Store report texts for in-app viewer
+      window._reportTexts = {
+        scorecard: (texts && texts.scorecard) || '',
+        prep:      (texts && texts.prep)      || '',
+        resume:    (texts && texts.resume)    || '',
+        company:   (texts && texts.company)   || '',
+      };
       // Set download links
       document.getElementById('dlReality').href = `${BASE}/pdf/${files.reality}`;
       document.getElementById('dlPlan').href = `${BASE}/pdf/${files.plan}`;
