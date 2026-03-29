@@ -639,49 +639,61 @@
       .jd-match-card {
         background: var(--bg-card);
         border: 1.5px solid var(--border);
-        border-radius: 14px;
-        padding: 16px;
+        border-radius: 16px;
+        padding: 16px 16px 14px;
         cursor: pointer;
         transition: border-color 0.15s, box-shadow 0.15s, transform 0.1s;
-        position: relative;
+        display: flex; flex-direction: column; gap: 10px;
       }
       .jd-match-card:hover {
         border-color: var(--purple);
-        box-shadow: 0 4px 16px rgba(108,99,255,0.13);
+        box-shadow: 0 4px 20px rgba(108,99,255,0.14);
         transform: translateY(-1px);
       }
       .jd-match-card.selected {
         border-color: var(--purple);
         background: var(--purple-light);
       }
+      .jd-match-top {
+        display: flex; align-items: flex-start; justify-content: space-between; gap: 10px;
+      }
       .jd-match-title {
-        font-size: 15px; font-weight: 700; margin-bottom: 3px; color: var(--text);
-      }
-      .jd-match-type {
-        font-size: 11px; color: var(--text-muted); font-weight: 500;
-        text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px;
-      }
-      .jd-match-skills {
-        display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px;
-      }
-      .jd-skill-chip {
-        background: var(--bg-subtle); border: 1px solid var(--border);
-        border-radius: 100px; font-size: 11px; padding: 3px 10px; color: var(--text-muted); font-weight: 500;
-      }
-      .jd-match-why {
-        font-size: 12px; color: var(--purple); font-weight: 600;
-        display: flex; align-items: flex-start; gap: 4px; line-height: 1.4;
+        font-size: 15px; font-weight: 700; color: var(--text); line-height: 1.3;
+        flex: 1;
       }
       .jd-use-btn {
-        position: absolute; right: 14px; top: 50%;
-        transform: translateY(-50%);
         background: var(--purple); color: #fff;
         border: none; border-radius: 8px;
         font-size: 12px; font-weight: 700;
-        padding: 6px 12px; cursor: pointer;
-        white-space: nowrap; transition: opacity 0.15s;
+        padding: 7px 13px; cursor: pointer;
+        white-space: nowrap; flex-shrink: 0;
+        transition: opacity 0.15s, transform 0.1s;
       }
-      .jd-use-btn:hover { opacity: 0.85; }
+      .jd-use-btn:hover { opacity: 0.85; transform: translateY(-1px); }
+      .jd-match-meta {
+        display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+      }
+      .jd-match-type {
+        font-size: 10px; font-weight: 700; padding: 2px 9px;
+        border-radius: 20px; letter-spacing: 0.3px;
+        background: var(--bg-subtle); border: 1px solid var(--border);
+        color: var(--text-muted);
+      }
+      .jd-match-skills {
+        display: flex; flex-wrap: wrap; gap: 5px;
+      }
+      .jd-skill-chip {
+        background: var(--purple-light); border: 1px solid rgba(108,99,255,0.2);
+        border-radius: 100px; font-size: 11px; padding: 3px 9px;
+        color: var(--purple); font-weight: 600;
+      }
+      .jd-match-why {
+        font-size: 12px; color: var(--text-muted); font-weight: 500;
+        line-height: 1.5; padding-top: 2px;
+        border-top: 1px solid var(--border);
+        display: flex; align-items: flex-start; gap: 5px;
+      }
+      .jd-match-why-icon { color: var(--purple); flex-shrink: 0; margin-top: 1px; }
       .jd-loading-state { text-align: center; padding: 40px 0; }
       .jd-loading-spinner {
         width: 36px; height: 36px; border: 3px solid var(--purple-light);
@@ -2710,13 +2722,18 @@
         const card = document.createElement('div');
         card.className = 'jd-match-card';
         card.innerHTML = `
-          <div style="padding-right:80px;">
+          <div class="jd-match-top">
             <div class="jd-match-title">${escHtml(job.title)}</div>
-            <div class="jd-match-type">${escHtml(job.company_type)}</div>
-            <div class="jd-match-skills">${skillsHtml}</div>
-            <div class="jd-match-why">✦ ${escHtml(job.why)}</div>
+            <button class="jd-use-btn" onclick="useJDMatch(${i})">Use this →</button>
           </div>
-          <button class="jd-use-btn" onclick="useJDMatch(${i})">Use this →</button>
+          <div class="jd-match-meta">
+            <span class="jd-match-type">${escHtml(job.company_type)}</span>
+          </div>
+          <div class="jd-match-skills">${skillsHtml}</div>
+          <div class="jd-match-why">
+            <span class="jd-match-why-icon">✦</span>
+            <span>${escHtml(job.why)}</span>
+          </div>
         `;
         grid.appendChild(card);
       });
