@@ -1419,6 +1419,212 @@
       .ai-match-role { font-size: 13px; font-weight: 600; color: var(--text); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
       .ai-match-pct { font-size: 11px; font-weight: 700; color: #22c55e; background: #f0fdf4; padding: 2px 8px; border-radius: 20px; flex-shrink: 0; }
       .ai-match-note { font-size: 11px; color: var(--text-subtle); text-align: center; margin-top: 10px; }
+
+      /* ─── 2.0: Auth Nav Area ────────────────────────────────────────────── */
+      #authNavArea { display: none; }
+      .auth-nav-signed-out { display: flex; align-items: center; gap: 8px; }
+      .auth-nav-btn {
+        padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 700;
+        border: none; cursor: pointer; font-family: "Inter", sans-serif;
+        transition: all 0.15s;
+      }
+      .auth-nav-btn.primary { background: var(--purple); color: white; }
+      .auth-nav-btn.primary:hover { background: var(--purple-dark); }
+      .auth-nav-btn.ghost { background: var(--purple-light); color: var(--purple); }
+      .auth-nav-btn.ghost:hover { background: var(--purple); color: white; }
+      .auth-nav-signed-in { display: flex; align-items: center; gap: 8px; }
+      .auth-nav-avatar {
+        width: 30px; height: 30px; border-radius: 50%; background: var(--purple);
+        color: white; font-size: 13px; font-weight: 700;
+        display: flex; align-items: center; justify-content: center; cursor: pointer;
+      }
+      .auth-nav-name { font-size: 12px; font-weight: 600; color: var(--text); max-width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .auth-nav-dashboard { font-size: 12px; font-weight: 700; color: var(--purple); cursor: pointer; }
+      .auth-nav-dashboard:hover { text-decoration: underline; }
+      .auth-nav-logout { font-size: 11px; color: var(--text-muted); cursor: pointer; padding: 4px; }
+      .auth-nav-logout:hover { color: var(--error); }
+
+      /* ─── 2.0: Auth Modal (OTP) ─────────────────────────────────────────── */
+      .auth-overlay {
+        display: none; position: fixed; inset: 0;
+        background: rgba(0,0,0,0.45); z-index: 9999;
+        align-items: flex-end; justify-content: center;
+      }
+      .auth-overlay.open { display: flex; animation: fadeIn 0.2s ease; }
+      .auth-sheet {
+        background: white; border-radius: 24px 24px 0 0;
+        padding: 28px 24px 40px; width: 100%; max-width: 640px;
+        animation: slideUp 0.25s cubic-bezier(0.34,1.2,0.64,1);
+      }
+      .auth-handle { width: 36px; height: 4px; background: #e2e8f0; border-radius: 2px; margin: 0 auto 20px; }
+      .auth-sheet-title { font-size: 20px; font-weight: 800; color: var(--text); margin-bottom: 6px; }
+      .auth-sheet-sub { font-size: 14px; color: var(--text-muted); margin-bottom: 24px; line-height: 1.5; }
+      .auth-email-input {
+        width: 100%; padding: 14px 16px; border-radius: 12px;
+        border: 1.5px solid var(--border); font-size: 15px;
+        font-family: "Inter", sans-serif; background: var(--bg-subtle);
+        outline: none; margin-bottom: 12px; transition: border-color 0.15s;
+      }
+      .auth-email-input:focus { border-color: var(--purple); background: white; }
+      .auth-otp-wrap { display: flex; gap: 8px; margin-bottom: 12px; }
+      .auth-otp-input {
+        flex: 1; padding: 16px 10px; border-radius: 12px; border: 1.5px solid var(--border);
+        font-size: 24px; font-weight: 700; text-align: center; letter-spacing: 6px;
+        font-family: "Inter", sans-serif; background: var(--bg-subtle); outline: none;
+        transition: border-color 0.15s;
+      }
+      .auth-otp-input:focus { border-color: var(--purple); background: white; }
+      .auth-btn {
+        width: 100%; padding: 14px; border-radius: 12px; background: var(--purple);
+        color: white; font-size: 15px; font-weight: 700; border: none;
+        cursor: pointer; font-family: "Inter", sans-serif;
+        transition: background 0.15s, opacity 0.15s;
+      }
+      .auth-btn:hover:not(:disabled) { background: var(--purple-dark); }
+      .auth-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+      .auth-sent-note { font-size: 13px; color: var(--text-muted); text-align: center; margin-top: 12px; line-height: 1.6; }
+      .auth-sent-note b { color: var(--text); }
+      .auth-error { font-size: 13px; color: var(--error); margin-top: 10px; display: none; }
+      .auth-error.visible { display: block; }
+      .auth-back-link { font-size: 13px; color: var(--purple); cursor: pointer; text-align: center; margin-top: 14px; }
+      .auth-back-link:hover { text-decoration: underline; }
+      .auth-divider { text-align: center; font-size: 12px; color: var(--text-subtle); margin: 16px 0; }
+      .auth-pw-toggle { font-size: 12px; color: var(--purple); cursor: pointer; text-align: center; margin-top: 12px; }
+
+      /* ─── 2.0: Dashboard (stepDash) ─────────────────────────────────────── */
+      #stepDash { display: none; }
+      .dash-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+      .dash-greeting-name { font-size: 22px; font-weight: 800; color: var(--text); }
+      .dash-greeting-sub { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+      .dash-signout-btn { font-size: 12px; color: var(--text-muted); cursor: pointer; padding: 6px 12px; border-radius: 8px; border: 1px solid var(--border); background: white; font-family: "Inter", sans-serif; }
+      .dash-signout-btn:hover { color: var(--error); border-color: var(--error); }
+
+      /* Profile completion bar */
+      .dash-profile-bar {
+        background: white; border-radius: 16px; border: 1px solid var(--border);
+        padding: 16px 18px; margin-bottom: 16px;
+        display: flex; align-items: center; gap: 14px;
+      }
+      .dash-profile-pct { font-size: 22px; font-weight: 800; color: var(--purple); flex-shrink: 0; }
+      .dash-profile-info { flex: 1; min-width: 0; }
+      .dash-profile-label { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+      .dash-profile-track { height: 6px; background: var(--border); border-radius: 99px; overflow: hidden; }
+      .dash-profile-fill { height: 100%; background: var(--purple); border-radius: 99px; transition: width 0.4s ease; }
+      .dash-profile-action { font-size: 11px; font-weight: 600; color: var(--purple); cursor: pointer; flex-shrink: 0; }
+      .dash-profile-action:hover { text-decoration: underline; }
+
+      /* Stats row */
+      .dash-stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 16px; }
+      .dash-stat { background: white; border-radius: 12px; border: 1px solid var(--border); padding: 14px 12px; text-align: center; }
+      .dash-stat-num { font-size: 22px; font-weight: 800; color: var(--text); line-height: 1; }
+      .dash-stat-label { font-size: 10px; color: var(--text-muted); margin-top: 3px; }
+
+      /* Filter tabs */
+      .dash-tabs { display: flex; gap: 6px; margin-bottom: 14px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; }
+      .dash-tabs::-webkit-scrollbar { display: none; }
+      .dash-tab {
+        padding: 7px 14px; border-radius: 20px; font-size: 12px; font-weight: 600;
+        color: var(--text-muted); background: white; border: 1.5px solid var(--border);
+        cursor: pointer; white-space: nowrap; transition: all 0.15s; flex-shrink: 0;
+        font-family: "Inter", sans-serif;
+      }
+      .dash-tab.active { background: var(--purple); color: white; border-color: var(--purple); }
+      .dash-tab:hover:not(.active) { border-color: var(--purple); color: var(--purple); }
+
+      /* Opportunity cards */
+      .opp-feed { display: flex; flex-direction: column; gap: 10px; }
+      .opp-card {
+        background: white; border-radius: 16px; border: 1px solid var(--border);
+        padding: 16px 18px; transition: box-shadow 0.15s, transform 0.15s;
+      }
+      .opp-card:hover { box-shadow: 0 4px 16px rgba(108,99,255,0.1); transform: translateY(-1px); }
+      .opp-card-top { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 10px; }
+      .opp-card-icon {
+        width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0;
+        display: flex; align-items: center; justify-content: center; font-size: 18px;
+      }
+      .opp-card-icon.job { background: #f0efff; }
+      .opp-card-icon.internship { background: #f0fdf4; }
+      .opp-card-icon.hackathon { background: #fffbeb; }
+      .opp-card-icon.opensource { background: #f0f9ff; }
+      .opp-card-icon.scholarship { background: #fdf2f8; }
+      .opp-card-body { flex: 1; min-width: 0; }
+      .opp-card-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 2px; line-height: 1.3; }
+      .opp-card-company { font-size: 12px; color: var(--text-muted); }
+      .opp-card-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+      .opp-type-badge { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+      .opp-type-badge.job { background: #f0efff; color: var(--purple); }
+      .opp-type-badge.internship { background: #f0fdf4; color: #065f46; }
+      .opp-type-badge.hackathon { background: #fffbeb; color: #92400e; }
+      .opp-type-badge.opensource { background: #f0f9ff; color: #0369a1; }
+      .opp-type-badge.scholarship { background: #fdf2f8; color: #9d174d; }
+      .opp-location { font-size: 11px; color: var(--text-subtle); }
+      .opp-salary { font-size: 11px; color: #22c55e; font-weight: 600; }
+      .match-badge {
+        font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px;
+        background: #f0fdf4; color: #16a34a; margin-left: auto;
+      }
+      .match-badge.low { background: var(--purple-light); color: var(--purple); }
+      .opp-desc { font-size: 12px; color: var(--text-muted); line-height: 1.5; margin-bottom: 12px;
+                  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+      .opp-actions { display: flex; gap: 8px; }
+      .opp-btn {
+        flex: 1; padding: 9px 12px; border-radius: 10px; font-size: 13px; font-weight: 600;
+        border: none; cursor: pointer; font-family: "Inter", sans-serif; transition: all 0.15s;
+        text-align: center;
+      }
+      .opp-btn.primary { background: var(--purple); color: white; }
+      .opp-btn.primary:hover { background: var(--purple-dark); }
+      .opp-btn.ghost { background: var(--purple-light); color: var(--purple); }
+      .opp-btn.ghost:hover { background: var(--purple); color: white; }
+      .opp-btn.tracked { background: #f0fdf4; color: #16a34a; cursor: default; }
+      .opp-feed-empty { text-align: center; padding: 40px 20px; color: var(--text-muted); font-size: 14px; }
+      .opp-feed-spinner { text-align: center; padding: 40px; }
+
+      /* ─── 2.0: Application Tracker ──────────────────────────────────────── */
+      #stepTracker { display: none; }
+      .tracker-header { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }
+      .app-list { display: flex; flex-direction: column; gap: 10px; }
+      .app-card {
+        background: white; border-radius: 16px; border: 1px solid var(--border);
+        padding: 16px 18px;
+      }
+      .app-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+      .app-card-title { font-size: 14px; font-weight: 700; color: var(--text); }
+      .app-card-company { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+      .status-pill {
+        padding: 4px 10px; border-radius: 20px; font-size: 10px; font-weight: 700;
+        border: none; cursor: pointer; font-family: "Inter", sans-serif;
+        flex-shrink: 0;
+      }
+      .status-pill.saved { background: #f0efff; color: var(--purple); }
+      .status-pill.applied { background: #dbeafe; color: #1d4ed8; }
+      .status-pill.interviewing { background: #fffbeb; color: #92400e; }
+      .status-pill.offered { background: #dcfce7; color: #15803d; }
+      .status-pill.rejected { background: #fef2f2; color: #b91c1c; }
+      .status-pill.withdrawn { background: #f1f5f9; color: #64748b; }
+      .app-card-meta { font-size: 11px; color: var(--text-subtle); margin-bottom: 10px; }
+      .app-card-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+      .app-status-select {
+        flex: 1; min-width: 120px; padding: 7px 10px; border-radius: 8px;
+        border: 1.5px solid var(--border); font-size: 12px; font-weight: 600;
+        font-family: "Inter", sans-serif; background: var(--bg-subtle); cursor: pointer;
+        outline: none; color: var(--text);
+      }
+      .app-status-select:focus { border-color: var(--purple); }
+      .app-delete-btn { padding: 7px 12px; border-radius: 8px; border: 1.5px solid #fecaca; background: #fef2f2; color: #b91c1c; font-size: 12px; font-weight: 600; cursor: pointer; font-family: "Inter", sans-serif; }
+      .app-delete-btn:hover { background: #fee2e2; }
+      .app-list-empty { text-align: center; padding: 40px 20px; color: var(--text-muted); font-size: 14px; }
+
+      /* ─── 2.0: Toast notification ───────────────────────────────────────── */
+      .nl-toast {
+        position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
+        background: #1a1a2e; color: white; padding: 12px 20px; border-radius: 12px;
+        font-size: 13px; font-weight: 600; z-index: 99999;
+        opacity: 0; transition: opacity 0.2s; pointer-events: none;
+        white-space: nowrap; max-width: 90vw;
+      }
+      .nl-toast.show { opacity: 1; }
     </style>
   </head>
   <body>
@@ -1461,7 +1667,18 @@
               <div class="brand-icon">9L</div>
               <span class="brand-name">Nine Lab</span>
             </div>
-            <div class="lp-badge">✓ No login &nbsp;·&nbsp; ✓ Free</div>
+            <div id="authNavArea">
+              <!-- Signed-out state -->
+              <div class="auth-nav-signed-out" id="authNavOut">
+                <button class="auth-nav-btn ghost" onclick="openAuthModal()">Sign in</button>
+              </div>
+              <!-- Signed-in state (hidden initially) -->
+              <div class="auth-nav-signed-in" id="authNavIn" style="display:none;">
+                <div class="auth-nav-avatar" id="authNavAvatar" onclick="showDashboard()">?</div>
+                <span class="auth-nav-dashboard" onclick="showDashboard()">Dashboard</span>
+                <span class="auth-nav-logout" onclick="handleLogout()" title="Sign out">✕</span>
+              </div>
+            </div>
           </div>
 
           <!-- Award strip — moved to top for instant trust -->
@@ -4360,6 +4577,584 @@
       initOrbParallax();
     });
 
+    /* ═══════════════════════════════════════════════════════════════════════
+       NINE LAB 2.0 — Auth, Dashboard, Opportunities, Tracker
+    ═══════════════════════════════════════════════════════════════════════ */
+
+    // ── State ──────────────────────────────────────────────────────────────
+    var NL_TOKEN_KEY = 'nl_auth_token';
+    var NL_REFRESH_KEY = 'nl_refresh_token';
+    var NL_USER_KEY = 'nl_user_v2';
+    var currentUser2 = null;  // {id, email, full_name}
+    var authToken2 = null;
+    var dashOpps = [];        // cached opportunities for dashboard
+    var dashApps = [];        // cached applications
+    var dashOppFilter = 'all';
+    var trackedOppIds = new Set();  // set of tracked opp IDs (local cache)
+
+    // ── Toast ───────────────────────────────────────────────────────────────
+    var _toastTimer = null;
+    function showToast(msg, durationMs) {
+      durationMs = durationMs || 2400;
+      var el = document.getElementById('nlToast');
+      if (!el) return;
+      el.textContent = msg;
+      el.classList.add('show');
+      clearTimeout(_toastTimer);
+      _toastTimer = setTimeout(function() { el.classList.remove('show'); }, durationMs);
+    }
+
+    // ── Auth helpers ────────────────────────────────────────────────────────
+    function _authHeaders() {
+      return authToken2 ? { 'Authorization': 'Bearer ' + authToken2 } : {};
+    }
+
+    function _saveSession(token, refresh, user) {
+      authToken2 = token;
+      currentUser2 = user;
+      localStorage.setItem(NL_TOKEN_KEY, token);
+      localStorage.setItem(NL_REFRESH_KEY, refresh || '');
+      localStorage.setItem(NL_USER_KEY, JSON.stringify(user));
+    }
+
+    function _clearSession() {
+      authToken2 = null;
+      currentUser2 = null;
+      localStorage.removeItem(NL_TOKEN_KEY);
+      localStorage.removeItem(NL_REFRESH_KEY);
+      localStorage.removeItem(NL_USER_KEY);
+    }
+
+    function updateAuthNav() {
+      var area = document.getElementById('authNavArea');
+      var out = document.getElementById('authNavOut');
+      var inEl = document.getElementById('authNavIn');
+      var avatar = document.getElementById('authNavAvatar');
+      if (!area) return;
+      area.style.display = 'block';
+      if (currentUser2) {
+        out.style.display = 'none';
+        inEl.style.display = 'flex';
+        var initials = (currentUser2.full_name || currentUser2.email || '?').charAt(0).toUpperCase();
+        if (avatar) avatar.textContent = initials;
+      } else {
+        out.style.display = 'flex';
+        inEl.style.display = 'none';
+      }
+    }
+
+    // ── Session restore ─────────────────────────────────────────────────────
+    function tryRestoreSession() {
+      var token = localStorage.getItem(NL_TOKEN_KEY);
+      var userRaw = localStorage.getItem(NL_USER_KEY);
+      if (!token || !userRaw) { updateAuthNav(); return; }
+      try {
+        var user = JSON.parse(userRaw);
+        authToken2 = token;
+        currentUser2 = user;
+        updateAuthNav();
+        // Validate token silently
+        fetch(BASE + '/auth/me', {
+          headers: { 'Authorization': 'Bearer ' + token }
+        }).then(function(r) {
+          if (r.status === 401) {
+            // Try refresh
+            var refresh = localStorage.getItem(NL_REFRESH_KEY);
+            if (refresh) {
+              fetch(BASE + '/auth/refresh', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ refresh_token: refresh })
+              }).then(function(r2) { return r2.json(); }).then(function(d) {
+                if (d.access_token) {
+                  _saveSession(d.access_token, d.refresh_token, currentUser2);
+                } else {
+                  _clearSession(); updateAuthNav();
+                }
+              }).catch(function() { _clearSession(); updateAuthNav(); });
+            } else {
+              _clearSession(); updateAuthNav();
+            }
+          }
+        }).catch(function() { /* network issue, keep session */ });
+      } catch(e) { _clearSession(); updateAuthNav(); }
+    }
+
+    // ── Profile sync ────────────────────────────────────────────────────────
+    function syncProfileToServer() {
+      if (!authToken2 || !profileData || !profileData.name) return;
+      var roles = [];
+      try {
+        var roleEls = document.querySelectorAll('[data-role-idx]');
+        roleEls.forEach(function(_, i) {
+          var co = document.getElementById('r_company_'+i);
+          var ro = document.getElementById('r_role_'+i);
+          var yr = document.getElementById('r_years_'+i);
+          if (co && ro) roles.push({ company: co.value, role: ro.value, years: yr ? yr.value : '' });
+        });
+      } catch(e) {}
+      var body = {
+        full_name: profileData.name || '',
+        phone: profileData.phone || '',
+        linkedin_url: profileData.linkedin || '',
+        city: profileData.city || '',
+        degree: profileData.degree || '',
+        field_of_study: profileData.field || '',
+        college: profileData.college || '',
+        grad_year: profileData.gradYear || '',
+        cgpa: profileData.cgpa || '',
+        is_fresher: !!profileData.fresher,
+        skills: profileData.skills || '',
+        projects: profileData.projects || '',
+        achievements: profileData.achievements || '',
+        roles: roles,
+      };
+      fetch(BASE + '/v2/profile', {
+        method: 'POST',
+        headers: Object.assign({ 'Content-Type': 'application/json' }, _authHeaders()),
+        body: JSON.stringify(body)
+      }).catch(function() {});  // fire-and-forget
+    }
+
+    // ── Auth Modal ──────────────────────────────────────────────────────────
+    var _authMode = 'otp';  // 'otp' or 'password'
+
+    function openAuthModal() {
+      showAuthStep('email');
+      _authMode = 'otp';
+      document.getElementById('authOverlay').classList.add('open');
+    }
+
+    function closeAuthModal() {
+      document.getElementById('authOverlay').classList.remove('open');
+    }
+
+    function showAuthStep(step) {
+      document.getElementById('authStepEmail').style.display = step === 'email' ? 'block' : 'none';
+      document.getElementById('authStepOTP').style.display = step === 'otp' ? 'block' : 'none';
+      document.getElementById('authStepPassword').style.display = step === 'password' ? 'block' : 'none';
+      // Clear errors
+      ['authEmailError','authOTPError','authPwError'].forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) { el.textContent = ''; el.classList.remove('visible'); }
+      });
+    }
+
+    function toggleAuthMode() {
+      _authMode = _authMode === 'otp' ? 'password' : 'otp';
+      if (_authMode === 'password') {
+        showAuthStep('password');
+      } else {
+        showAuthStep('email');
+      }
+    }
+
+    function _setAuthBtnLoading(btnId, loading) {
+      var btn = document.getElementById(btnId);
+      if (!btn) return;
+      btn.disabled = loading;
+      if (loading) btn.setAttribute('data-orig', btn.textContent), btn.textContent = '...';
+      else btn.textContent = btn.getAttribute('data-orig') || btn.textContent;
+    }
+
+    function _showAuthError(elId, msg) {
+      var el = document.getElementById(elId);
+      if (!el) return;
+      el.textContent = msg;
+      el.classList.add('visible');
+    }
+
+    async function handleSendOTP() {
+      var email = (document.getElementById('authEmailInput').value || '').trim();
+      if (!email || !email.includes('@')) {
+        _showAuthError('authEmailError', 'Please enter a valid email address.'); return;
+      }
+      _setAuthBtnLoading('authSendBtn', true);
+      try {
+        var r = await fetch(BASE + '/auth/otp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: email })
+        });
+        var d = await r.json();
+        if (d.success || r.ok) {
+          document.getElementById('authEmailDisplay').textContent = email;
+          document.getElementById('authOTPInput').value = '';
+          showAuthStep('otp');
+        } else {
+          _showAuthError('authEmailError', d.detail || d.message || 'Could not send code. Please try again.');
+        }
+      } catch(e) {
+        _showAuthError('authEmailError', 'Network error. Please try again.');
+      } finally {
+        _setAuthBtnLoading('authSendBtn', false);
+      }
+    }
+
+    async function handleVerifyOTP() {
+      var email = (document.getElementById('authEmailInput').value || '').trim();
+      var otp = (document.getElementById('authOTPInput').value || '').trim();
+      if (!otp || otp.length < 6) {
+        _showAuthError('authOTPError', 'Please enter the 6-digit code.'); return;
+      }
+      _setAuthBtnLoading('authVerifyBtn', true);
+      try {
+        var r = await fetch(BASE + '/auth/verify-otp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: email, token: otp })
+        });
+        var d = await r.json();
+        if (d.success && d.access_token) {
+          onLoginSuccess(d);
+        } else {
+          _showAuthError('authOTPError', d.detail || d.message || 'Invalid or expired code. Please try again.');
+        }
+      } catch(e) {
+        _showAuthError('authOTPError', 'Network error. Please try again.');
+      } finally {
+        _setAuthBtnLoading('authVerifyBtn', false);
+      }
+    }
+
+    async function handlePasswordLogin() {
+      var email = (document.getElementById('authPwEmailInput').value || '').trim();
+      var pw = document.getElementById('authPwInput').value || '';
+      if (!email || !pw) { _showAuthError('authPwError', 'Email and password are required.'); return; }
+      _setAuthBtnLoading('authPwBtn', true);
+      try {
+        var r = await fetch(BASE + '/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: email, password: pw })
+        });
+        var d = await r.json();
+        if (d.success && d.access_token) {
+          onLoginSuccess(d);
+        } else {
+          _showAuthError('authPwError', d.detail || d.message || 'Invalid email or password.');
+        }
+      } catch(e) {
+        _showAuthError('authPwError', 'Network error. Please try again.');
+      } finally {
+        _setAuthBtnLoading('authPwBtn', false);
+      }
+    }
+
+    function onLoginSuccess(data) {
+      _saveSession(data.access_token, data.refresh_token, data.user || {});
+      updateAuthNav();
+      closeAuthModal();
+      showToast('✓ Signed in as ' + (data.user.email || ''));
+      // Sync local profile to server (if any)
+      syncProfileToServer();
+      // Go to dashboard
+      setTimeout(showDashboard, 300);
+    }
+
+    async function handleLogout() {
+      if (authToken2) {
+        fetch(BASE + '/auth/logout', {
+          method: 'POST',
+          headers: Object.assign({ 'Content-Type': 'application/json' }, _authHeaders())
+        }).catch(function() {});
+      }
+      _clearSession();
+      updateAuthNav();
+      // Hide dashboard / tracker screens
+      document.getElementById('stepDash').style.display = 'none';
+      document.getElementById('stepTracker').style.display = 'none';
+      goToStep(0);
+      showToast('Signed out.');
+    }
+
+    // ── Dashboard ───────────────────────────────────────────────────────────
+    function showDashboard() {
+      if (!currentUser2) { openAuthModal(); return; }
+      // Hide all app steps
+      var allSteps = document.querySelectorAll('#app > div[id^="step"]');
+      allSteps.forEach(function(s) { s.style.display = 'none'; });
+      document.getElementById('stepDash').style.display = 'block';
+      document.getElementById('stepTracker').style.display = 'none';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      loadDashboard();
+    }
+
+    async function loadDashboard() {
+      try {
+        var r = await fetch(BASE + '/v2/dashboard', { headers: _authHeaders() });
+        if (r.status === 401) { _clearSession(); updateAuthNav(); openAuthModal(); return; }
+        var d = await r.json();
+        if (!d.success) return;
+        // Update greeting
+        var name = (d.user.full_name || d.user.email || '').split(' ')[0];
+        document.getElementById('dashGreetName').textContent = 'Hey, ' + (name || 'there') + '! 👋';
+        // Profile bar
+        var pct = d.profile_pct || 0;
+        document.getElementById('dashProfilePct').textContent = pct + '%';
+        document.getElementById('dashProfileFill').style.width = pct + '%';
+        document.getElementById('dashProfileLabel').textContent =
+          pct < 80 ? 'Complete your profile for better matches' : 'Profile complete!';
+        // Stats
+        document.getElementById('dashStatTotal').textContent = d.stats.total || 0;
+        document.getElementById('dashStatInterviews').textContent = d.stats.interviews || 0;
+        document.getElementById('dashStatOffers').textContent = d.stats.offers || 0;
+        // Opportunities
+        dashOpps = d.opportunities || [];
+        dashApps = d.recent_applications || [];
+        trackedOppIds = new Set(dashApps.map(function(a) { return a.opportunity_id; }).filter(Boolean));
+        renderDashOpps(dashOpps);
+      } catch(e) {
+        document.getElementById('dashOppFeed').innerHTML =
+          '<div class="opp-feed-empty">Could not load. <span style="color:var(--purple);cursor:pointer;" onclick="loadDashboard()">Retry →</span></div>';
+      }
+    }
+
+    function filterDashOpps(type, tabEl) {
+      dashOppFilter = type;
+      document.querySelectorAll('.dash-tab').forEach(function(t) { t.classList.remove('active'); });
+      if (tabEl) tabEl.classList.add('active');
+      var filtered = type === 'all' ? dashOpps : dashOpps.filter(function(o) { return o.type === type; });
+      if (filtered.length === 0) {
+        // Fetch from server for this filter
+        fetchOpps(type);
+      } else {
+        renderDashOpps(filtered);
+      }
+    }
+
+    async function fetchOpps(type) {
+      document.getElementById('dashOppFeed').innerHTML = '<div class="opp-feed-spinner"><div class="spinner"></div></div>';
+      try {
+        var url = BASE + '/v2/opportunities?limit=25' + (type && type !== 'all' ? '&type='+type : '');
+        var r = await fetch(url, { headers: _authHeaders() });
+        var d = await r.json();
+        var opps = d.opportunities || [];
+        if (type === 'all' || !type) dashOpps = opps;
+        renderDashOpps(opps);
+      } catch(e) {
+        document.getElementById('dashOppFeed').innerHTML = '<div class="opp-feed-empty">Could not load opportunities.</div>';
+      }
+    }
+
+    function _oppIcon(type) {
+      var icons = { job: '💼', internship: '🎓', hackathon: '⚡', opensource: '🌐', scholarship: '🏅' };
+      return icons[type] || '📋';
+    }
+
+    function renderDashOpps(opps) {
+      var feed = document.getElementById('dashOppFeed');
+      if (!opps || opps.length === 0) {
+        feed.innerHTML = '<div class="opp-feed-empty">No opportunities found for this filter.</div>';
+        return;
+      }
+      var html = '';
+      opps.forEach(function(opp) {
+        var type = opp.type || 'job';
+        var score = opp.match_score || 0;
+        var isTracked = trackedOppIds.has(opp.id);
+        var matchLabel = score >= 8 ? '★ Great match' : score >= 4 ? '✓ Good match' : 'Possible match';
+        var matchClass = score >= 8 ? '' : 'low';
+        html += '<div class="opp-card">' +
+          '<div class="opp-card-top">' +
+            '<div class="opp-card-icon ' + type + '">' + _oppIcon(type) + '</div>' +
+            '<div class="opp-card-body">' +
+              '<div class="opp-card-title">' + _esc(opp.title) + '</div>' +
+              '<div class="opp-card-company">' + _esc(opp.company) + '</div>' +
+            '</div>' +
+            '<div class="match-badge ' + matchClass + '">' + matchLabel + '</div>' +
+          '</div>' +
+          '<div class="opp-card-meta">' +
+            '<span class="opp-type-badge ' + type + '">' + type + '</span>' +
+            (opp.location ? '<span class="opp-location">📍 ' + _esc(opp.location) + '</span>' : '') +
+            (opp.salary_range ? '<span class="opp-salary">' + _esc(opp.salary_range) + '</span>' : '') +
+          '</div>' +
+          '<div class="opp-desc">' + _esc(opp.description || '') + '</div>' +
+          '<div class="opp-actions">' +
+            '<button class="opp-btn primary" onclick="generateKitForOpp(' + JSON.stringify(opp).replace(/"/g,'&quot;') + ')">🚀 Generate Kit</button>' +
+            (isTracked
+              ? '<button class="opp-btn tracked">✓ Tracked</button>'
+              : '<button class="opp-btn ghost" onclick="trackOpp(' + JSON.stringify(opp).replace(/"/g,'&quot;') + ')">+ Track</button>') +
+          '</div>' +
+        '</div>';
+      });
+      feed.innerHTML = html;
+    }
+
+    function _esc(s) {
+      return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    function generateKitForOpp(opp) {
+      // Pre-fill the JD textarea with this opportunity's description + requirements
+      var jdText = opp.title + '\n' + opp.company + '\n\n' + (opp.description || '') + '\n\n' + (opp.requirements || '');
+      // Navigate to JD step
+      var jdInput = document.getElementById('jdInput');
+      if (jdInput) jdInput.value = jdText.trim();
+      // Hide dashboard, show app
+      document.getElementById('stepDash').style.display = 'none';
+      // If profile is already built, skip to step 3; otherwise go to step 0
+      if (profileData && profileData.name) {
+        assembledResume = buildResumeText(profileData);
+        goToStep(3);
+      } else {
+        goToStep(0);
+        setTimeout(function() { showStartOptions(); }, 300);
+      }
+      // Track as "saved"
+      if (currentUser2) trackOpp(opp);
+    }
+
+    async function trackOpp(opp) {
+      if (!currentUser2) { openAuthModal(); return; }
+      if (trackedOppIds.has(opp.id)) { showToast('Already tracking ' + opp.title); return; }
+      try {
+        var r = await fetch(BASE + '/v2/applications', {
+          method: 'POST',
+          headers: Object.assign({ 'Content-Type': 'application/json' }, _authHeaders()),
+          body: JSON.stringify({
+            opportunity_id: opp.id,
+            custom_title: opp.title,
+            custom_company: opp.company,
+            custom_url: opp.url || '',
+            status: 'saved',
+          })
+        });
+        var d = await r.json();
+        if (d.success) {
+          trackedOppIds.add(opp.id);
+          showToast('✓ Added to tracker: ' + opp.title);
+          // Re-render to update button
+          var filtered = dashOppFilter === 'all' ? dashOpps : dashOpps.filter(function(o) { return o.type === dashOppFilter; });
+          renderDashOpps(filtered);
+        }
+      } catch(e) { showToast('Could not track — try again.'); }
+    }
+
+    // ── Application Tracker ─────────────────────────────────────────────────
+    function showTracker() {
+      if (!currentUser2) { openAuthModal(); return; }
+      document.getElementById('stepDash').style.display = 'none';
+      document.getElementById('stepTracker').style.display = 'block';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      loadApplications();
+    }
+
+    async function loadApplications() {
+      var list = document.getElementById('appTrackerList');
+      list.innerHTML = '<div class="app-list-empty">Loading...</div>';
+      try {
+        var r = await fetch(BASE + '/v2/applications', { headers: _authHeaders() });
+        if (r.status === 401) { _clearSession(); updateAuthNav(); openAuthModal(); return; }
+        var d = await r.json();
+        dashApps = d.applications || [];
+        renderApplications();
+      } catch(e) {
+        list.innerHTML = '<div class="app-list-empty">Could not load applications. <span style="color:var(--purple);cursor:pointer;" onclick="loadApplications()">Retry →</span></div>';
+      }
+    }
+
+    var STATUS_LABELS = { saved:'Saved', applied:'Applied', interviewing:'Interviewing', offered:'Offered!', rejected:'Rejected', withdrawn:'Withdrawn' };
+
+    function renderApplications() {
+      var list = document.getElementById('appTrackerList');
+      if (!dashApps || dashApps.length === 0) {
+        list.innerHTML = '<div class="app-list-empty">No applications tracked yet.<br><br>Go to your <span style="color:var(--purple);cursor:pointer;" onclick="showDashboard()">Dashboard →</span> and click "Track" on any opportunity.</div>';
+        return;
+      }
+      var html = '';
+      dashApps.forEach(function(app) {
+        var title = app.custom_title || (app.opportunity ? app.opportunity.title : '') || 'Unnamed role';
+        var company = app.custom_company || (app.opportunity ? app.opportunity.company : '') || '';
+        var status = app.status || 'saved';
+        var date = app.applied_at ? new Date(app.applied_at).toLocaleDateString('en-IN', {day:'numeric',month:'short'}) : '';
+        html += '<div class="app-card" id="appcard-' + app.id + '">' +
+          '<div class="app-card-top">' +
+            '<div>' +
+              '<div class="app-card-title">' + _esc(title) + '</div>' +
+              (company ? '<div class="app-card-company">' + _esc(company) + '</div>' : '') +
+            '</div>' +
+            '<span class="status-pill ' + status + '">' + (STATUS_LABELS[status] || status) + '</span>' +
+          '</div>' +
+          (date ? '<div class="app-card-meta">Applied: ' + date + '</div>' : '') +
+          '<div class="app-card-actions">' +
+            '<select class="app-status-select" onchange="updateAppStatus(\'' + app.id + '\', this.value)">' +
+              Object.keys(STATUS_LABELS).map(function(s) {
+                return '<option value="' + s + '"' + (s === status ? ' selected' : '') + '>' + STATUS_LABELS[s] + '</option>';
+              }).join('') +
+            '</select>' +
+            '<button class="app-delete-btn" onclick="deleteApp(\'' + app.id + '\')">Remove</button>' +
+          '</div>' +
+        '</div>';
+      });
+      list.innerHTML = html;
+    }
+
+    async function updateAppStatus(appId, status) {
+      try {
+        await fetch(BASE + '/v2/applications/' + appId, {
+          method: 'PATCH',
+          headers: Object.assign({ 'Content-Type': 'application/json' }, _authHeaders()),
+          body: JSON.stringify({ status: status })
+        });
+        var app = dashApps.find(function(a) { return a.id === appId; });
+        if (app) { app.status = status; renderApplications(); }
+        showToast('✓ Status updated to ' + STATUS_LABELS[status]);
+      } catch(e) { showToast('Could not update status.'); }
+    }
+
+    async function deleteApp(appId) {
+      if (!confirm('Remove this application from tracker?')) return;
+      try {
+        await fetch(BASE + '/v2/applications/' + appId, {
+          method: 'DELETE',
+          headers: _authHeaders()
+        });
+        dashApps = dashApps.filter(function(a) { return a.id !== appId; });
+        renderApplications();
+        showToast('Removed from tracker.');
+      } catch(e) { showToast('Could not remove.'); }
+    }
+
+    // ── Hook into existing flow ─────────────────────────────────────────────
+    // Patch init() to call tryRestoreSession
+    var _origInit = typeof init === 'function' ? init : null;
+    if (_origInit) {
+      init = function() { _origInit(); tryRestoreSession(); };
+      // Re-run since DOMContentLoaded may have already fired
+      tryRestoreSession();
+    } else {
+      tryRestoreSession();
+    }
+
+    // Patch submitStep1 to sync profile to server after save
+    var _origSubmitStep1 = typeof submitStep1 === 'function' ? submitStep1 : null;
+    if (_origSubmitStep1) {
+      submitStep1 = function() {
+        _origSubmitStep1();
+        setTimeout(function() { if (authToken2) syncProfileToServer(); }, 500);
+      };
+    }
+
+    // Track "Apply for this Job" in step5 to server
+    var _origOpenApplySheet = typeof openApplySheet === 'function' ? openApplySheet : null;
+    if (_origOpenApplySheet) {
+      openApplySheet = function() {
+        _origOpenApplySheet();
+        if (authToken2 && currentCompany) {
+          fetch(BASE + '/v2/applications', {
+            method: 'POST',
+            headers: Object.assign({ 'Content-Type': 'application/json' }, _authHeaders()),
+            body: JSON.stringify({
+              custom_title: currentJobTitle || 'Custom role',
+              custom_company: currentCompany || '',
+              status: 'applied',
+            })
+          }).catch(function() {});
+        }
+      };
+    }
+
   </script>
   <!-- Dark Mode Toggle -->
   <div class="dark-toggle" id="darkToggle" onclick="toggleDarkMode()" title="Toggle dark mode">🌙</div>
@@ -4378,5 +5173,143 @@
   <div class="mobile-gen-bar" id="mobileGenBar">
     <button class="btn-primary" onclick="handleGenerate()">Generate My Kit →</button>
   </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       2.0: AUTH MODAL (OTP)
+  ════════════════════════════════════════════════════════════════════ -->
+  <div class="auth-overlay" id="authOverlay" onclick="if(event.target===this)closeAuthModal()">
+    <div class="auth-sheet">
+      <div class="auth-handle"></div>
+
+      <!-- Step 1: Email input -->
+      <div id="authStepEmail">
+        <div class="auth-sheet-title">Sign in to Nine Lab</div>
+        <div class="auth-sheet-sub">Enter your email — we'll send you a 6-digit code. No password needed.</div>
+        <input class="auth-email-input" type="email" id="authEmailInput" placeholder="you@example.com" />
+        <button class="auth-btn" onclick="handleSendOTP()" id="authSendBtn">Send Code →</button>
+        <div class="auth-error" id="authEmailError"></div>
+        <div class="auth-divider">— or —</div>
+        <div class="auth-pw-toggle" onclick="toggleAuthMode()">Use email & password instead</div>
+      </div>
+
+      <!-- Step 1 (password mode): Email + Password -->
+      <div id="authStepPassword" style="display:none;">
+        <div class="auth-sheet-title">Sign in with password</div>
+        <div class="auth-sheet-sub">Use your email and password to sign in.</div>
+        <input class="auth-email-input" type="email" id="authPwEmailInput" placeholder="you@example.com" />
+        <input class="auth-email-input" type="password" id="authPwInput" placeholder="Password (6+ chars)" />
+        <button class="auth-btn" onclick="handlePasswordLogin()" id="authPwBtn">Sign In →</button>
+        <div class="auth-error" id="authPwError"></div>
+        <div class="auth-pw-toggle" onclick="toggleAuthMode()">← Use magic code instead</div>
+      </div>
+
+      <!-- Step 2: OTP input -->
+      <div id="authStepOTP" style="display:none;">
+        <div class="auth-sheet-title">Check your email</div>
+        <div class="auth-sheet-sub" id="authOTPSub">We sent a 6-digit code to <b id="authEmailDisplay"></b></div>
+        <input class="auth-otp-input" type="text" id="authOTPInput" placeholder="● ● ● ● ● ●"
+               maxlength="6" inputmode="numeric" pattern="[0-9]*"
+               oninput="if(this.value.length===6)handleVerifyOTP()" />
+        <button class="auth-btn" onclick="handleVerifyOTP()" id="authVerifyBtn" style="margin-top:12px;">Verify →</button>
+        <div class="auth-error" id="authOTPError"></div>
+        <div class="auth-sent-note">Didn't get it? Check spam or <span style="color:var(--purple);cursor:pointer;" onclick="showAuthStep('email')">try again</span></div>
+      </div>
+
+      <div class="start-cancel" onclick="closeAuthModal()">Cancel</div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       2.0: DASHBOARD (stepDash)
+  ════════════════════════════════════════════════════════════════════ -->
+  <div id="stepDash">
+    <div class="app">
+      <!-- Header -->
+      <div class="dash-header">
+        <div>
+          <div class="dash-greeting-name" id="dashGreetName">Welcome back!</div>
+          <div class="dash-greeting-sub" id="dashGreetSub">Here's what's new for you</div>
+        </div>
+        <button class="dash-signout-btn" onclick="handleLogout()">Sign out</button>
+      </div>
+
+      <!-- Profile completion -->
+      <div class="dash-profile-bar">
+        <div class="dash-profile-pct" id="dashProfilePct">0%</div>
+        <div class="dash-profile-info">
+          <div class="dash-profile-label" id="dashProfileLabel">Complete your profile</div>
+          <div class="dash-profile-track">
+            <div class="dash-profile-fill" id="dashProfileFill" style="width:0%"></div>
+          </div>
+        </div>
+        <div class="dash-profile-action" onclick="goToStep(1)">Edit →</div>
+      </div>
+
+      <!-- Stats -->
+      <div class="dash-stats">
+        <div class="dash-stat">
+          <div class="dash-stat-num" id="dashStatTotal">0</div>
+          <div class="dash-stat-label">Tracked</div>
+        </div>
+        <div class="dash-stat">
+          <div class="dash-stat-num" id="dashStatInterviews">0</div>
+          <div class="dash-stat-label">Interviews</div>
+        </div>
+        <div class="dash-stat">
+          <div class="dash-stat-num" id="dashStatOffers">0</div>
+          <div class="dash-stat-label">Offers</div>
+        </div>
+      </div>
+
+      <!-- Section heading + Tracker CTA -->
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
+        <div class="lp-section-label" style="margin:0;">Opportunities for you</div>
+        <span style="font-size:12px;color:var(--purple);font-weight:600;cursor:pointer;" onclick="showTracker()">My applications →</span>
+      </div>
+
+      <!-- Filter tabs -->
+      <div class="dash-tabs" id="dashTabs">
+        <button class="dash-tab active" onclick="filterDashOpps('all',this)">All</button>
+        <button class="dash-tab" onclick="filterDashOpps('job',this)">Jobs</button>
+        <button class="dash-tab" onclick="filterDashOpps('internship',this)">Internships</button>
+        <button class="dash-tab" onclick="filterDashOpps('hackathon',this)">Hackathons</button>
+        <button class="dash-tab" onclick="filterDashOpps('opensource',this)">Open Source</button>
+        <button class="dash-tab" onclick="filterDashOpps('scholarship',this)">Scholarships</button>
+      </div>
+
+      <!-- Opportunity feed -->
+      <div class="opp-feed" id="dashOppFeed">
+        <div class="opp-feed-spinner"><div class="spinner"></div></div>
+      </div>
+
+      <!-- Back to kit builder link -->
+      <div style="text-align:center; margin-top:24px; padding-bottom:32px;">
+        <span style="font-size:13px; color:var(--text-muted);">Need to generate a prep kit for a custom role?</span><br>
+        <span style="font-size:13px; color:var(--purple); font-weight:600; cursor:pointer;" onclick="goToStep(0); setTimeout(()=>showStartOptions(),200)">Use the kit builder →</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       2.0: APPLICATION TRACKER (stepTracker)
+  ════════════════════════════════════════════════════════════════════ -->
+  <div id="stepTracker">
+    <div class="app">
+      <div class="tracker-header">
+        <button class="back-btn" onclick="showDashboard()" title="Back">←</button>
+        <div class="step-title">My Applications</div>
+      </div>
+      <div class="app-list" id="appTrackerList">
+        <div class="app-list-empty">Loading your applications...</div>
+      </div>
+      <div style="text-align:center; margin-top:20px; padding-bottom:32px;">
+        <button class="btn-outline" onclick="showDashboard()">← Back to Dashboard</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast notification -->
+  <div class="nl-toast" id="nlToast"></div>
+
   </body>
 </html>

@@ -2883,3 +2883,695 @@ async def health():
         "tavily": bool(TAVILY_API_KEY),
         "supabase": bool(SUPABASE_URL and SUPABASE_KEY),
     }}
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  NINE LAB 2.0 — Complete Career Platform
+# ══════════════════════════════════════════════════════════════════════════════
+
+# ── Supabase REST helper ───────────────────────────────────────────────────────
+
+def supabase_rest(method: str, table: str, *, payload=None, params: dict = None,
+                  token: str = None, use_service_key: bool = False,
+                  upsert: bool = False) -> dict:
+    """Hit Supabase PostgREST API. Always use service key server-side for writes."""
+    import httpx
+    auth_key = SUPABASE_SERVICE_KEY if use_service_key else (token or SUPABASE_KEY)
+    prefer = "return=representation"
+    if upsert:
+        prefer += ",resolution=merge-duplicates"
+    headers = {
+        "apikey": SUPABASE_KEY,
+        "Authorization": f"Bearer {auth_key}",
+        "Content-Type": "application/json",
+        "Prefer": prefer,
+    }
+    url = f"{SUPABASE_URL}/rest/v1/{table}"
+    qp = dict(params or {})
+    if "select" not in qp:
+        qp["select"] = "*"
+    try:
+        import httpx as _hx
+        if method == "GET":
+            r = _hx.get(url, headers=headers, params=qp, timeout=10)
+        elif method == "POST":
+            r = _hx.post(url, headers=headers, json=payload, params=qp, timeout=10)
+        elif method == "PATCH":
+            r = _hx.patch(url, headers=headers, json=payload, params=qp, timeout=10)
+        elif method == "DELETE":
+            r = _hx.delete(url, headers=headers, params=qp, timeout=10)
+        else:
+            return {"status": 405, "data": {"error": "Unsupported method"}}
+        data = r.json() if r.text else []
+        return {"status": r.status_code, "data": data}
+    except Exception as e:
+        return {"status": 500, "data": {"error": str(e)}}
+
+
+def _get_auth_user_v2(authorization: Optional[str]) -> Optional[dict]:
+    """Extract and validate user from 'Bearer <token>' header."""
+    if not authorization:
+        return None
+    token = authorization.removeprefix("Bearer ").strip()
+    if not token:
+        return None
+    return get_user_from_token(token)
+
+
+def _require_auth_v2(authorization: Optional[str]) -> dict:
+    user = _get_auth_user_v2(authorization)
+    if not user:
+        raise HTTPException(401, detail="Authentication required. Please sign in.")
+    return user
+
+
+# ── New Pydantic Models ────────────────────────────────────────────────────────
+
+class MagicLinkRequest(BaseModel):
+    email: str
+
+class OTPVerifyRequest(BaseModel):
+    email: str
+    token: str
+
+class ProfileSaveRequest(BaseModel):
+    full_name: Optional[str] = None
+    phone: Optional[str] = None
+    linkedin_url: Optional[str] = None
+    city: Optional[str] = None
+    degree: Optional[str] = None
+    field_of_study: Optional[str] = None
+    college: Optional[str] = None
+    grad_year: Optional[str] = None
+    cgpa: Optional[str] = None
+    is_fresher: Optional[bool] = None
+    skills: Optional[str] = None
+    projects: Optional[str] = None
+    achievements: Optional[str] = None
+    roles: Optional[list] = None
+
+class ApplicationCreateRequest(BaseModel):
+    opportunity_id: Optional[str] = None
+    custom_title: Optional[str] = None
+    custom_company: Optional[str] = None
+    custom_url: Optional[str] = None
+    status: str = "saved"
+    notes: Optional[str] = None
+    resume_generated: Optional[bool] = False
+    prep_downloaded: Optional[bool] = False
+
+class ApplicationUpdateRequest(BaseModel):
+    status: Optional[str] = None
+    notes: Optional[str] = None
+    resume_generated: Optional[bool] = None
+    prep_downloaded: Optional[bool] = None
+    redirect_clicked: Optional[bool] = None
+
+class ActivityRequest(BaseModel):
+    action_type: str
+    metadata: Optional[dict] = None
+
+
+# ── Profile completion calculator ─────────────────────────────────────────────
+
+def _calc_profile_pct(row: dict) -> int:
+    fields = ["full_name", "degree", "college", "skills", "grad_year"]
+    exp_ok = bool(row.get("roles")) or row.get("is_fresher", False)
+    filled = sum(1 for f in fields if (row.get(f) or "").strip()) + (1 if exp_ok else 0)
+    return int(filled / (len(fields) + 1) * 100)
+
+
+# ── Seed opportunities (in-memory, also used as DB fallback) ──────────────────
+
+SEED_OPPS = [
+    {"id":"opp-001","title":"Software Developer Trainee","company":"TCS","type":"job",
+     "location":"Pan India","salary_range":"₹3.5L–₹4.5L/yr","url":"https://nextstep.tcs.com",
+     "description":"Build enterprise software across banking, healthcare, and retail. 15-step training program. Strong Java/Python fundamentals required.",
+     "requirements":"B.Tech/MCA/M.Sc with 60%+. Proficient in Java or Python. No active backlogs.",
+     "tags":["fresher","b.tech","mca","java","python","it"],"match_fields":"java python sql btech mca fresher software developer it"},
+    {"id":"opp-002","title":"System Engineer","company":"Infosys","type":"job",
+     "location":"Bengaluru / Pune / Hyderabad","salary_range":"₹3.6L–₹4.2L/yr","url":"https://career.infosys.com",
+     "description":"Work on Fortune 500 client projects. Infosys InStep training included. Rotational assignments across verticals.",
+     "requirements":"B.Tech/BCA/MCA with 65%+. Any programming language. Good communication.",
+     "tags":["fresher","b.tech","java","it","bca"],"match_fields":"java c++ sql btech bca mca fresher infosys system engineer"},
+    {"id":"opp-003","title":"Associate Engineer","company":"Wipro","type":"job",
+     "location":"Multi-location","salary_range":"₹3.5L/yr","url":"https://careers.wipro.com",
+     "description":"Application development, testing, and support. 90-day Talent Transformation training.",
+     "requirements":"B.Tech/BE/MCA with 60%+. No arrears. Proficient in one language.",
+     "tags":["fresher","b.tech","java","it"],"match_fields":"java python btech mca fresher wipro associate engineer"},
+    {"id":"opp-004","title":"Junior Software Engineer","company":"Razorpay","type":"job",
+     "location":"Bengaluru","salary_range":"₹12L–₹18L/yr","url":"https://razorpay.com/jobs",
+     "description":"Build India's payment infrastructure. High-scale systems processing millions of transactions daily. Strong DSA required.",
+     "requirements":"B.Tech CS/related. Strong DSA, backend development. Go/Java/Python preferred.",
+     "tags":["startup","fintech","java","python","backend","b.tech"],"match_fields":"java python go backend api fintech payments btech software engineer"},
+    {"id":"opp-005","title":"Backend Engineer","company":"Zepto","type":"job",
+     "location":"Mumbai","salary_range":"₹15L–₹25L/yr","url":"https://zepto.com/careers",
+     "description":"Build real-time inventory, order management, and logistics systems for India's fastest-growing quick commerce startup.",
+     "requirements":"B.Tech CS. Node.js, Go, or Java. Microservices. Strong problem-solving.",
+     "tags":["startup","backend","node.js","java","b.tech"],"match_fields":"node.js java go backend microservices api btech"},
+    {"id":"opp-006","title":"Data Analyst","company":"Flipkart","type":"job",
+     "location":"Bengaluru","salary_range":"₹8L–₹14L/yr","url":"https://www.flipkartcareers.com",
+     "description":"Analyze large datasets, build dashboards, run A/B tests, and present insights to leadership at India's top e-commerce platform.",
+     "requirements":"B.Tech/B.Sc/MCA. SQL, Python (Pandas). Tableau/PowerBI preferred.",
+     "tags":["data","sql","python","analytics","b.tech","mca"],"match_fields":"python sql pandas data analytics tableau power bi btech mca data analyst"},
+    {"id":"opp-007","title":"Frontend Engineer","company":"Swiggy","type":"job",
+     "location":"Bengaluru","salary_range":"₹12L–₹20L/yr","url":"https://careers.swiggy.com",
+     "description":"Build consumer-facing React features for Swiggy's apps used by 50M+ users. Focus on performance and UX.",
+     "requirements":"B.Tech CS. React, JavaScript, HTML/CSS. Redux, TypeScript preferred.",
+     "tags":["frontend","react","javascript","b.tech"],"match_fields":"react javascript typescript html css redux frontend btech engineer"},
+    {"id":"opp-008","title":"ML Engineer","company":"CRED","type":"job",
+     "location":"Bengaluru","salary_range":"₹18L–₹30L/yr","url":"https://careers.cred.club",
+     "description":"Build ML models for credit scoring, fraud detection, and personalization.",
+     "requirements":"B.Tech CS. Python, scikit-learn, TensorFlow/PyTorch. Large-scale data experience.",
+     "tags":["ml","ai","python","b.tech","data science"],"match_fields":"python machine learning ml tensorflow pytorch sklearn data science ai btech"},
+    {"id":"opp-009","title":"Full Stack Developer","company":"Zoho","type":"job",
+     "location":"Chennai / Bengaluru","salary_range":"₹5L–₹9L/yr","url":"https://careers.zohocorp.com",
+     "description":"Build features for Zoho's 50+ business apps used by 100M+ users worldwide.",
+     "requirements":"B.Tech CS. Java or any backend. JavaScript, HTML/CSS. Problem-solving.",
+     "tags":["full stack","java","javascript","b.tech"],"match_fields":"java javascript html css fullstack full stack btech zoho"},
+    {"id":"opp-010","title":"DevOps Engineer","company":"Freshworks","type":"job",
+     "location":"Chennai","salary_range":"₹8L–₹14L/yr","url":"https://careers.freshworks.com",
+     "description":"Manage CI/CD pipelines, cloud infrastructure, and reliability for SaaS products.",
+     "requirements":"B.Tech CS. AWS/GCP, Docker, Kubernetes, CI/CD. Python/Bash scripting.",
+     "tags":["devops","aws","cloud","kubernetes","b.tech"],"match_fields":"aws gcp docker kubernetes devops cicd linux python bash cloud btech"},
+    {"id":"opp-011","title":"Android Developer","company":"Dream11","type":"job",
+     "location":"Mumbai","salary_range":"₹12L–₹22L/yr","url":"https://careers.dream11.com",
+     "description":"Build Android features for India's largest fantasy sports platform with 200M+ users.",
+     "requirements":"B.Tech CS. Kotlin/Java Android. Jetpack Compose, MVVM architecture.",
+     "tags":["android","kotlin","mobile","b.tech"],"match_fields":"android kotlin java mobile mvvm jetpack btech"},
+    {"id":"opp-012","title":"Cloud Engineer","company":"Accenture","type":"job",
+     "location":"Bengaluru / Pune / Hyderabad","salary_range":"₹4.5L–₹8L/yr","url":"https://www.accenture.com/in-en/careers",
+     "description":"Cloud migration and modernization projects for Fortune 500 clients on AWS, Azure, GCP.",
+     "requirements":"B.Tech/MCA/BCA. Cloud platform knowledge. Cloud cert a plus.",
+     "tags":["cloud","aws","azure","b.tech","mca","bca"],"match_fields":"aws azure gcp cloud btech mca bca accenture"},
+    # Internships
+    {"id":"opp-013","title":"Software Engineering Intern","company":"Google","type":"internship",
+     "location":"Bengaluru / Hyderabad","salary_range":"₹1.2L–₹1.8L/month","url":"https://careers.google.com/students/",
+     "description":"12-week internship on real products used by billions. Projects in Search, Maps, YouTube, or Cloud.",
+     "requirements":"B.Tech 2nd/3rd year. Strong CS fundamentals, DSA, algorithms.",
+     "tags":["internship","b.tech","algorithms","dsa"],"match_fields":"algorithms dsa data structures google intern btech software"},
+    {"id":"opp-014","title":"Data Science Intern","company":"Paytm","type":"internship",
+     "location":"Noida","salary_range":"₹25K–₹40K/month","url":"https://paytm.com/about-us/careers",
+     "description":"Build ML models and data pipelines. Work on fraud detection and recommendation systems.",
+     "requirements":"B.Tech/M.Sc CS with ML coursework. Python, SQL, ML fundamentals.",
+     "tags":["internship","data science","ml","python","b.tech"],"match_fields":"python sql machine learning ml data science intern btech paytm"},
+    {"id":"opp-015","title":"Backend Development Intern","company":"Ola","type":"internship",
+     "location":"Bengaluru","salary_range":"₹35K–₹50K/month","url":"https://jobs.olacabs.com",
+     "description":"Build APIs and backend systems for Ola's mobility platform. Ride-matching, surge pricing, driver management.",
+     "requirements":"B.Tech 2nd/3rd year. Java/Python/Node.js. REST APIs and databases.",
+     "tags":["internship","backend","java","python","b.tech"],"match_fields":"java python node backend api databases intern btech ola"},
+    {"id":"opp-016","title":"Product Management Intern","company":"Meesho","type":"internship",
+     "location":"Bengaluru","salary_range":"₹60K–₹80K/month","url":"https://careers.meesho.com",
+     "description":"Drive product initiatives for India's social commerce platform with 140M+ users.",
+     "requirements":"MBA/B.Tech final year. Analytical mindset. Data-driven decision making.",
+     "tags":["internship","product","mba","b.tech"],"match_fields":"product management analytics data mba btech meesho intern"},
+    {"id":"opp-017","title":"iOS Development Intern","company":"PhonePe","type":"internship",
+     "location":"Bengaluru","salary_range":"₹50K–₹70K/month","url":"https://careers.phonepe.com",
+     "description":"Build iOS features for PhonePe with 500M+ users. Payments, UPI, insurance modules.",
+     "requirements":"B.Tech CS. Swift, iOS development basics. Swift/SwiftUI.",
+     "tags":["internship","ios","swift","mobile","b.tech"],"match_fields":"swift ios mobile xcode intern btech phonepe"},
+    # Hackathons
+    {"id":"opp-018","title":"Smart India Hackathon 2025","company":"Government of India","type":"hackathon",
+     "location":"Pan India","salary_range":"Prize: ₹1L–₹5L","url":"https://www.sih.gov.in",
+     "description":"India's largest hackathon with 50,000+ participants. Solve real government and industry problems across 17+ categories.",
+     "requirements":"Any student. Team of 6. Working prototype in 36 hours.",
+     "tags":["hackathon","b.tech","mca","competition"],"match_fields":"hackathon competition prototype team government btech mca"},
+    {"id":"opp-019","title":"HackWithInfy 2025","company":"Infosys","type":"hackathon",
+     "location":"Online → Bengaluru Finals","salary_range":"Prize: ₹2L + PPO","url":"https://hackwithinfy.com",
+     "description":"Solve real-world problems using AI/ML, cloud, and data. Top performers get Pre-Placement Offer.",
+     "requirements":"B.Tech/B.E 3rd or final year. Team of 2-4.",
+     "tags":["hackathon","b.tech","ml","ai","infosys"],"match_fields":"hackathon ai ml cloud infosys btech ppo competition"},
+    {"id":"opp-020","title":"Google Summer of Code 2025","company":"Google / OSS Orgs","type":"opensource",
+     "location":"Remote","salary_range":"$1,500–$6,600 (USD)","url":"https://summerofcode.withgoogle.com",
+     "description":"12–22 week paid open source contribution. Work with an OSS org on a significant project under mentorship.",
+     "requirements":"18+ enrolled student or recent grad. Strong programming. OSS contribution experience preferred.",
+     "tags":["open source","gsoc","remote","b.tech","mca"],"match_fields":"open source github contribution remote gsoc btech mca programming"},
+    {"id":"opp-021","title":"Microsoft Learn Student Ambassadors","company":"Microsoft","type":"scholarship",
+     "location":"College / Remote","salary_range":"Azure Credits + Mentorship","url":"https://studentambassadors.microsoft.com",
+     "description":"Become a Microsoft ambassador at your college. Azure credits, certifications, access to Microsoft tools.",
+     "requirements":"Enrolled student. Passion for tech. Run 1 event/semester.",
+     "tags":["scholarship","microsoft","azure","cloud","b.tech"],"match_fields":"microsoft azure cloud scholarship ambassador student btech"},
+    {"id":"opp-022","title":"QA Engineer","company":"Myntra","type":"job",
+     "location":"Bengaluru","salary_range":"₹6L–₹10L/yr","url":"https://careers.myntra.com",
+     "description":"Ensure quality of Myntra's fashion e-commerce platform. Design test plans, automation frameworks, performance tests.",
+     "requirements":"B.Tech CS. Selenium, Appium, or Cypress. Python/Java for automation. CI/CD understanding.",
+     "tags":["qa","testing","selenium","b.tech"],"match_fields":"testing qa selenium appium cypress python java automation btech"},
+    {"id":"opp-023","title":"Business Analyst Trainee","company":"Cognizant","type":"job",
+     "location":"Pan India","salary_range":"₹4L–₹5.5L/yr","url":"https://careers.cognizant.com",
+     "description":"Bridge technology and business for Cognizant clients. User stories, requirement analysis, Agile support.",
+     "requirements":"B.Tech/MBA/BCA/MCA with 60%+. Analytical skills, SDLC, Agile basics.",
+     "tags":["business analyst","ba","agile","b.tech","mba"],"match_fields":"business analyst agile scrum sdlc btech mba bca cognizant"},
+    {"id":"opp-024","title":"Cybersecurity Analyst","company":"HCL Technologies","type":"job",
+     "location":"Noida / Chennai","salary_range":"₹4.5L–₹7L/yr","url":"https://www.hcltech.com/careers",
+     "description":"Monitor, detect, and respond to security threats for banking, healthcare, and government clients.",
+     "requirements":"B.Tech CS/IT/ECE. Networking, security fundamentals. CEH/Security+ a plus.",
+     "tags":["cybersecurity","security","networking","b.tech"],"match_fields":"cybersecurity security networking ceh btech it ece hcl"},
+    {"id":"opp-025","title":"React Native Developer","company":"Urban Company","type":"job",
+     "location":"Bengaluru","salary_range":"₹10L–₹18L/yr","url":"https://urbancompany.com/careers",
+     "description":"Build cross-platform mobile features for Urban Company's service marketplace used in 50+ cities.",
+     "requirements":"B.Tech CS. React Native, JavaScript. 1+ yr experience or strong portfolio.",
+     "tags":["react native","mobile","javascript","b.tech"],"match_fields":"react native mobile javascript ios android btech urban company"},
+]
+
+def _match_score(opp: dict, skills_text: str, degree_text: str) -> int:
+    """Simple keyword overlap score for opportunity ranking."""
+    combined = (skills_text + " " + degree_text).lower()
+    tokens = set(re.findall(r'\w+', combined))
+    match_tokens = set(re.findall(r'\w+', (opp.get("match_fields") or "").lower()))
+    return len(tokens & match_tokens)
+
+
+def _rank_opps(opps: list, profile_row: dict) -> list:
+    """Rank opportunities by match score with user profile."""
+    skills = (profile_row.get("skills") or "").lower()
+    degree = (profile_row.get("degree") or "").lower()
+    is_fresher = profile_row.get("is_fresher", True)
+    has_roles = bool(profile_row.get("roles"))
+
+    scored = []
+    for opp in opps:
+        score = _match_score(opp, skills, degree)
+        # Boost internships/hackathons for freshers
+        if is_fresher and opp["type"] in ("internship", "hackathon", "opensource", "scholarship"):
+            score += 3
+        if not is_fresher and has_roles and opp["type"] == "job":
+            score += 2
+        scored.append((score, opp))
+    scored.sort(key=lambda x: -x[0])
+    return [o for _, o in scored]
+
+
+# ── OTP / Magic Link auth routes ──────────────────────────────────────────────
+
+@app.post("/ninelab/auth/otp")
+async def send_otp(req: MagicLinkRequest):
+    """Send 6-digit OTP to user email via Supabase."""
+    email = (req.email or "").strip().lower()
+    if "@" not in email:
+        raise HTTPException(400, detail="Please enter a valid email address.")
+    if not SUPABASE_URL or not SUPABASE_KEY:
+        raise HTTPException(503, detail="Auth not configured. Set SUPABASE_URL and SUPABASE_KEY.")
+
+    import httpx as _hx
+    headers = {"apikey": SUPABASE_KEY, "Authorization": f"Bearer {SUPABASE_KEY}",
+               "Content-Type": "application/json"}
+    try:
+        r = _hx.post(f"{SUPABASE_URL}/auth/v1/otp", headers=headers,
+                     json={"email": email, "create_user": True}, timeout=10)
+        if r.status_code == 200:
+            return JSONResponse({"success": True, "message": "OTP sent! Check your email — valid for 10 minutes."})
+        data = r.json() if r.text else {}
+        msg = data.get("msg") or data.get("message") or data.get("error") or "Could not send OTP."
+        raise HTTPException(400, detail=str(msg)[:200])
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(500, detail=f"Email service error: {str(e)[:100]}")
+
+
+@app.post("/ninelab/auth/verify-otp")
+async def verify_otp_route(req: OTPVerifyRequest):
+    """Verify 6-digit OTP and return session tokens."""
+    email = (req.email or "").strip().lower()
+    token = (req.token or "").strip()
+    if not email or not token:
+        raise HTTPException(400, detail="Email and OTP code are required.")
+    if not SUPABASE_URL or not SUPABASE_KEY:
+        raise HTTPException(503, detail="Auth not configured.")
+
+    import httpx as _hx
+    headers = {"apikey": SUPABASE_KEY, "Authorization": f"Bearer {SUPABASE_KEY}",
+               "Content-Type": "application/json"}
+    try:
+        r = _hx.post(f"{SUPABASE_URL}/auth/v1/verify", headers=headers,
+                     json={"email": email, "token": token, "type": "email"}, timeout=10)
+        data = r.json() if r.text else {}
+        if r.status_code == 200 and data.get("access_token"):
+            user = data.get("user") or {}
+            meta = user.get("user_metadata") or {}
+            return JSONResponse({
+                "success": True,
+                "access_token": data["access_token"],
+                "refresh_token": data.get("refresh_token", ""),
+                "user": {
+                    "id": user.get("id", ""),
+                    "email": user.get("email", email),
+                    "full_name": meta.get("full_name") or meta.get("name") or "",
+                },
+            })
+        msg = data.get("msg") or data.get("message") or data.get("error") or "Invalid or expired OTP."
+        raise HTTPException(400, detail=str(msg)[:200])
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(500, detail=f"Verification error: {str(e)[:100]}")
+
+
+# ── Profile routes ────────────────────────────────────────────────────────────
+
+@app.get("/ninelab/v2/profile")
+async def get_profile_v2(authorization: Optional[str] = Header(None)):
+    user = _require_auth_v2(authorization)
+    uid = user["id"]
+
+    if not SUPABASE_URL or not SUPABASE_KEY:
+        return JSONResponse({"success": True, "profile": {}, "pct": 0})
+
+    token = authorization.removeprefix("Bearer ").strip()
+    result = supabase_rest("GET", "user_profiles", params={"id": f"eq.{uid}"}, token=token)
+    rows = result.get("data", [])
+    if isinstance(rows, list) and rows:
+        row = rows[0]
+        pct = row.get("profile_pct") or _calc_profile_pct(row)
+        return JSONResponse({"success": True, "profile": row, "pct": pct})
+    return JSONResponse({"success": True, "profile": {
+        "id": uid, "email": user.get("email", ""),
+        "full_name": (user.get("user_metadata") or {}).get("full_name", ""),
+    }, "pct": 0})
+
+
+@app.post("/ninelab/v2/profile")
+async def save_profile_v2(req: ProfileSaveRequest, authorization: Optional[str] = Header(None)):
+    user = _require_auth_v2(authorization)
+    uid = user["id"]
+    email = user.get("email", "")
+
+    row = {
+        "id": uid, "email": email,
+        "full_name": req.full_name or "",
+        "phone": req.phone or "",
+        "linkedin_url": req.linkedin_url or "",
+        "city": req.city or "",
+        "degree": req.degree or "",
+        "field_of_study": req.field_of_study or "",
+        "college": req.college or "",
+        "grad_year": req.grad_year or "",
+        "cgpa": req.cgpa or "",
+        "is_fresher": req.is_fresher if req.is_fresher is not None else True,
+        "skills": req.skills or "",
+        "projects": req.projects or "",
+        "achievements": req.achievements or "",
+        "roles": req.roles or [],
+        "updated_at": datetime.utcnow().isoformat(),
+    }
+    row["profile_pct"] = _calc_profile_pct(row)
+    row["profile_complete"] = row["profile_pct"] >= 80
+
+    if not SUPABASE_URL or not SUPABASE_KEY:
+        return JSONResponse({"success": True, "pct": row["profile_pct"]})
+
+    result = supabase_rest("POST", "user_profiles", payload=row,
+                           use_service_key=True, upsert=True)
+    return JSONResponse({
+        "success": result["status"] in (200, 201),
+        "pct": row["profile_pct"],
+    })
+
+
+# ── Opportunities feed routes ─────────────────────────────────────────────────
+
+@app.get("/ninelab/v2/opportunities")
+async def get_opportunities(
+    type: Optional[str] = None,
+    search: Optional[str] = None,
+    limit: int = 25,
+    authorization: Optional[str] = Header(None)
+):
+    profile_row: dict = {}
+    if authorization:
+        user = _get_auth_user_v2(authorization)
+        if user and SUPABASE_URL:
+            token = authorization.removeprefix("Bearer ").strip()
+            r = supabase_rest("GET", "user_profiles",
+                              params={"id": f"eq.{user['id']}"}, token=token)
+            rows = r.get("data", [])
+            if isinstance(rows, list) and rows:
+                profile_row = rows[0]
+
+    # Try DB first
+    opps: list = []
+    if SUPABASE_URL and SUPABASE_KEY:
+        params: dict = {"is_active": "eq.true", "order": "created_at.desc",
+                        "limit": str(limit * 2), "select": "*"}
+        if type and type != "all":
+            params["type"] = f"eq.{type}"
+        result = supabase_rest("GET", "opportunities", params=params,
+                               use_service_key=True)
+        rows2 = result.get("data", [])
+        if isinstance(rows2, list) and rows2:
+            opps = rows2
+
+    # Fallback to seed data
+    if not opps:
+        opps = list(SEED_OPPS)
+
+    # Type filter on seed data
+    if type and type != "all":
+        opps = [o for o in opps if o.get("type") == type]
+
+    # Search filter
+    if search:
+        sq = search.lower()
+        opps = [o for o in opps if
+                sq in (o.get("title") or "").lower() or
+                sq in (o.get("company") or "").lower() or
+                sq in (o.get("description") or "").lower() or
+                any(sq in t for t in (o.get("tags") or []))]
+
+    # Rank by profile match
+    if profile_row:
+        opps = _rank_opps(opps, profile_row)
+
+    opps = opps[:limit]
+
+    # Attach match score
+    skills = (profile_row.get("skills") or "").lower()
+    degree = (profile_row.get("degree") or "").lower()
+    for opp in opps:
+        opp["match_score"] = _match_score(opp, skills, degree)
+
+    return JSONResponse({"success": True, "opportunities": opps, "total": len(opps)})
+
+
+@app.get("/ninelab/v2/opportunities/{opp_id}")
+async def get_opportunity_v2(opp_id: str):
+    for opp in SEED_OPPS:
+        if opp.get("id") == opp_id:
+            return JSONResponse({"success": True, "opportunity": opp})
+    if SUPABASE_URL and SUPABASE_KEY:
+        result = supabase_rest("GET", "opportunities",
+                               params={"id": f"eq.{opp_id}"}, use_service_key=True)
+        rows = result.get("data", [])
+        if isinstance(rows, list) and rows:
+            return JSONResponse({"success": True, "opportunity": rows[0]})
+    raise HTTPException(404, detail="Opportunity not found.")
+
+
+# ── Application tracking routes ───────────────────────────────────────────────
+
+@app.get("/ninelab/v2/applications")
+async def get_applications(authorization: Optional[str] = Header(None)):
+    user = _require_auth_v2(authorization)
+    uid = user["id"]
+
+    if not SUPABASE_URL or not SUPABASE_KEY:
+        return JSONResponse({"success": True, "applications": []})
+
+    token = authorization.removeprefix("Bearer ").strip()
+    result = supabase_rest("GET", "applications",
+                           params={"user_id": f"eq.{uid}", "order": "updated_at.desc",
+                                   "select": "*"}, token=token)
+    apps = result.get("data", []) if isinstance(result.get("data"), list) else []
+    return JSONResponse({"success": True, "applications": apps})
+
+
+@app.post("/ninelab/v2/applications")
+async def create_application_v2(req: ApplicationCreateRequest,
+                                  authorization: Optional[str] = Header(None)):
+    user = _require_auth_v2(authorization)
+    uid = user["id"]
+
+    if not SUPABASE_URL or not SUPABASE_KEY:
+        return JSONResponse({"success": True, "id": str(uuid.uuid4())})
+
+    token = authorization.removeprefix("Bearer ").strip()
+
+    # Check for duplicate
+    dup_params: dict = {"user_id": f"eq.{uid}"}
+    if req.opportunity_id:
+        dup_params["opportunity_id"] = f"eq.{req.opportunity_id}"
+    elif req.custom_title:
+        dup_params["custom_title"] = f"eq.{req.custom_title}"
+        dup_params["custom_company"] = f"eq.{req.custom_company or ''}"
+
+    dup = supabase_rest("GET", "applications", params=dup_params, token=token)
+    if isinstance(dup.get("data"), list) and dup["data"]:
+        return JSONResponse({"success": True, "id": dup["data"][0].get("id"), "existing": True})
+
+    valid_statuses = {"saved", "applied", "interviewing", "offered", "rejected", "withdrawn"}
+    status = req.status if req.status in valid_statuses else "saved"
+
+    payload = {
+        "user_id": uid,
+        "opportunity_id": req.opportunity_id,
+        "custom_title": req.custom_title or "",
+        "custom_company": req.custom_company or "",
+        "custom_url": req.custom_url or "",
+        "status": status,
+        "resume_generated": bool(req.resume_generated),
+        "prep_downloaded": bool(req.prep_downloaded),
+        "notes": req.notes or "",
+        "applied_at": datetime.utcnow().isoformat() if status == "applied" else None,
+    }
+    result = supabase_rest("POST", "applications", payload=payload, token=token)
+    data = result.get("data")
+    app_id = data[0].get("id") if isinstance(data, list) and data else str(uuid.uuid4())
+    return JSONResponse({"success": True, "id": app_id})
+
+
+@app.patch("/ninelab/v2/applications/{app_id}")
+async def update_application_v2(app_id: str, req: ApplicationUpdateRequest,
+                                  authorization: Optional[str] = Header(None)):
+    user = _require_auth_v2(authorization)
+    uid = user["id"]
+
+    valid_statuses = {"saved", "applied", "interviewing", "offered", "rejected", "withdrawn"}
+    if req.status and req.status not in valid_statuses:
+        raise HTTPException(400, detail=f"Invalid status. Choose: {', '.join(valid_statuses)}")
+
+    if not SUPABASE_URL or not SUPABASE_KEY:
+        return JSONResponse({"success": True})
+
+    token = authorization.removeprefix("Bearer ").strip()
+    payload: dict = {"updated_at": datetime.utcnow().isoformat()}
+    if req.status:
+        payload["status"] = req.status
+        if req.status == "applied":
+            payload["applied_at"] = datetime.utcnow().isoformat()
+    if req.notes is not None:
+        payload["notes"] = req.notes
+    if req.resume_generated is not None:
+        payload["resume_generated"] = req.resume_generated
+    if req.prep_downloaded is not None:
+        payload["prep_downloaded"] = req.prep_downloaded
+    if req.redirect_clicked is not None:
+        payload["redirect_clicked"] = req.redirect_clicked
+
+    result = supabase_rest("PATCH", "applications", payload=payload,
+                           params={"id": f"eq.{app_id}", "user_id": f"eq.{uid}"},
+                           token=token)
+    return JSONResponse({"success": result["status"] in (200, 201, 204)})
+
+
+@app.delete("/ninelab/v2/applications/{app_id}")
+async def delete_application_v2(app_id: str, authorization: Optional[str] = Header(None)):
+    user = _require_auth_v2(authorization)
+    uid = user["id"]
+
+    if not SUPABASE_URL or not SUPABASE_KEY:
+        return JSONResponse({"success": True})
+
+    token = authorization.removeprefix("Bearer ").strip()
+    result = supabase_rest("DELETE", "applications",
+                           params={"id": f"eq.{app_id}", "user_id": f"eq.{uid}"},
+                           token=token)
+    return JSONResponse({"success": result["status"] in (200, 204)})
+
+
+# ── Activity logging ──────────────────────────────────────────────────────────
+
+@app.post("/ninelab/v2/activity")
+async def log_activity_v2(req: ActivityRequest, authorization: Optional[str] = Header(None)):
+    user = _get_auth_user_v2(authorization)
+    if not user or not SUPABASE_URL or not SUPABASE_KEY:
+        return JSONResponse({"success": True})
+
+    token = authorization.removeprefix("Bearer ").strip()
+    payload = {
+        "user_id": user["id"],
+        "action_type": (req.action_type or "")[:50],
+        "metadata": req.metadata or {},
+    }
+    supabase_rest("POST", "activity_logs", payload=payload, token=token)
+    return JSONResponse({"success": True})
+
+
+# ── Admin: seed opportunities ─────────────────────────────────────────────────
+
+@app.post("/ninelab/admin/seed-opportunities")
+async def seed_opportunities_admin(request: Request):
+    """One-time endpoint to seed opportunities table. Protected by service key."""
+    x_key = request.headers.get("x-admin-key", "")
+    if not x_key or x_key != SUPABASE_SERVICE_KEY:
+        raise HTTPException(403, detail="Forbidden.")
+    if not SUPABASE_URL or not SUPABASE_KEY:
+        raise HTTPException(503, detail="Supabase not configured.")
+
+    inserted, skipped = 0, 0
+    for opp in SEED_OPPS:
+        row = {
+            "title": opp["title"], "company": opp["company"],
+            "type": opp["type"], "location": opp.get("location", "India"),
+            "url": opp.get("url", ""), "description": opp.get("description", ""),
+            "requirements": opp.get("requirements", ""),
+            "salary_range": opp.get("salary_range", ""),
+            "tags": opp.get("tags", []),
+            "match_fields": opp.get("match_fields", ""),
+            "is_active": True,
+        }
+        result = supabase_rest("POST", "opportunities", payload=row, use_service_key=True)
+        if result["status"] in (200, 201):
+            inserted += 1
+        else:
+            skipped += 1
+
+    return JSONResponse({"seeded": inserted, "skipped": skipped})
+
+
+# ── Dashboard ─────────────────────────────────────────────────────────────────
+
+@app.get("/ninelab/v2/dashboard")
+async def get_dashboard_v2(authorization: Optional[str] = Header(None)):
+    user = _require_auth_v2(authorization)
+    uid = user["id"]
+    email = user.get("email", "")
+    meta = user.get("user_metadata") or {}
+
+    profile_row: dict = {}
+    apps: list = []
+
+    if SUPABASE_URL and SUPABASE_KEY:
+        token = authorization.removeprefix("Bearer ").strip()
+        pr = supabase_rest("GET", "user_profiles", params={"id": f"eq.{uid}"}, token=token)
+        rows = pr.get("data", [])
+        if isinstance(rows, list) and rows:
+            profile_row = rows[0]
+
+        ar = supabase_rest("GET", "applications",
+                           params={"user_id": f"eq.{uid}", "order": "updated_at.desc",
+                                   "limit": "10"}, token=token)
+        apps = ar.get("data", []) if isinstance(ar.get("data"), list) else []
+
+    opps = _rank_opps(list(SEED_OPPS), profile_row)[:12]
+    skills = (profile_row.get("skills") or "").lower()
+    degree = (profile_row.get("degree") or "").lower()
+    for opp in opps:
+        opp["match_score"] = _match_score(opp, skills, degree)
+
+    pct = profile_row.get("profile_pct") or _calc_profile_pct(profile_row)
+
+    return JSONResponse({
+        "success": True,
+        "user": {
+            "id": uid, "email": email,
+            "full_name": profile_row.get("full_name") or meta.get("full_name") or "",
+        },
+        "profile_pct": pct,
+        "opportunities": opps,
+        "recent_applications": apps,
+        "stats": {
+            "total": len(apps),
+            "interviews": sum(1 for a in apps if a.get("status") == "interviewing"),
+            "offers": sum(1 for a in apps if a.get("status") == "offered"),
+        },
+    })
