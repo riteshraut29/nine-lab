@@ -1393,6 +1393,32 @@
       .ic-end-stat-num { font-size: 22px; font-weight: 800; color: var(--purple); }
       .ic-end-stat-label { font-size: 10px; color: var(--text-muted); font-weight: 600; }
       .ic-restart-btn { font-size: 13px; color: var(--purple); font-weight: 600; cursor: pointer; background: none; border: none; text-decoration: underline; }
+
+      /* ─── Redesign: Vertical Steps ──────────────────────────────────── */
+      .lp-steps-v { display: flex; flex-direction: column; gap: 0; margin: 4px 0; }
+      .lp-step-v { display: flex; align-items: flex-start; gap: 14px; padding: 12px 0; position: relative; }
+      .lp-step-v:not(:last-child)::after { content: ''; position: absolute; left: 20px; top: 44px; width: 2px; height: calc(100% - 8px); background: #ede9ff; }
+      .lp-step-v-icon { width: 42px; height: 42px; border-radius: 50%; background: white; border: 2px solid #ede9ff; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; z-index: 1; position: relative; }
+      .lp-step-v-icon.active { background: var(--purple-light); border-color: var(--purple); }
+      .lp-step-v-content { padding-top: 8px; }
+      .lp-step-v-num { font-size: 10px; font-weight: 700; color: var(--purple); letter-spacing: 0.5px; margin-bottom: 2px; text-transform: uppercase; }
+      .lp-step-v-label { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
+      .lp-step-v-sub { font-size: 12px; color: var(--text-muted); line-height: 1.45; }
+      .lp-step-v-badge { display: inline-block; background: var(--purple-light); color: var(--purple); font-size: 10px; font-weight: 700; padding: 1px 7px; border-radius: 20px; margin-left: 6px; vertical-align: middle; }
+      .lp-step-v-badge.green { background: #d1fae5; color: #065f46; }
+
+      /* ─── Redesign: AI Match Demo Card ──────────────────────────────── */
+      .ai-match-demo { background: white; border-radius: 16px; padding: 16px; border: 1px solid #f0f0f0; margin: 4px 0; }
+      .ai-match-demo-header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+      .ai-match-demo-icon { font-size: 18px; }
+      .ai-match-demo-title { font-size: 13px; font-weight: 700; color: var(--text); }
+      .ai-match-demo-sub { font-size: 11px; color: var(--text-muted); margin-left: auto; }
+      .ai-match-item { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 10px; margin-bottom: 6px; background: var(--bg); border: 1px solid transparent; }
+      .ai-match-item:last-child { margin-bottom: 0; }
+      .ai-match-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--purple); flex-shrink: 0; }
+      .ai-match-role { font-size: 13px; font-weight: 600; color: var(--text); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .ai-match-pct { font-size: 11px; font-weight: 700; color: #22c55e; background: #f0fdf4; padding: 2px 8px; border-radius: 20px; flex-shrink: 0; }
+      .ai-match-note { font-size: 11px; color: var(--text-subtle); text-align: center; margin-top: 10px; }
     </style>
   </head>
   <body>
@@ -1458,10 +1484,10 @@
           </div>
 
           <div class="lp-hero-headline" id="heroHeadline"></div>
-          <div class="lp-hero-sub">Nine Lab rewrites your resume using a 15-step ATS framework — and delivers your complete placement kit in 60 seconds.</div>
+          <div class="lp-hero-sub">Nine Lab reads your profile, finds jobs that match you, builds your complete prep kit — then connects you to real listings on LinkedIn and Indeed. All free.</div>
 
-          <button class="lp-cta-btn" onclick="showStartOptions()">Get My Free Kit →</button>
-          <div class="lp-trust-line">4 PDFs · No account · For Indian students</div>
+          <button class="lp-cta-btn" onclick="showStartOptions()">Start My Journey →</button>
+          <div class="lp-trust-line">AI job match · 4 PDFs · Real apply links · No login</div>
           <div class="lp-kits-counter">🚀 <strong id="kitsCountEl">3,200+</strong> kits generated</div>
           <div class="lp-sample-link" onclick="showKitPreview('scorecard')">or see a sample kit first →</div>
         </div>
@@ -1524,25 +1550,82 @@
         <!-- SECTION 4: HOW IT WORKS -->
         <div class="lp-section reveal-section">
           <div class="lp-section-label">How it works</div>
-          <div class="lp-steps">
-            <div class="lp-step">
-              <div class="lp-step-icon">📋</div>
-              <div class="lp-step-num">Step 1</div>
-              <div class="lp-step-label">Add your resume</div>
-              <div class="lp-step-arrow">›</div>
+          <div class="lp-steps-v">
+            <div class="lp-step-v">
+              <div class="lp-step-v-icon">📋</div>
+              <div class="lp-step-v-content">
+                <div class="lp-step-v-num">Step 1</div>
+                <div class="lp-step-v-label">Add your profile</div>
+                <div class="lp-step-v-sub">Upload resume PDF, fill manually, or import from LinkedIn</div>
+              </div>
             </div>
-            <div class="lp-step">
-              <div class="lp-step-icon">🎯</div>
-              <div class="lp-step-num">Step 2</div>
-              <div class="lp-step-label">Paste the JD</div>
-              <div class="lp-step-arrow">›</div>
+            <div class="lp-step-v">
+              <div class="lp-step-v-icon active">🤖</div>
+              <div class="lp-step-v-content">
+                <div class="lp-step-v-num">Step 2 <span class="lp-step-v-badge">New</span></div>
+                <div class="lp-step-v-label">AI finds your best-fit jobs</div>
+                <div class="lp-step-v-sub">Nine Lab analyzes your profile and surfaces 4 matching roles — no searching required</div>
+              </div>
             </div>
-            <div class="lp-step">
-              <div class="lp-step-icon">📥</div>
-              <div class="lp-step-num">Step 3</div>
-              <div class="lp-step-label">Download your kit</div>
+            <div class="lp-step-v">
+              <div class="lp-step-v-icon">🎯</div>
+              <div class="lp-step-v-content">
+                <div class="lp-step-v-num">Step 3</div>
+                <div class="lp-step-v-label">Pick a role, paste the JD</div>
+                <div class="lp-step-v-sub">Select an AI-matched job or paste any JD you already have</div>
+              </div>
+            </div>
+            <div class="lp-step-v">
+              <div class="lp-step-v-icon">📥</div>
+              <div class="lp-step-v-content">
+                <div class="lp-step-v-num">Step 4</div>
+                <div class="lp-step-v-label">Get your complete prep kit</div>
+                <div class="lp-step-v-sub">ATS resume, scorecard, interview guide, and company cheat sheet — in 60 seconds</div>
+              </div>
+            </div>
+            <div class="lp-step-v">
+              <div class="lp-step-v-icon active">🚀</div>
+              <div class="lp-step-v-content">
+                <div class="lp-step-v-num">Step 5 <span class="lp-step-v-badge green">Real listings</span></div>
+                <div class="lp-step-v-label">Apply to real jobs</div>
+                <div class="lp-step-v-sub">One-tap apply to verified listings on LinkedIn, Indeed &amp; Glassdoor — with an application tracker</div>
+              </div>
             </div>
           </div>
+        </div>
+
+        <!-- SECTION 4b: AI JOB MATCHING DEMO -->
+        <div class="lp-section reveal-section">
+          <div class="lp-section-label">AI finds jobs that match you — not the other way around</div>
+          <div class="ai-match-demo">
+            <div class="ai-match-demo-header">
+              <span class="ai-match-demo-icon">🤖</span>
+              <span class="ai-match-demo-title">Your AI job matches</span>
+              <span class="ai-match-demo-sub">Based on your profile</span>
+            </div>
+            <div class="ai-match-item">
+              <div class="ai-match-dot"></div>
+              <div class="ai-match-role">Software Developer Trainee</div>
+              <div class="ai-match-pct">94% match</div>
+            </div>
+            <div class="ai-match-item">
+              <div class="ai-match-dot"></div>
+              <div class="ai-match-role">Associate Engineer — TCS</div>
+              <div class="ai-match-pct">89% match</div>
+            </div>
+            <div class="ai-match-item">
+              <div class="ai-match-dot"></div>
+              <div class="ai-match-role">Junior Backend Developer</div>
+              <div class="ai-match-pct">81% match</div>
+            </div>
+            <div class="ai-match-item">
+              <div class="ai-match-dot"></div>
+              <div class="ai-match-role">Python Intern — Infosys</div>
+              <div class="ai-match-pct">78% match</div>
+            </div>
+            <div class="ai-match-note">Pick any match → Nine Lab generates your full kit for that exact role</div>
+          </div>
+          <div class="lp-link-cta" onclick="showStartOptions()">Get my AI job matches →</div>
         </div>
 
         <!-- SECTION 5: BEFORE/AFTER — clean card -->
@@ -1599,10 +1682,10 @@
 
         <!-- SECTION 7: FINAL CTA -->
         <div class="lp-final-cta">
-          <div class="lp-final-title">Ready to get shortlisted?</div>
-          <div class="lp-final-sub">No account. No login. Completely free.</div>
+          <div class="lp-final-title">Your AI placement journey starts here.</div>
+          <div class="lp-final-sub">Profile → AI job match → prep kit → real apply. Free, no login.</div>
           <button class="lp-cta-btn" onclick="showStartOptions()">📄 &nbsp;Upload My Resume</button>
-          <button class="lp-cta-btn outline" onclick="showStartOptions()">✏️ &nbsp;Fill in 2 mins</button>
+          <button class="lp-cta-btn outline" onclick="showStartOptions()">✏️ &nbsp;Start in 2 mins</button>
         </div>
 
         <div class="lp-footer">Nine Lab · Built for Indian students · ninelab.in</div>
@@ -4090,8 +4173,8 @@
     function initTypewriter() {
       var el = document.getElementById('heroHeadline');
       if (!el) return;
-      var text1 = 'Get shortlisted';
-      var text2 = 'before others apply.';
+      var text1 = 'Find jobs. Get prepped.';
+      var text2 = 'Apply — all in one place.';
       var full = text1 + '\n' + text2;
       var i = 0;
       var cursor = '<span class="tw-cursor"></span>';
