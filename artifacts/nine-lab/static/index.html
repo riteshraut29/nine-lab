@@ -633,6 +633,81 @@
       .pipe-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
       .pipe-dot.spinning { animation: spin 1s linear infinite; }
 
+      /* ─── Step 2.5: AI Job Matches ─────────────────────────────────── */
+      #step2b { display: none; }
+      .jd-match-grid { display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px; }
+      .jd-match-card {
+        background: var(--bg-card);
+        border: 1.5px solid var(--border);
+        border-radius: 16px;
+        padding: 16px 16px 14px;
+        cursor: pointer;
+        transition: border-color 0.15s, box-shadow 0.15s, transform 0.1s;
+        display: flex; flex-direction: column; gap: 10px;
+      }
+      .jd-match-card:hover {
+        border-color: var(--purple);
+        box-shadow: 0 4px 20px rgba(108,99,255,0.14);
+        transform: translateY(-1px);
+      }
+      .jd-match-card.selected {
+        border-color: var(--purple);
+        background: var(--purple-light);
+      }
+      .jd-match-top {
+        display: flex; align-items: flex-start; justify-content: space-between; gap: 10px;
+      }
+      .jd-match-title {
+        font-size: 15px; font-weight: 700; color: var(--text); line-height: 1.3;
+        flex: 1;
+      }
+      .jd-use-btn {
+        background: var(--purple); color: #fff;
+        border: none; border-radius: 8px;
+        font-size: 12px; font-weight: 700;
+        padding: 7px 13px; cursor: pointer;
+        white-space: nowrap; flex-shrink: 0;
+        transition: opacity 0.15s, transform 0.1s;
+      }
+      .jd-use-btn:hover { opacity: 0.85; transform: translateY(-1px); }
+      .jd-match-meta {
+        display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+      }
+      .jd-match-type {
+        font-size: 10px; font-weight: 700; padding: 2px 9px;
+        border-radius: 20px; letter-spacing: 0.3px;
+        background: var(--bg-subtle); border: 1px solid var(--border);
+        color: var(--text-muted);
+      }
+      .jd-match-skills {
+        display: flex; flex-wrap: wrap; gap: 5px;
+      }
+      .jd-skill-chip {
+        background: var(--purple-light); border: 1px solid rgba(108,99,255,0.2);
+        border-radius: 100px; font-size: 11px; padding: 3px 9px;
+        color: var(--purple); font-weight: 600;
+      }
+      .jd-match-why {
+        font-size: 12px; color: var(--text-muted); font-weight: 500;
+        line-height: 1.5; padding-top: 2px;
+        border-top: 1px solid var(--border);
+        display: flex; align-items: flex-start; gap: 5px;
+      }
+      .jd-match-why-icon { color: var(--purple); flex-shrink: 0; margin-top: 1px; }
+      .jd-loading-state { text-align: center; padding: 40px 0; }
+      .jd-loading-spinner {
+        width: 36px; height: 36px; border: 3px solid var(--purple-light);
+        border-top-color: var(--purple); border-radius: 50%;
+        animation: spin 0.8s linear infinite; margin: 0 auto 14px;
+      }
+      .jd-loading-text { font-size: 14px; color: var(--text-muted); font-weight: 500; }
+      .jd-skip-link {
+        display: block; text-align: center; margin-top: 8px;
+        font-size: 13px; color: var(--text-muted); cursor: pointer;
+        text-decoration: underline; text-underline-offset: 3px;
+      }
+      .jd-skip-link:hover { color: var(--purple); }
+
       /* ─── Step 5: Results ───────────────────────────────────────────── */
       #step5 { display: none; }
       .results-header { text-align: center; margin-bottom: 28px; }
@@ -690,6 +765,107 @@
       .pdf-card-actions { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
 
       /* PDF Viewer Modal */
+      /* Apply Sheet */
+      .apply-cta-wrap { margin: 20px 0 4px; }
+      .apply-cta-btn {
+        width: 100%; padding: 16px; border-radius: 14px; border: none; cursor: pointer;
+        background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+        color: #fff; font-size: 16px; font-weight: 700; letter-spacing: 0.2px;
+        display: flex; align-items: center; justify-content: center; gap: 8px;
+        box-shadow: 0 4px 16px rgba(22,163,74,0.3); transition: opacity 0.15s, transform 0.1s;
+      }
+      .apply-cta-btn:hover { opacity: 0.92; transform: translateY(-1px); }
+      .apply-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:9998; align-items:flex-end; }
+      .apply-overlay.open { display:flex; animation:fadeIn 0.2s ease; }
+      /* ── Apply Sheet ── */
+      .apply-sheet {
+        background:#fff; border-radius:24px 24px 0 0; width:100%;
+        max-height:88vh; display:flex; flex-direction:column;
+        animation:slideUp 0.25s cubic-bezier(0.34,1.2,0.64,1);
+      }
+      .apply-sheet-handle { width:36px; height:4px; background:#e2e8f0; border-radius:2px; margin:10px auto 0; flex-shrink:0; }
+      .apply-sheet-header {
+        padding:14px 20px 12px; display:flex; justify-content:space-between;
+        align-items:center; border-bottom:1px solid var(--border); flex-shrink:0;
+      }
+      .apply-sheet-title { font-size:16px; font-weight:700; color:var(--text); }
+      .apply-sheet-sub { font-size:12px; color:var(--text-muted); margin-top:2px; }
+      .apply-sheet-close {
+        background:var(--bg-subtle); border:none; width:30px; height:30px;
+        border-radius:50%; font-size:16px; color:var(--text-muted);
+        cursor:pointer; display:flex; align-items:center; justify-content:center;
+        transition:background 0.15s;
+      }
+      .apply-sheet-close:hover { background:var(--border); }
+      /* Scrollable body */
+      .apply-boards {
+        overflow-y:auto; flex:1; min-height:0; padding:12px 0 40px;
+        -webkit-overflow-scrolling:touch;
+      }
+      /* Tabs */
+      .apply-tabs { display:flex; gap:8px; padding:0 16px 10px; }
+      .apply-tab {
+        flex:1; padding:8px; border:1.5px solid var(--border); border-radius:10px;
+        background:var(--bg-card); font-size:12px; font-weight:600;
+        cursor:pointer; color:var(--text-muted); transition:all 0.15s;
+      }
+      .apply-tab.active { background:var(--purple-light); border-color:var(--purple); color:var(--purple); }
+      /* Section label */
+      .apply-section-label {
+        font-size:10px; font-weight:700; color:var(--text-subtle);
+        text-transform:uppercase; letter-spacing:0.8px;
+        padding:14px 20px 8px;
+      }
+      /* Real job cards — horizontal layout */
+      .apply-job-card {
+        display:flex; align-items:flex-start; gap:12px;
+        padding:14px 20px; border-bottom:1px solid var(--border);
+        transition:background 0.12s;
+      }
+      .apply-job-card:hover { background:var(--bg-subtle); }
+      .apply-job-card:last-child { border-bottom:none; }
+      .apply-job-info { flex:1; min-width:0; }
+      .apply-job-title { font-size:13px; font-weight:700; color:var(--text); line-height:1.3; margin-bottom:3px; }
+      .apply-job-meta {
+        font-size:11px; color:var(--text-muted); margin-bottom:5px;
+        display:flex; align-items:center; gap:5px; flex-wrap:wrap;
+      }
+      .apply-source-badge {
+        font-size:10px; font-weight:700; padding:1px 7px; border-radius:20px;
+        background:var(--purple-light); color:var(--purple); white-space:nowrap;
+      }
+      .apply-job-snippet { font-size:11px; color:var(--text-subtle); line-height:1.5; }
+      .apply-job-right { display:flex; align-items:center; flex-shrink:0; padding-top:2px; }
+      .apply-job-btn {
+        font-size:12px; font-weight:700; color:white; background:var(--purple);
+        border:none; border-radius:8px; padding:7px 13px; cursor:pointer;
+        text-decoration:none; white-space:nowrap; transition:opacity 0.15s;
+        display:inline-flex; align-items:center; gap:4px;
+      }
+      .apply-job-btn:hover { opacity:0.85; }
+      .apply-job-btn.applied { background:#16a34a; cursor:default; pointer-events:none; }
+      /* Board buttons */
+      .apply-board-btn {
+        display:flex; align-items:center; gap:14px; padding:13px 20px;
+        border-bottom:1px solid var(--border); background:var(--bg-card);
+        text-decoration:none; cursor:pointer; transition:background 0.12s;
+      }
+      .apply-board-btn:hover { background:var(--bg-subtle); }
+      .apply-board-btn:last-child { border-bottom:none; }
+      .apply-board-logo { width:34px; height:34px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
+      .apply-board-name { font-size:13px; font-weight:700; color:var(--text); }
+      .apply-board-hint { font-size:11px; color:var(--text-muted); margin-top:1px; }
+      .apply-board-arrow { font-size:14px; color:var(--text-subtle); margin-left:auto; }
+      /* CTA badge */
+      .apply-cta-badge { display:inline-flex; align-items:center; justify-content:center; background:rgba(255,255,255,0.25); color:white; font-size:11px; font-weight:700; border-radius:12px; padding:1px 7px; margin-left:8px; }
+      /* Spinner row */
+      .apply-spinner-row { display:flex; align-items:center; gap:10px; padding:32px 20px; font-size:14px; color:var(--text-muted); justify-content:center; }
+      /* Dark mode */
+      body.dark-mode .apply-sheet { background:#1a2035; }
+      body.dark-mode .apply-sheet-handle { background:#2d3748; }
+      body.dark-mode .apply-job-card:hover { background:rgba(255,255,255,0.04); }
+      body.dark-mode .apply-board-btn:hover { background:rgba(255,255,255,0.04); }
+
       .viewer-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:9999; align-items:flex-end; }
       .viewer-overlay.open { display:flex; animation:fadeIn 0.2s ease; }
       .viewer-sheet { background:#fff; border-radius:24px 24px 0 0; width:100%; max-height:90vh; display:flex; flex-direction:column; animation:slideUp 0.25s cubic-bezier(0.34,1.2,0.64,1); }
@@ -1217,6 +1393,279 @@
       .ic-end-stat-num { font-size: 22px; font-weight: 800; color: var(--purple); }
       .ic-end-stat-label { font-size: 10px; color: var(--text-muted); font-weight: 600; }
       .ic-restart-btn { font-size: 13px; color: var(--purple); font-weight: 600; cursor: pointer; background: none; border: none; text-decoration: underline; }
+
+      /* ─── Redesign: Vertical Steps ──────────────────────────────────── */
+      .lp-steps-v { display: flex; flex-direction: column; gap: 0; margin: 4px 0; }
+      .lp-step-v { display: flex; align-items: flex-start; gap: 14px; padding: 12px 0; position: relative; }
+      .lp-step-v:not(:last-child)::after { content: ''; position: absolute; left: 20px; top: 44px; width: 2px; height: calc(100% - 8px); background: #ede9ff; }
+      .lp-step-v-icon { width: 42px; height: 42px; border-radius: 50%; background: white; border: 2px solid #ede9ff; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; z-index: 1; position: relative; }
+      .lp-step-v-icon.active { background: var(--purple-light); border-color: var(--purple); }
+      .lp-step-v-content { padding-top: 8px; }
+      .lp-step-v-num { font-size: 10px; font-weight: 700; color: var(--purple); letter-spacing: 0.5px; margin-bottom: 2px; text-transform: uppercase; }
+      .lp-step-v-label { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
+      .lp-step-v-sub { font-size: 12px; color: var(--text-muted); line-height: 1.45; }
+      .lp-step-v-badge { display: inline-block; background: var(--purple-light); color: var(--purple); font-size: 10px; font-weight: 700; padding: 1px 7px; border-radius: 20px; margin-left: 6px; vertical-align: middle; }
+      .lp-step-v-badge.green { background: #d1fae5; color: #065f46; }
+
+      /* ─── Redesign: AI Match Demo Card ──────────────────────────────── */
+      .ai-match-demo { background: white; border-radius: 16px; padding: 16px; border: 1px solid #f0f0f0; margin: 4px 0; }
+      .ai-match-demo-header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+      .ai-match-demo-icon { font-size: 18px; }
+      .ai-match-demo-title { font-size: 13px; font-weight: 700; color: var(--text); }
+      .ai-match-demo-sub { font-size: 11px; color: var(--text-muted); margin-left: auto; }
+      .ai-match-item { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 10px; margin-bottom: 6px; background: var(--bg); border: 1px solid transparent; }
+      .ai-match-item:last-child { margin-bottom: 0; }
+      .ai-match-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--purple); flex-shrink: 0; }
+      .ai-match-role { font-size: 13px; font-weight: 600; color: var(--text); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .ai-match-pct { font-size: 11px; font-weight: 700; color: #22c55e; background: #f0fdf4; padding: 2px 8px; border-radius: 20px; flex-shrink: 0; }
+      .ai-match-note { font-size: 11px; color: var(--text-subtle); text-align: center; margin-top: 10px; }
+
+      /* ─── 2.0: Auth Nav Area ────────────────────────────────────────────── */
+      #authNavArea { display: none; }
+      .auth-nav-signed-out { display: flex; align-items: center; gap: 8px; }
+      .auth-nav-btn {
+        padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 700;
+        border: none; cursor: pointer; font-family: "Inter", sans-serif;
+        transition: all 0.15s;
+      }
+      .auth-nav-btn.primary { background: var(--purple); color: white; }
+      .auth-nav-btn.primary:hover { background: var(--purple-dark); }
+      .auth-nav-btn.ghost { background: var(--purple-light); color: var(--purple); }
+      .auth-nav-btn.ghost:hover { background: var(--purple); color: white; }
+      .auth-nav-signed-in { display: flex; align-items: center; gap: 8px; }
+      .auth-nav-avatar {
+        width: 30px; height: 30px; border-radius: 50%; background: var(--purple);
+        color: white; font-size: 13px; font-weight: 700;
+        display: flex; align-items: center; justify-content: center; cursor: pointer;
+      }
+      .auth-nav-name { font-size: 12px; font-weight: 600; color: var(--text); max-width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .auth-nav-dashboard { font-size: 12px; font-weight: 700; color: var(--purple); cursor: pointer; }
+      .auth-nav-dashboard:hover { text-decoration: underline; }
+      .auth-nav-logout { font-size: 11px; color: var(--text-muted); cursor: pointer; padding: 4px; }
+      .auth-nav-logout:hover { color: var(--error); }
+
+      /* ─── 2.0: Auth Modal (OTP) ─────────────────────────────────────────── */
+      .auth-overlay {
+        display: none; position: fixed; inset: 0;
+        background: rgba(0,0,0,0.45); z-index: 9999;
+        align-items: flex-end; justify-content: center;
+      }
+      .auth-overlay.open { display: flex; animation: fadeIn 0.2s ease; }
+      .auth-sheet {
+        background: white; border-radius: 24px 24px 0 0;
+        padding: 28px 24px 40px; width: 100%; max-width: 640px;
+        animation: slideUp 0.25s cubic-bezier(0.34,1.2,0.64,1);
+      }
+      .auth-handle { width: 36px; height: 4px; background: #e2e8f0; border-radius: 2px; margin: 0 auto 20px; }
+      .auth-sheet-title { font-size: 20px; font-weight: 800; color: var(--text); margin-bottom: 6px; }
+      .auth-sheet-sub { font-size: 14px; color: var(--text-muted); margin-bottom: 24px; line-height: 1.5; }
+      .auth-email-input {
+        width: 100%; padding: 14px 16px; border-radius: 12px;
+        border: 1.5px solid var(--border); font-size: 15px;
+        font-family: "Inter", sans-serif; background: var(--bg-subtle);
+        outline: none; margin-bottom: 12px; transition: border-color 0.15s;
+      }
+      .auth-email-input:focus { border-color: var(--purple); background: white; }
+      .auth-otp-wrap { display: flex; gap: 8px; margin-bottom: 12px; }
+      .auth-otp-input {
+        flex: 1; padding: 16px 10px; border-radius: 12px; border: 1.5px solid var(--border);
+        font-size: 24px; font-weight: 700; text-align: center; letter-spacing: 6px;
+        font-family: "Inter", sans-serif; background: var(--bg-subtle); outline: none;
+        transition: border-color 0.15s;
+      }
+      .auth-otp-input:focus { border-color: var(--purple); background: white; }
+      .auth-btn {
+        width: 100%; padding: 14px; border-radius: 12px; background: var(--purple);
+        color: white; font-size: 15px; font-weight: 700; border: none;
+        cursor: pointer; font-family: "Inter", sans-serif;
+        transition: background 0.15s, opacity 0.15s;
+      }
+      .auth-btn:hover:not(:disabled) { background: var(--purple-dark); }
+      .auth-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+      .auth-sent-note { font-size: 13px; color: var(--text-muted); text-align: center; margin-top: 12px; line-height: 1.6; }
+      .auth-sent-note b { color: var(--text); }
+      .auth-error { font-size: 13px; color: var(--error); margin-top: 10px; display: none; }
+      .auth-error.visible { display: block; }
+      .auth-back-link { font-size: 13px; color: var(--purple); cursor: pointer; text-align: center; margin-top: 14px; }
+      .auth-back-link:hover { text-decoration: underline; }
+      .auth-divider { text-align: center; font-size: 12px; color: var(--text-subtle); margin: 16px 0; }
+      .auth-pw-toggle { font-size: 12px; color: var(--purple); cursor: pointer; text-align: center; margin-top: 12px; }
+
+      /* ─── PlaceAI: Discover Screen ──────────────────────────────────────── */
+      .disc-tabs { display:flex; gap:6px; margin-bottom:14px; overflow-x:auto; padding-bottom:2px; }
+      .disc-tab { flex:1; min-width:72px; padding:8px 6px; border:1.5px solid var(--border); border-radius:10px;
+                  background:#fff; font-size:12px; font-weight:600; cursor:pointer; color:var(--text-muted);
+                  transition:all 0.15s; white-space:nowrap; font-family:inherit; }
+      .disc-tab.active { background:var(--purple-light); border-color:var(--purple); color:var(--purple); }
+      .disc-count { background:var(--purple); color:#fff; font-size:10px; font-weight:700;
+                    padding:1px 5px; border-radius:10px; margin-left:3px; }
+      .disc-tab:not(.active) .disc-count { background:var(--border); color:var(--text-muted); }
+      .disc-panel { display:flex; flex-direction:column; gap:12px; }
+
+      .disc-card { background:#fff; border-radius:14px; border:1px solid var(--border);
+                   padding:16px; transition:box-shadow 0.15s; }
+      .disc-card:hover { box-shadow:0 4px 16px rgba(108,99,255,0.10); }
+      .disc-card-top { display:flex; justify-content:space-between; align-items:flex-start; gap:8px; }
+      .disc-card-title { font-size:14px; font-weight:600; color:var(--text); line-height:1.3; flex:1; }
+      .disc-card-company { font-size:12px; color:var(--text-muted); margin-top:3px; }
+      .disc-match-badge { flex-shrink:0; display:flex; flex-direction:column; align-items:center;
+                          background:var(--purple-light); border-radius:10px; padding:6px 10px; }
+      .disc-match-pct { font-size:16px; font-weight:700; color:var(--purple); line-height:1; }
+      .disc-match-label { font-size:9px; color:var(--purple); font-weight:600; margin-top:1px; }
+      .disc-gap-hint { display:inline-flex; align-items:center; gap:5px; margin-top:10px;
+                       background:#fff8e6; border:1px solid #fcd34d; border-radius:8px;
+                       padding:5px 10px; font-size:11px; font-weight:500; color:#92400e; }
+      .disc-card-footer { display:flex; justify-content:space-between; align-items:center; margin-top:12px; }
+      .disc-source-badge { font-size:10px; font-weight:600; padding:3px 8px; border-radius:6px;
+                           background:var(--bg-subtle); color:var(--text-muted); border:1px solid var(--border); }
+      .disc-apply-btn { padding:7px 16px; background:var(--purple); color:#fff; border:none;
+                        border-radius:8px; font-size:12px; font-weight:600; cursor:pointer;
+                        font-family:inherit; text-decoration:none; display:inline-block; transition:background 0.15s; }
+      .disc-apply-btn:hover { background:var(--purple-dark); }
+      .disc-snippet { font-size:12px; color:var(--text-muted); margin-top:8px; line-height:1.5;
+                      display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+
+      .disc-agent-row { display:flex; align-items:center; justify-content:space-between;
+                        font-size:13px; font-weight:500; color:var(--text); }
+      .disc-agent-badge { font-size:10px; font-weight:600; padding:2px 8px; border-radius:6px; }
+      .disc-agent-badge.searching { background:#fff8e6; color:#92400e; border:1px solid #fcd34d; }
+      .disc-agent-badge.done { background:#dcfce7; color:#15803d; border:1px solid #86efac; }
+      .disc-agent-badge.error { background:#fee2e2; color:#dc2626; border:1px solid #fca5a5; }
+
+      /* ─── 2.0: Dashboard (stepDash) ─────────────────────────────────────── */
+      #stepDash { display: none; }
+      .dash-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+      .dash-greeting-name { font-size: 22px; font-weight: 800; color: var(--text); }
+      .dash-greeting-sub { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+      .dash-signout-btn { font-size: 12px; color: var(--text-muted); cursor: pointer; padding: 6px 12px; border-radius: 8px; border: 1px solid var(--border); background: white; font-family: "Inter", sans-serif; }
+      .dash-signout-btn:hover { color: var(--error); border-color: var(--error); }
+
+      /* Profile completion bar */
+      .dash-profile-bar {
+        background: white; border-radius: 16px; border: 1px solid var(--border);
+        padding: 16px 18px; margin-bottom: 16px;
+        display: flex; align-items: center; gap: 14px;
+      }
+      .dash-profile-pct { font-size: 22px; font-weight: 800; color: var(--purple); flex-shrink: 0; }
+      .dash-profile-info { flex: 1; min-width: 0; }
+      .dash-profile-label { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+      .dash-profile-track { height: 6px; background: var(--border); border-radius: 99px; overflow: hidden; }
+      .dash-profile-fill { height: 100%; background: var(--purple); border-radius: 99px; transition: width 0.4s ease; }
+      .dash-profile-action { font-size: 11px; font-weight: 600; color: var(--purple); cursor: pointer; flex-shrink: 0; }
+      .dash-profile-action:hover { text-decoration: underline; }
+
+      /* Stats row */
+      .dash-stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 16px; }
+      .dash-stat { background: white; border-radius: 12px; border: 1px solid var(--border); padding: 14px 12px; text-align: center; }
+      .dash-stat-num { font-size: 22px; font-weight: 800; color: var(--text); line-height: 1; }
+      .dash-stat-label { font-size: 10px; color: var(--text-muted); margin-top: 3px; }
+
+      /* Filter tabs */
+      .dash-tabs { display: flex; gap: 6px; margin-bottom: 14px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; }
+      .dash-tabs::-webkit-scrollbar { display: none; }
+      .dash-tab {
+        padding: 7px 14px; border-radius: 20px; font-size: 12px; font-weight: 600;
+        color: var(--text-muted); background: white; border: 1.5px solid var(--border);
+        cursor: pointer; white-space: nowrap; transition: all 0.15s; flex-shrink: 0;
+        font-family: "Inter", sans-serif;
+      }
+      .dash-tab.active { background: var(--purple); color: white; border-color: var(--purple); }
+      .dash-tab:hover:not(.active) { border-color: var(--purple); color: var(--purple); }
+
+      /* Opportunity cards */
+      .opp-feed { display: flex; flex-direction: column; gap: 10px; }
+      .opp-card {
+        background: white; border-radius: 16px; border: 1px solid var(--border);
+        padding: 16px 18px; transition: box-shadow 0.15s, transform 0.15s;
+      }
+      .opp-card:hover { box-shadow: 0 4px 16px rgba(108,99,255,0.1); transform: translateY(-1px); }
+      .opp-card-top { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 10px; }
+      .opp-card-icon {
+        width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0;
+        display: flex; align-items: center; justify-content: center; font-size: 18px;
+      }
+      .opp-card-icon.job { background: #f0efff; }
+      .opp-card-icon.internship { background: #f0fdf4; }
+      .opp-card-icon.hackathon { background: #fffbeb; }
+      .opp-card-icon.opensource { background: #f0f9ff; }
+      .opp-card-icon.scholarship { background: #fdf2f8; }
+      .opp-card-body { flex: 1; min-width: 0; }
+      .opp-card-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 2px; line-height: 1.3; }
+      .opp-card-company { font-size: 12px; color: var(--text-muted); }
+      .opp-card-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+      .opp-type-badge { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+      .opp-type-badge.job { background: #f0efff; color: var(--purple); }
+      .opp-type-badge.internship { background: #f0fdf4; color: #065f46; }
+      .opp-type-badge.hackathon { background: #fffbeb; color: #92400e; }
+      .opp-type-badge.opensource { background: #f0f9ff; color: #0369a1; }
+      .opp-type-badge.scholarship { background: #fdf2f8; color: #9d174d; }
+      .opp-location { font-size: 11px; color: var(--text-subtle); }
+      .opp-salary { font-size: 11px; color: #22c55e; font-weight: 600; }
+      .match-badge {
+        font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px;
+        background: #f0fdf4; color: #16a34a; margin-left: auto;
+      }
+      .match-badge.low { background: var(--purple-light); color: var(--purple); }
+      .opp-desc { font-size: 12px; color: var(--text-muted); line-height: 1.5; margin-bottom: 12px;
+                  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+      .opp-actions { display: flex; gap: 8px; }
+      .opp-btn {
+        flex: 1; padding: 9px 12px; border-radius: 10px; font-size: 13px; font-weight: 600;
+        border: none; cursor: pointer; font-family: "Inter", sans-serif; transition: all 0.15s;
+        text-align: center;
+      }
+      .opp-btn.primary { background: var(--purple); color: white; }
+      .opp-btn.primary:hover { background: var(--purple-dark); }
+      .opp-btn.ghost { background: var(--purple-light); color: var(--purple); }
+      .opp-btn.ghost:hover { background: var(--purple); color: white; }
+      .opp-btn.tracked { background: #f0fdf4; color: #16a34a; cursor: default; }
+      .opp-feed-empty { text-align: center; padding: 40px 20px; color: var(--text-muted); font-size: 14px; }
+      .opp-feed-spinner { text-align: center; padding: 40px; }
+
+      /* ─── 2.0: Application Tracker ──────────────────────────────────────── */
+      #stepTracker { display: none; }
+      .tracker-header { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }
+      .app-list { display: flex; flex-direction: column; gap: 10px; }
+      .app-card {
+        background: white; border-radius: 16px; border: 1px solid var(--border);
+        padding: 16px 18px;
+      }
+      .app-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+      .app-card-title { font-size: 14px; font-weight: 700; color: var(--text); }
+      .app-card-company { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+      .status-pill {
+        padding: 4px 10px; border-radius: 20px; font-size: 10px; font-weight: 700;
+        border: none; cursor: pointer; font-family: "Inter", sans-serif;
+        flex-shrink: 0;
+      }
+      .status-pill.saved { background: #f0efff; color: var(--purple); }
+      .status-pill.applied { background: #dbeafe; color: #1d4ed8; }
+      .status-pill.interviewing { background: #fffbeb; color: #92400e; }
+      .status-pill.offered { background: #dcfce7; color: #15803d; }
+      .status-pill.rejected { background: #fef2f2; color: #b91c1c; }
+      .status-pill.withdrawn { background: #f1f5f9; color: #64748b; }
+      .app-card-meta { font-size: 11px; color: var(--text-subtle); margin-bottom: 10px; }
+      .app-card-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+      .app-status-select {
+        flex: 1; min-width: 120px; padding: 7px 10px; border-radius: 8px;
+        border: 1.5px solid var(--border); font-size: 12px; font-weight: 600;
+        font-family: "Inter", sans-serif; background: var(--bg-subtle); cursor: pointer;
+        outline: none; color: var(--text);
+      }
+      .app-status-select:focus { border-color: var(--purple); }
+      .app-delete-btn { padding: 7px 12px; border-radius: 8px; border: 1.5px solid #fecaca; background: #fef2f2; color: #b91c1c; font-size: 12px; font-weight: 600; cursor: pointer; font-family: "Inter", sans-serif; }
+      .app-delete-btn:hover { background: #fee2e2; }
+      .app-list-empty { text-align: center; padding: 40px 20px; color: var(--text-muted); font-size: 14px; }
+
+      /* ─── 2.0: Toast notification ───────────────────────────────────────── */
+      .nl-toast {
+        position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
+        background: #1a1a2e; color: white; padding: 12px 20px; border-radius: 12px;
+        font-size: 13px; font-weight: 600; z-index: 99999;
+        opacity: 0; transition: opacity 0.2s; pointer-events: none;
+        white-space: nowrap; max-width: 90vw;
+      }
+      .nl-toast.show { opacity: 1; }
     </style>
   </head>
   <body>
@@ -1259,7 +1708,18 @@
               <div class="brand-icon">9L</div>
               <span class="brand-name">Nine Lab</span>
             </div>
-            <div class="lp-badge">✓ No login &nbsp;·&nbsp; ✓ Free</div>
+            <div id="authNavArea">
+              <!-- Signed-out state -->
+              <div class="auth-nav-signed-out" id="authNavOut">
+                <button class="auth-nav-btn ghost" onclick="openAuthModal()">Sign in</button>
+              </div>
+              <!-- Signed-in state (hidden initially) -->
+              <div class="auth-nav-signed-in" id="authNavIn" style="display:none;">
+                <div class="auth-nav-avatar" id="authNavAvatar" onclick="showDashboard()">?</div>
+                <span class="auth-nav-dashboard" onclick="showDashboard()">Dashboard</span>
+                <span class="auth-nav-logout" onclick="handleLogout()" title="Sign out">✕</span>
+              </div>
+            </div>
           </div>
 
           <!-- Award strip — moved to top for instant trust -->
@@ -1282,10 +1742,12 @@
           </div>
 
           <div class="lp-hero-headline" id="heroHeadline"></div>
-          <div class="lp-hero-sub">Nine Lab rewrites your resume using a 15-step ATS framework — and delivers your complete placement kit in 60 seconds.</div>
+          <div class="lp-hero-sub">Nine Lab reads your profile, finds jobs that match you, builds your complete prep kit — then connects you to real listings on LinkedIn and Indeed. All free.</div>
 
-          <button class="lp-cta-btn" onclick="showStartOptions()">Get My Free Kit →</button>
-          <div class="lp-trust-line">4 PDFs · No account · For Indian students</div>
+          <button class="lp-cta-btn" onclick="showStartOptions()">Start My Journey →</button>
+          <!-- PlaceAI Discover CTA -->
+          <button onclick="showDiscover()" style="width:100%;margin-top:10px;padding:13px;background:#fff;color:var(--purple);border:2px solid var(--purple);border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;transition:background 0.15s;" onmouseover="this.style.background='var(--purple-light)'" onmouseout="this.style.background='#fff'">🔍 Find Live Opportunities →</button>
+          <div class="lp-trust-line">AI job match · 4 PDFs · Real apply links · No login</div>
           <div class="lp-kits-counter">🚀 <strong id="kitsCountEl">3,200+</strong> kits generated</div>
           <div class="lp-sample-link" onclick="showKitPreview('scorecard')">or see a sample kit first →</div>
         </div>
@@ -1348,25 +1810,82 @@
         <!-- SECTION 4: HOW IT WORKS -->
         <div class="lp-section reveal-section">
           <div class="lp-section-label">How it works</div>
-          <div class="lp-steps">
-            <div class="lp-step">
-              <div class="lp-step-icon">📋</div>
-              <div class="lp-step-num">Step 1</div>
-              <div class="lp-step-label">Add your resume</div>
-              <div class="lp-step-arrow">›</div>
+          <div class="lp-steps-v">
+            <div class="lp-step-v">
+              <div class="lp-step-v-icon">📋</div>
+              <div class="lp-step-v-content">
+                <div class="lp-step-v-num">Step 1</div>
+                <div class="lp-step-v-label">Add your profile</div>
+                <div class="lp-step-v-sub">Upload resume PDF, fill manually, or import from LinkedIn</div>
+              </div>
             </div>
-            <div class="lp-step">
-              <div class="lp-step-icon">🎯</div>
-              <div class="lp-step-num">Step 2</div>
-              <div class="lp-step-label">Paste the JD</div>
-              <div class="lp-step-arrow">›</div>
+            <div class="lp-step-v">
+              <div class="lp-step-v-icon active">🤖</div>
+              <div class="lp-step-v-content">
+                <div class="lp-step-v-num">Step 2 <span class="lp-step-v-badge">New</span></div>
+                <div class="lp-step-v-label">AI finds your best-fit jobs</div>
+                <div class="lp-step-v-sub">Nine Lab analyzes your profile and surfaces 4 matching roles — no searching required</div>
+              </div>
             </div>
-            <div class="lp-step">
-              <div class="lp-step-icon">📥</div>
-              <div class="lp-step-num">Step 3</div>
-              <div class="lp-step-label">Download your kit</div>
+            <div class="lp-step-v">
+              <div class="lp-step-v-icon">🎯</div>
+              <div class="lp-step-v-content">
+                <div class="lp-step-v-num">Step 3</div>
+                <div class="lp-step-v-label">Pick a role, paste the JD</div>
+                <div class="lp-step-v-sub">Select an AI-matched job or paste any JD you already have</div>
+              </div>
+            </div>
+            <div class="lp-step-v">
+              <div class="lp-step-v-icon">📥</div>
+              <div class="lp-step-v-content">
+                <div class="lp-step-v-num">Step 4</div>
+                <div class="lp-step-v-label">Get your complete prep kit</div>
+                <div class="lp-step-v-sub">ATS resume, scorecard, interview guide, and company cheat sheet — in 60 seconds</div>
+              </div>
+            </div>
+            <div class="lp-step-v">
+              <div class="lp-step-v-icon active">🚀</div>
+              <div class="lp-step-v-content">
+                <div class="lp-step-v-num">Step 5 <span class="lp-step-v-badge green">Real listings</span></div>
+                <div class="lp-step-v-label">Apply to real jobs</div>
+                <div class="lp-step-v-sub">One-tap apply to verified listings on LinkedIn, Indeed &amp; Glassdoor — with an application tracker</div>
+              </div>
             </div>
           </div>
+        </div>
+
+        <!-- SECTION 4b: AI JOB MATCHING DEMO -->
+        <div class="lp-section reveal-section">
+          <div class="lp-section-label">AI finds jobs that match you — not the other way around</div>
+          <div class="ai-match-demo">
+            <div class="ai-match-demo-header">
+              <span class="ai-match-demo-icon">🤖</span>
+              <span class="ai-match-demo-title">Your AI job matches</span>
+              <span class="ai-match-demo-sub">Based on your profile</span>
+            </div>
+            <div class="ai-match-item">
+              <div class="ai-match-dot"></div>
+              <div class="ai-match-role">Software Developer Trainee</div>
+              <div class="ai-match-pct">94% match</div>
+            </div>
+            <div class="ai-match-item">
+              <div class="ai-match-dot"></div>
+              <div class="ai-match-role">Associate Engineer — TCS</div>
+              <div class="ai-match-pct">89% match</div>
+            </div>
+            <div class="ai-match-item">
+              <div class="ai-match-dot"></div>
+              <div class="ai-match-role">Junior Backend Developer</div>
+              <div class="ai-match-pct">81% match</div>
+            </div>
+            <div class="ai-match-item">
+              <div class="ai-match-dot"></div>
+              <div class="ai-match-role">Python Intern — Infosys</div>
+              <div class="ai-match-pct">78% match</div>
+            </div>
+            <div class="ai-match-note">Pick any match → Nine Lab generates your full kit for that exact role</div>
+          </div>
+          <div class="lp-link-cta" onclick="showStartOptions()">Get my AI job matches →</div>
         </div>
 
         <!-- SECTION 5: BEFORE/AFTER — clean card -->
@@ -1423,10 +1942,10 @@
 
         <!-- SECTION 7: FINAL CTA -->
         <div class="lp-final-cta">
-          <div class="lp-final-title">Ready to get shortlisted?</div>
-          <div class="lp-final-sub">No account. No login. Completely free.</div>
+          <div class="lp-final-title">Your AI placement journey starts here.</div>
+          <div class="lp-final-sub">Profile → AI job match → prep kit → real apply. Free, no login.</div>
           <button class="lp-cta-btn" onclick="showStartOptions()">📄 &nbsp;Upload My Resume</button>
-          <button class="lp-cta-btn outline" onclick="showStartOptions()">✏️ &nbsp;Fill in 2 mins</button>
+          <button class="lp-cta-btn outline" onclick="showStartOptions()">✏️ &nbsp;Start in 2 mins</button>
         </div>
 
         <div class="lp-footer">Nine Lab · Built for Indian students · ninelab.in</div>
@@ -1710,7 +2229,54 @@
         <a class="edit-profile-link" onclick="goToStep(1)">Edit profile</a>
       </div>
 
-      <button class="btn-primary" onclick="goToStep(3)">This looks right →</button>
+      <button class="btn-primary" onclick="goToFindJobs()">Find matching jobs →</button>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════
+         STEP 2.5 — AI Job Matches
+    ════════════════════════════════════════════════ -->
+    <div id="step2b">
+      <div class="step-header">
+        <button class="back-btn" onclick="goToStep(2)" title="Back">←</button>
+        <div>
+          <div class="step-breadcrumb">
+            <div class="step-crumb done"></div>
+            <div class="step-crumb active"></div>
+            <div class="step-crumb"></div>
+            <span class="step-crumb-label">Step 2 of 3</span>
+          </div>
+          <div class="step-title">Jobs that fit your profile</div>
+        </div>
+      </div>
+
+      <!-- Loading state -->
+      <div id="jdLoadingState" class="jd-loading-state">
+        <div class="jd-loading-spinner"></div>
+        <div class="jd-loading-text">AI is finding your best matches...</div>
+        <div style="font-size:12px;color:var(--text-subtle);margin-top:6px;">Takes 5–10 seconds</div>
+      </div>
+
+      <!-- Results state -->
+      <div id="jdMatchResults" style="display:none;">
+        <p style="font-size:13px;color:var(--text-muted);margin-bottom:14px;line-height:1.5;">
+          Based on your profile, here are 4 roles you're well-suited for. Tap one to use it, or add your own.
+        </p>
+        <div class="jd-match-grid" id="jdMatchGrid">
+          <!-- Cards rendered by JS -->
+        </div>
+        <button class="btn-outline" style="width:100%;margin-top:4px;" onclick="goToStep(3)">
+          + Add my own JD instead
+        </button>
+        <span class="jd-skip-link" onclick="goToStep(3)">Skip this step</span>
+      </div>
+
+      <!-- Error state -->
+      <div id="jdMatchError" style="display:none;">
+        <div class="info-box" style="margin-bottom:16px;">
+          Could not load job suggestions. You can still paste your own JD below.
+        </div>
+        <button class="btn-primary" onclick="goToStep(3)">Add my own JD →</button>
+      </div>
     </div>
 
     <!-- ═══════════════════════════════════════════════
@@ -1742,15 +2308,7 @@
         <div class="info-box" style="margin-bottom:16px;">
           💡 Don't have a JD yet? You can also paste the role title and key skills.
         </div>
-
-        <div class="divider"></div>
-
-        <div class="form-group">
-          <label class="form-label">Company Name <span class="opt">(recommended)</span></label>
-          <input type="text" id="companyInput" placeholder="e.g. Google, Infosys, Zomato..." maxlength="100" oninput="updateCompanyHint(this.value)" />
-          <div class="company-hint" id="companyHint"></div>
-          <p style="font-size:12px; color:var(--text-subtle); margin-top:6px;">We'll research this company for your prep report.</p>
-        </div>
+        <input type="hidden" id="companyInput" value="" />
 
         <!-- ATS Score collapsible -->
         <div class="ats-toggle-header" onclick="toggleATSSection()">
@@ -1880,6 +2438,31 @@
         </div>
       </div>
 
+      <!-- Apply CTA -->
+      <div class="apply-cta-wrap">
+        <button class="apply-cta-btn" id="applyCTABtn" onclick="openApplySheet()">
+          🚀 Apply for this Job
+          <span class="apply-cta-badge" id="appliedCountBadge" style="display:none;">0 applied</span>
+        </button>
+      </div>
+
+      <!-- Apply Bottom Sheet -->
+      <div class="apply-overlay" id="applyOverlay" onclick="if(event.target===this)closeApplySheet()">
+        <div class="apply-sheet">
+          <div class="apply-sheet-handle"></div>
+          <div class="apply-sheet-header">
+            <div>
+              <div class="apply-sheet-title">Apply now</div>
+              <div class="apply-sheet-sub" id="applySheetSub">Choose a platform to apply</div>
+            </div>
+            <button class="apply-sheet-close" onclick="closeApplySheet()">✕</button>
+          </div>
+          <div class="apply-boards" id="applyBoardsList">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+      </div>
+
       <!-- PDF Viewer Modal -->
       <div class="viewer-overlay" id="viewerOverlay" onclick="if(event.target===this)closeViewer()">
         <div class="viewer-sheet">
@@ -1935,6 +2518,8 @@
     let pollInterval = null;     // setInterval handle
     let assembledResume = "";    // the built resume text passed to /generate
     let lastATSResult = null;    // cached ATS result from step 3
+    let currentCompany = "";     // company name for apply links
+    let currentJobTitle = "";    // job title for apply links
     let roleCount = 0;           // how many role blocks have been added
 
     // Profile data (mirrors form fields)
@@ -1943,7 +2528,7 @@
     /* ─────────────────────────────────────────────────────────────────────────
        STEP NAVIGATION
     ───────────────────────────────────────────────────────────────────────── */
-    const STEPS = ['step0','step1','step1b','step2','step3','step4','step5'];
+    const STEPS = ['step0','step1','step1b','step2','step2b','step3','step4','step5'];
 
     function showStep(id) {
       STEPS.forEach(s => document.getElementById(s).style.display = 'none');
@@ -1951,9 +2536,9 @@
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    // goToStep uses numeric mapping: 0=step0, 1=step1, 1.5=step1b, 2=step2, 3=step3, 4=step4, 5=step5
+    // goToStep uses numeric mapping: 0=step0, 1=step1, 1.5=step1b, 2=step2, 2.5=step2b, 3=step3, 4=step4, 5=step5
     function goToStep(n) {
-      const map = { 0: 'step0', 1: 'step1', 1.5: 'step1b', 2: 'step2', 3: 'step3', 4: 'step4', 5: 'step5' };
+      const map = { 0: 'step0', 1: 'step1', 1.5: 'step1b', 2: 'step2', 2.5: 'step2b', 3: 'step3', 4: 'step4', 5: 'step5' };
       if (map[n]) {
         currentStep = n;
         showStep(map[n]);
@@ -1978,6 +2563,30 @@
 
     function clearProfile() {
       localStorage.removeItem(PROFILE_KEY);
+    }
+
+    /* ─────────────────────────────────────────────────────────────────────────
+       APPLICATION TRACKER — localStorage only
+    ───────────────────────────────────────────────────────────────────────── */
+    const APPLIED_KEY = 'nl_applied_jobs';
+
+    function getAppliedJobs() {
+      try { return JSON.parse(localStorage.getItem(APPLIED_KEY) || '[]'); } catch(e) { return []; }
+    }
+    function saveAppliedJob(url, title, company) {
+      const list = getAppliedJobs();
+      if (list.some(j => j.url === url)) return;
+      list.push({ url, title, company, applied_at: Date.now() });
+      localStorage.setItem(APPLIED_KEY, JSON.stringify(list));
+      updateAppliedBadge();
+    }
+    function isApplied(url) { return getAppliedJobs().some(j => j.url === url); }
+    function updateAppliedBadge() {
+      const count = getAppliedJobs().length;
+      const b = document.getElementById('appliedCountBadge');
+      if (!b) return;
+      b.style.display = count > 0 ? 'inline-flex' : 'none';
+      b.textContent = count + ' applied';
     }
 
     /* ─────────────────────────────────────────────────────────────────────────
@@ -2260,6 +2869,138 @@
     function closeViewer() {
       document.getElementById('viewerOverlay').classList.remove('open');
     }
+
+    async function openApplySheet() {
+      const title = currentJobTitle || 'Software Developer';
+      const company = currentCompany || '';
+
+      document.getElementById('applySheetSub').textContent =
+        title + (company ? ' · ' + company : '');
+
+      // Open sheet immediately with spinner — don't make user wait
+      const list = document.getElementById('applyBoardsList');
+      list.innerHTML = `
+        <div class="apply-spinner-row">
+          <div class="spinner"></div>
+          Searching for real openings...
+        </div>`;
+      document.getElementById('applyOverlay').classList.add('open');
+
+      // Fetch real job + internship listings from JSearch
+      let jobs = [], internships = [];
+      try {
+        const resp = await fetch(`${BASE}/real-jobs?${new URLSearchParams({ title, company, type: 'both' })}`);
+        if (resp.ok) {
+          const data = await resp.json();
+          jobs        = data.jobs        || [];
+          internships = data.internships || [];
+        }
+      } catch(e) { /* fall through to boards-only view */ }
+
+      renderApplySheet(list, title, company, jobs, internships);
+    }
+
+    function renderApplySheet(list, title, company, jobs, internships) {
+      const q         = encodeURIComponent(title + (company ? ' ' + company : ''));
+      const titleSlug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+
+      const fallbackBoards = [
+        { name:'LinkedIn',    hint:'Most used for product & MNC roles', emoji:'💼', bg:'#0A66C2', url:`https://www.linkedin.com/jobs/search/?keywords=${q}&location=India` },
+        { name:'Naukri',      hint:'Best for IT & Indian companies',     emoji:'🔍', bg:'#FF7555', url:`https://www.naukri.com/${titleSlug}-jobs` },
+        { name:'Internshala', hint:'Great for freshers & internships',   emoji:'🎓', bg:'#00A86B', url:`https://internshala.com/jobs/${titleSlug}-jobs/` },
+        { name:'Indeed India',hint:'Wide listings across all sectors',   emoji:'🌐', bg:'#2164F3', url:`https://in.indeed.com/jobs?q=${q}&l=India` },
+      ];
+
+      const hasJobs    = jobs.length > 0;
+      const hasInterns = internships.length > 0;
+      let html = '';
+
+      if (hasJobs || hasInterns) {
+        html += `<div class="apply-section-label">Live Openings Found</div>`;
+
+        // Tabs — only show if both types exist
+        if (hasJobs && hasInterns) {
+          html += `
+            <div class="apply-tabs" style="padding:0 20px 12px;">
+              <button class="apply-tab active" id="applyTabJobs"    onclick="switchApplyTab('jobs')">💼 Jobs (${jobs.length})</button>
+              <button class="apply-tab"        id="applyTabInterns" onclick="switchApplyTab('internships')">🎓 Internships (${internships.length})</button>
+            </div>
+            <div id="applyJobsList">${_buildJobCards(jobs, 'j')}</div>
+            <div id="applyInternsList" style="display:none;">${_buildJobCards(internships, 'i')}</div>`;
+        } else {
+          html += _buildJobCards(hasJobs ? jobs : internships, 'r');
+        }
+      }
+
+      html += `<div class="apply-section-label">${hasJobs||hasInterns ? 'Search Manually' : 'Find Jobs On'}</div>`;
+      html += fallbackBoards.map(b => `
+        <a class="apply-board-btn" href="${b.url}" target="_blank" rel="noopener">
+          <div class="apply-board-logo" style="background:${b.bg}20;">${b.emoji}</div>
+          <div>
+            <div class="apply-board-name">${b.name}</div>
+            <div class="apply-board-hint">${b.hint}</div>
+          </div>
+          <div class="apply-board-arrow">↗</div>
+        </a>`).join('');
+
+      list.innerHTML = html;
+    }
+
+    function _buildJobCards(list, prefix) {
+      return list.map((job, i) => {
+        const applied = isApplied(job.url);
+        return `
+          <div class="apply-job-card">
+            <div class="apply-job-info">
+              <div class="apply-job-title">${escHtml(job.title)}</div>
+              <div class="apply-job-meta">
+                ${job.company ? `<span>${escHtml(job.company)}</span><span style="color:var(--border);">·</span>` : ''}
+                <span class="apply-source-badge">${escHtml(job.source)}</span>
+              </div>
+              ${job.snippet ? `<div class="apply-job-snippet">${escHtml(job.snippet.slice(0,140))}</div>` : ''}
+            </div>
+            <div class="apply-job-right">
+              <a class="apply-job-btn${applied ? ' applied' : ''}"
+                 href="${applied ? '#' : escHtml(job.url)}"
+                 target="${applied ? '_self' : '_blank'}" rel="noopener"
+                 data-url="${escHtml(job.url)}"
+                 data-title="${escHtml(job.title)}"
+                 data-company="${escHtml(job.company || '')}"
+                 onclick="return handleApplyClick(this)">
+                ${applied ? '✓' : 'Apply →'}
+              </a>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    function switchApplyTab(which) {
+      const jobsList    = document.getElementById('applyJobsList');
+      const internsList = document.getElementById('applyInternsList');
+      const tabJobs     = document.getElementById('applyTabJobs');
+      const tabInterns  = document.getElementById('applyTabInterns');
+      if (!jobsList || !internsList) return;
+      const showJobs = which === 'jobs';
+      jobsList.style.display    = showJobs ? 'block' : 'none';
+      internsList.style.display = showJobs ? 'none'  : 'block';
+      tabJobs.classList.toggle('active',    showJobs);
+      tabInterns.classList.toggle('active', !showJobs);
+    }
+
+    function handleApplyClick(el) {
+      const url = el.dataset.url;
+      if (!url || isApplied(url)) return false; // already applied, block nav
+      saveAppliedJob(url, el.dataset.title, el.dataset.company);
+      el.textContent = 'Applied ✓';
+      el.classList.add('applied');
+      el.href = '#';
+      el.target = '_self';
+      return true; // let browser open the URL in new tab
+    }
+
+    function closeApplySheet() {
+      document.getElementById('applyOverlay').classList.remove('open');
+    }
     function closeStartOptions(e) {
       if (!e || e.target === document.getElementById('startOverlay')) {
         document.getElementById('startOverlay').classList.remove('open');
@@ -2278,6 +3019,80 @@
       initExpFields();
       initSkillChips();
       goToStep(1);
+    }
+
+    /* ─── Step 2.5 — AI Job Matches ─────────────────────────────────────── */
+    async function goToFindJobs() {
+      goToStep(2.5);
+      // Reset to loading state
+      document.getElementById('jdLoadingState').style.display = 'block';
+      document.getElementById('jdMatchResults').style.display = 'none';
+      document.getElementById('jdMatchError').style.display = 'none';
+
+      try {
+        const resp = await fetch(`${BASE}/find-jds`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ resume: assembledResume || '' })
+        });
+        if (!resp.ok) throw new Error('Bad response');
+        const data = await resp.json();
+        renderJDMatches(data.jobs || []);
+      } catch (e) {
+        document.getElementById('jdLoadingState').style.display = 'none';
+        document.getElementById('jdMatchError').style.display = 'block';
+      }
+    }
+
+    function renderJDMatches(jobs) {
+      document.getElementById('jdLoadingState').style.display = 'none';
+      const grid = document.getElementById('jdMatchGrid');
+      grid.innerHTML = '';
+
+      jobs.forEach((job, i) => {
+        const skillsHtml = (job.skills || [])
+          .map(s => `<span class="jd-skill-chip">${escHtml(s)}</span>`)
+          .join('');
+
+        const card = document.createElement('div');
+        card.className = 'jd-match-card';
+        card.innerHTML = `
+          <div class="jd-match-top">
+            <div class="jd-match-title">${escHtml(job.title)}</div>
+            <button class="jd-use-btn" onclick="useJDMatch(${i})">Use this →</button>
+          </div>
+          <div class="jd-match-skills">${skillsHtml}</div>
+          <div class="jd-match-why">
+            <span class="jd-match-why-icon">✦</span>
+            <span>${escHtml(job.why)}</span>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+
+      // Store for later use
+      window._jdMatches = jobs;
+      document.getElementById('jdMatchResults').style.display = 'block';
+    }
+
+    function useJDMatch(index) {
+      const job = window._jdMatches && window._jdMatches[index];
+      if (!job) return;
+      // Store for apply links
+      currentJobTitle = job.title;
+      currentCompany = job.company_type;
+      // Pre-fill JD textarea and company field
+      document.getElementById('jdInput').value = job.jd;
+      document.getElementById('companyInput').value = '';
+      // Trigger word count update
+      const wcEvent = new Event('input');
+      document.getElementById('jdInput').dispatchEvent(wcEvent);
+      // Highlight selected card
+      document.querySelectorAll('.jd-match-card').forEach((c, i) => {
+        c.classList.toggle('selected', i === index);
+      });
+      // Go to JD step after short delay so user sees selection
+      setTimeout(() => goToStep(3), 180);
     }
 
     // Initialize one default role block if none exist
@@ -2686,10 +3501,20 @@
     ───────────────────────────────────────────────────────────────────────── */
     async function handleGenerate() {
       const jd = document.getElementById('jdInput').value.trim();
-      const company = document.getElementById('companyInput').value.trim();
 
       if (!jd) { showStepError('step3Error', 'Please paste the job description.'); return; }
       clearStepError('step3Error');
+
+      // Auto-extract company name from JD text
+      const companyMatch = jd.match(/(?:at|@|by|for|company[:\s]+|employer[:\s]+)\s*([A-Z][A-Za-z0-9&\s\.\-]{1,30})/);
+      const company = (companyMatch ? companyMatch[1].trim() : '') ;
+      document.getElementById('companyInput').value = company;
+
+      // Store for apply links
+      currentCompany = company;
+      if (!currentJobTitle) {
+        currentJobTitle = jd.split('\n')[0].replace(/[^a-zA-Z0-9 ]/g, '').trim().slice(0, 60) || 'Software Developer';
+      }
 
       goToStep(4);
 
@@ -3164,6 +3989,8 @@
       goToStep(0);
       // Show welcome-back banner if saved profile exists
       checkWelcomeBack();
+      // Restore applied jobs badge count
+      updateAppliedBadge();
     }
 
     // Run after DOM is ready
@@ -3606,8 +4433,8 @@
     function initTypewriter() {
       var el = document.getElementById('heroHeadline');
       if (!el) return;
-      var text1 = 'Get shortlisted';
-      var text2 = 'before others apply.';
+      var text1 = 'Find jobs. Get prepped.';
+      var text2 = 'Apply — all in one place.';
       var full = text1 + '\n' + text2;
       var i = 0;
       var cursor = '<span class="tw-cursor"></span>';
@@ -3793,6 +4620,716 @@
       initOrbParallax();
     });
 
+    /* ═══════════════════════════════════════════════════════════════════════
+       NINE LAB 2.0 — Auth, Dashboard, Opportunities, Tracker
+    ═══════════════════════════════════════════════════════════════════════ */
+
+    // ── State ──────────────────────────────────────────────────────────────
+    var NL_TOKEN_KEY = 'nl_auth_token';
+    var NL_REFRESH_KEY = 'nl_refresh_token';
+    var NL_USER_KEY = 'nl_user_v2';
+    var currentUser2 = null;  // {id, email, full_name}
+    var authToken2 = null;
+    var dashOpps = [];        // cached opportunities for dashboard
+    var dashApps = [];        // cached applications
+    var dashOppFilter = 'all';
+    var trackedOppIds = new Set();  // set of tracked opp IDs (local cache)
+
+    // ── Toast ───────────────────────────────────────────────────────────────
+    var _toastTimer = null;
+    function showToast(msg, durationMs) {
+      durationMs = durationMs || 2400;
+      var el = document.getElementById('nlToast');
+      if (!el) return;
+      el.textContent = msg;
+      el.classList.add('show');
+      clearTimeout(_toastTimer);
+      _toastTimer = setTimeout(function() { el.classList.remove('show'); }, durationMs);
+    }
+
+    // ── Auth helpers ────────────────────────────────────────────────────────
+    function _authHeaders() {
+      return authToken2 ? { 'Authorization': 'Bearer ' + authToken2 } : {};
+    }
+
+    function _saveSession(token, refresh, user) {
+      authToken2 = token;
+      currentUser2 = user;
+      localStorage.setItem(NL_TOKEN_KEY, token);
+      localStorage.setItem(NL_REFRESH_KEY, refresh || '');
+      localStorage.setItem(NL_USER_KEY, JSON.stringify(user));
+    }
+
+    function _clearSession() {
+      authToken2 = null;
+      currentUser2 = null;
+      localStorage.removeItem(NL_TOKEN_KEY);
+      localStorage.removeItem(NL_REFRESH_KEY);
+      localStorage.removeItem(NL_USER_KEY);
+    }
+
+    function updateAuthNav() {
+      var area = document.getElementById('authNavArea');
+      var out = document.getElementById('authNavOut');
+      var inEl = document.getElementById('authNavIn');
+      var avatar = document.getElementById('authNavAvatar');
+      if (!area) return;
+      area.style.display = 'block';
+      if (currentUser2) {
+        out.style.display = 'none';
+        inEl.style.display = 'flex';
+        var initials = (currentUser2.full_name || currentUser2.email || '?').charAt(0).toUpperCase();
+        if (avatar) avatar.textContent = initials;
+      } else {
+        out.style.display = 'flex';
+        inEl.style.display = 'none';
+      }
+    }
+
+    // ── Session restore ─────────────────────────────────────────────────────
+    function tryRestoreSession() {
+      var token = localStorage.getItem(NL_TOKEN_KEY);
+      var userRaw = localStorage.getItem(NL_USER_KEY);
+      if (!token || !userRaw) { updateAuthNav(); return; }
+      try {
+        var user = JSON.parse(userRaw);
+        authToken2 = token;
+        currentUser2 = user;
+        updateAuthNav();
+        // Validate token silently
+        fetch(BASE + '/auth/me', {
+          headers: { 'Authorization': 'Bearer ' + token }
+        }).then(function(r) {
+          if (r.status === 401) {
+            // Try refresh
+            var refresh = localStorage.getItem(NL_REFRESH_KEY);
+            if (refresh) {
+              fetch(BASE + '/auth/refresh', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ refresh_token: refresh })
+              }).then(function(r2) { return r2.json(); }).then(function(d) {
+                if (d.access_token) {
+                  _saveSession(d.access_token, d.refresh_token, currentUser2);
+                } else {
+                  _clearSession(); updateAuthNav();
+                }
+              }).catch(function() { _clearSession(); updateAuthNav(); });
+            } else {
+              _clearSession(); updateAuthNav();
+            }
+          }
+        }).catch(function() { /* network issue, keep session */ });
+      } catch(e) { _clearSession(); updateAuthNav(); }
+    }
+
+    // ── Profile sync ────────────────────────────────────────────────────────
+    function syncProfileToServer() {
+      if (!authToken2 || !profileData || !profileData.name) return;
+      var roles = [];
+      try {
+        var roleEls = document.querySelectorAll('[data-role-idx]');
+        roleEls.forEach(function(_, i) {
+          var co = document.getElementById('r_company_'+i);
+          var ro = document.getElementById('r_role_'+i);
+          var yr = document.getElementById('r_years_'+i);
+          if (co && ro) roles.push({ company: co.value, role: ro.value, years: yr ? yr.value : '' });
+        });
+      } catch(e) {}
+      var body = {
+        full_name: profileData.name || '',
+        phone: profileData.phone || '',
+        linkedin_url: profileData.linkedin || '',
+        city: profileData.city || '',
+        degree: profileData.degree || '',
+        field_of_study: profileData.field || '',
+        college: profileData.college || '',
+        grad_year: profileData.gradYear || '',
+        cgpa: profileData.cgpa || '',
+        is_fresher: !!profileData.fresher,
+        skills: profileData.skills || '',
+        projects: profileData.projects || '',
+        achievements: profileData.achievements || '',
+        roles: roles,
+      };
+      fetch(BASE + '/v2/profile', {
+        method: 'POST',
+        headers: Object.assign({ 'Content-Type': 'application/json' }, _authHeaders()),
+        body: JSON.stringify(body)
+      }).catch(function() {});  // fire-and-forget
+    }
+
+    // ── Auth Modal ──────────────────────────────────────────────────────────
+    var _authMode = 'otp';  // 'otp' or 'password'
+
+    function openAuthModal() {
+      showAuthStep('email');
+      _authMode = 'otp';
+      document.getElementById('authOverlay').classList.add('open');
+    }
+
+    function closeAuthModal() {
+      document.getElementById('authOverlay').classList.remove('open');
+    }
+
+    function showAuthStep(step) {
+      document.getElementById('authStepEmail').style.display = step === 'email' ? 'block' : 'none';
+      document.getElementById('authStepOTP').style.display = step === 'otp' ? 'block' : 'none';
+      document.getElementById('authStepPassword').style.display = step === 'password' ? 'block' : 'none';
+      // Clear errors
+      ['authEmailError','authOTPError','authPwError'].forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) { el.textContent = ''; el.classList.remove('visible'); }
+      });
+    }
+
+    function toggleAuthMode() {
+      _authMode = _authMode === 'otp' ? 'password' : 'otp';
+      if (_authMode === 'password') {
+        showAuthStep('password');
+      } else {
+        showAuthStep('email');
+      }
+    }
+
+    function _setAuthBtnLoading(btnId, loading) {
+      var btn = document.getElementById(btnId);
+      if (!btn) return;
+      btn.disabled = loading;
+      if (loading) btn.setAttribute('data-orig', btn.textContent), btn.textContent = '...';
+      else btn.textContent = btn.getAttribute('data-orig') || btn.textContent;
+    }
+
+    function _showAuthError(elId, msg) {
+      var el = document.getElementById(elId);
+      if (!el) return;
+      el.textContent = msg;
+      el.classList.add('visible');
+    }
+
+    async function handleSendOTP() {
+      var email = (document.getElementById('authEmailInput').value || '').trim();
+      if (!email || !email.includes('@')) {
+        _showAuthError('authEmailError', 'Please enter a valid email address.'); return;
+      }
+      _setAuthBtnLoading('authSendBtn', true);
+      try {
+        var r = await fetch(BASE + '/auth/otp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: email })
+        });
+        var d = await r.json();
+        if (d.success || r.ok) {
+          document.getElementById('authEmailDisplay').textContent = email;
+          document.getElementById('authOTPInput').value = '';
+          showAuthStep('otp');
+        } else {
+          _showAuthError('authEmailError', d.detail || d.message || 'Could not send code. Please try again.');
+        }
+      } catch(e) {
+        _showAuthError('authEmailError', 'Network error. Please try again.');
+      } finally {
+        _setAuthBtnLoading('authSendBtn', false);
+      }
+    }
+
+    async function handleVerifyOTP() {
+      var email = (document.getElementById('authEmailInput').value || '').trim();
+      var otp = (document.getElementById('authOTPInput').value || '').trim();
+      if (!otp || otp.length < 6) {
+        _showAuthError('authOTPError', 'Please enter the 6-digit code.'); return;
+      }
+      _setAuthBtnLoading('authVerifyBtn', true);
+      try {
+        var r = await fetch(BASE + '/auth/verify-otp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: email, token: otp })
+        });
+        var d = await r.json();
+        if (d.success && d.access_token) {
+          onLoginSuccess(d);
+        } else {
+          _showAuthError('authOTPError', d.detail || d.message || 'Invalid or expired code. Please try again.');
+        }
+      } catch(e) {
+        _showAuthError('authOTPError', 'Network error. Please try again.');
+      } finally {
+        _setAuthBtnLoading('authVerifyBtn', false);
+      }
+    }
+
+    async function handlePasswordLogin() {
+      var email = (document.getElementById('authPwEmailInput').value || '').trim();
+      var pw = document.getElementById('authPwInput').value || '';
+      if (!email || !pw) { _showAuthError('authPwError', 'Email and password are required.'); return; }
+      _setAuthBtnLoading('authPwBtn', true);
+      try {
+        var r = await fetch(BASE + '/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: email, password: pw })
+        });
+        var d = await r.json();
+        if (d.success && d.access_token) {
+          onLoginSuccess(d);
+        } else {
+          _showAuthError('authPwError', d.detail || d.message || 'Invalid email or password.');
+        }
+      } catch(e) {
+        _showAuthError('authPwError', 'Network error. Please try again.');
+      } finally {
+        _setAuthBtnLoading('authPwBtn', false);
+      }
+    }
+
+    function onLoginSuccess(data) {
+      _saveSession(data.access_token, data.refresh_token, data.user || {});
+      updateAuthNav();
+      closeAuthModal();
+      showToast('✓ Signed in as ' + (data.user.email || ''));
+      // Sync local profile to server (if any)
+      syncProfileToServer();
+      // Go to dashboard
+      setTimeout(showDashboard, 300);
+    }
+
+    async function handleLogout() {
+      if (authToken2) {
+        fetch(BASE + '/auth/logout', {
+          method: 'POST',
+          headers: Object.assign({ 'Content-Type': 'application/json' }, _authHeaders())
+        }).catch(function() {});
+      }
+      _clearSession();
+      updateAuthNav();
+      // Hide dashboard / tracker screens
+      document.getElementById('stepDash').style.display = 'none';
+      document.getElementById('stepTracker').style.display = 'none';
+      goToStep(0);
+      showToast('Signed out.');
+    }
+
+    // ── PlaceAI Discover ────────────────────────────────────────────────────
+    var _discoverData = {};
+
+    function showDiscover() {
+      var allSteps = document.querySelectorAll('#app > div[id^="step"]');
+      allSteps.forEach(function(s) { s.style.display = 'none'; });
+      document.getElementById('stepDash').style.display    = 'none';
+      document.getElementById('stepTracker').style.display = 'none';
+      document.getElementById('stepDiscover').style.display = 'block';
+      // Pre-fill skills from profile if available
+      if (profileData && profileData.skills) {
+        var sk = Array.isArray(profileData.skills)
+          ? profileData.skills.join(', ')
+          : (profileData.skills || '');
+        if (sk) document.getElementById('discSkills').value = sk;
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function hideDiscover() {
+      document.getElementById('stepDiscover').style.display = 'none';
+      goToStep(0);
+    }
+
+    function switchDiscTab(tab) {
+      ['jobs','internships','freelancing','scholarships'].forEach(function(t) {
+        document.getElementById('dtab-' + t).classList.toggle('active', t === tab);
+        document.getElementById('disc-' + t + '-panel').style.display = t === tab ? 'flex' : 'none';
+      });
+    }
+
+    function _agentDone(name, count) {
+      var badge = document.querySelector('#dagent-' + name + ' .disc-agent-badge');
+      if (!badge) return;
+      badge.className = 'disc-agent-badge ' + (count > 0 ? 'done' : 'error');
+      badge.textContent = count > 0 ? count + ' found' : 'none found';
+    }
+
+    function _renderDiscCard(item) {
+      var gapHtml = item.gap
+        ? '<div class="disc-gap-hint">⚡ Gap: <strong>' + item.gap + '</strong></div>'
+        : '';
+      var snippetHtml = item.snippet
+        ? '<div class="disc-snippet">' + item.snippet.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</div>'
+        : '';
+      return '<div class="disc-card">' +
+        '<div class="disc-card-top">' +
+          '<div>' +
+            '<div class="disc-card-title">' + (item.title||'').replace(/</g,'&lt;') + '</div>' +
+            '<div class="disc-card-company">' + (item.company||'').replace(/</g,'&lt;') + '</div>' +
+          '</div>' +
+          '<div class="disc-match-badge">' +
+            '<div class="disc-match-pct">' + (item.match||0) + '%</div>' +
+            '<div class="disc-match-label">match</div>' +
+          '</div>' +
+        '</div>' +
+        gapHtml +
+        snippetHtml +
+        '<div class="disc-card-footer">' +
+          '<span class="disc-source-badge">' + (item.source||'') + '</span>' +
+          '<a href="' + (item.url||'#') + '" target="_blank" rel="noopener" class="disc-apply-btn">Apply →</a>' +
+        '</div>' +
+      '</div>';
+    }
+
+    function _populatePanel(name, items) {
+      var panel = document.getElementById('disc-' + name + '-panel');
+      var countEl = document.getElementById('d' + name + '-count');
+      if (countEl) countEl.textContent = items.length;
+      if (!items.length) {
+        panel.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text-muted);font-size:13px;">No ' + name + ' found for your profile.</div>';
+      } else {
+        panel.innerHTML = items.map(_renderDiscCard).join('');
+      }
+    }
+
+    async function runDiscover() {
+      var skillsRaw = (document.getElementById('discSkills').value || '').trim();
+      if (!skillsRaw) {
+        document.getElementById('discSkills').focus();
+        document.getElementById('discSkills').style.borderColor = 'var(--error)';
+        setTimeout(function(){ document.getElementById('discSkills').style.borderColor='var(--border)'; }, 2000);
+        return;
+      }
+      var skills = skillsRaw.split(',').map(function(s){ return s.trim(); }).filter(Boolean);
+      var year    = document.getElementById('discYear').value;
+      var degree  = document.getElementById('discDegree').value;
+      var title   = (document.getElementById('discTitle').value || '').trim();
+
+      // Show agent status, hide results
+      document.getElementById('discSearchBtn').disabled = true;
+      document.getElementById('discSearchBtn').textContent = '⏳ Searching...';
+      document.getElementById('discAgentStatus').style.display = 'block';
+      document.getElementById('discResults').style.display = 'none';
+      document.getElementById('discEmpty').style.display = 'none';
+      // Reset badges
+      ['jobs','internships','freelancing','scholarships'].forEach(function(n){
+        var b = document.querySelector('#dagent-' + n + ' .disc-agent-badge');
+        if (b) { b.className = 'disc-agent-badge searching'; b.textContent = 'searching'; }
+      });
+
+      try {
+        var resp = await fetch(BASE + '/discover', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ skills: skills, year: year, degree: degree, title: title })
+        });
+        if (!resp.ok) throw new Error('API error');
+        var data = await resp.json();
+        _discoverData = data;
+
+        // Update agent badges + populate panels
+        ['jobs','internships','freelancing','scholarships'].forEach(function(n){
+          var items = data[n] || [];
+          _agentDone(n, items.length);
+          _populatePanel(n, items);
+        });
+
+        var total = (data.jobs||[]).length + (data.internships||[]).length +
+                    (data.freelancing||[]).length + (data.scholarships||[]).length;
+
+        document.getElementById('discResults').style.display = total ? 'block' : 'none';
+        document.getElementById('discEmpty').style.display   = total ? 'none'  : 'block';
+        switchDiscTab('jobs');
+      } catch(e) {
+        document.getElementById('discEmpty').style.display = 'block';
+      } finally {
+        document.getElementById('discSearchBtn').disabled = false;
+        document.getElementById('discSearchBtn').textContent = '🔍 Find Opportunities';
+      }
+    }
+
+    // ── Dashboard ───────────────────────────────────────────────────────────
+    function showDashboard() {
+      if (!currentUser2) { openAuthModal(); return; }
+      // Hide all app steps
+      var allSteps = document.querySelectorAll('#app > div[id^="step"]');
+      allSteps.forEach(function(s) { s.style.display = 'none'; });
+      document.getElementById('stepDash').style.display = 'block';
+      document.getElementById('stepTracker').style.display = 'none';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      loadDashboard();
+    }
+
+    async function loadDashboard() {
+      try {
+        var r = await fetch(BASE + '/v2/dashboard', { headers: _authHeaders() });
+        if (r.status === 401) { _clearSession(); updateAuthNav(); openAuthModal(); return; }
+        var d = await r.json();
+        if (!d.success) return;
+        // Update greeting
+        var name = (d.user.full_name || d.user.email || '').split(' ')[0];
+        document.getElementById('dashGreetName').textContent = 'Hey, ' + (name || 'there') + '! 👋';
+        // Profile bar
+        var pct = d.profile_pct || 0;
+        document.getElementById('dashProfilePct').textContent = pct + '%';
+        document.getElementById('dashProfileFill').style.width = pct + '%';
+        document.getElementById('dashProfileLabel').textContent =
+          pct < 80 ? 'Complete your profile for better matches' : 'Profile complete!';
+        // Stats
+        document.getElementById('dashStatTotal').textContent = d.stats.total || 0;
+        document.getElementById('dashStatInterviews').textContent = d.stats.interviews || 0;
+        document.getElementById('dashStatOffers').textContent = d.stats.offers || 0;
+        // Opportunities
+        dashOpps = d.opportunities || [];
+        dashApps = d.recent_applications || [];
+        trackedOppIds = new Set(dashApps.map(function(a) { return a.opportunity_id; }).filter(Boolean));
+        renderDashOpps(dashOpps);
+      } catch(e) {
+        document.getElementById('dashOppFeed').innerHTML =
+          '<div class="opp-feed-empty">Could not load. <span style="color:var(--purple);cursor:pointer;" onclick="loadDashboard()">Retry →</span></div>';
+      }
+    }
+
+    function filterDashOpps(type, tabEl) {
+      dashOppFilter = type;
+      document.querySelectorAll('.dash-tab').forEach(function(t) { t.classList.remove('active'); });
+      if (tabEl) tabEl.classList.add('active');
+      var filtered = type === 'all' ? dashOpps : dashOpps.filter(function(o) { return o.type === type; });
+      if (filtered.length === 0) {
+        // Fetch from server for this filter
+        fetchOpps(type);
+      } else {
+        renderDashOpps(filtered);
+      }
+    }
+
+    async function fetchOpps(type) {
+      document.getElementById('dashOppFeed').innerHTML = '<div class="opp-feed-spinner"><div class="spinner"></div></div>';
+      try {
+        var url = BASE + '/v2/opportunities?limit=25' + (type && type !== 'all' ? '&type='+type : '');
+        var r = await fetch(url, { headers: _authHeaders() });
+        var d = await r.json();
+        var opps = d.opportunities || [];
+        if (type === 'all' || !type) dashOpps = opps;
+        renderDashOpps(opps);
+      } catch(e) {
+        document.getElementById('dashOppFeed').innerHTML = '<div class="opp-feed-empty">Could not load opportunities.</div>';
+      }
+    }
+
+    function _oppIcon(type) {
+      var icons = { job: '💼', internship: '🎓', hackathon: '⚡', opensource: '🌐', scholarship: '🏅' };
+      return icons[type] || '📋';
+    }
+
+    function renderDashOpps(opps) {
+      var feed = document.getElementById('dashOppFeed');
+      if (!opps || opps.length === 0) {
+        feed.innerHTML = '<div class="opp-feed-empty">No opportunities found for this filter.</div>';
+        return;
+      }
+      var html = '';
+      opps.forEach(function(opp) {
+        var type = opp.type || 'job';
+        var score = opp.match_score || 0;
+        var isTracked = trackedOppIds.has(opp.id);
+        var matchLabel = score >= 8 ? '★ Great match' : score >= 4 ? '✓ Good match' : 'Possible match';
+        var matchClass = score >= 8 ? '' : 'low';
+        html += '<div class="opp-card">' +
+          '<div class="opp-card-top">' +
+            '<div class="opp-card-icon ' + type + '">' + _oppIcon(type) + '</div>' +
+            '<div class="opp-card-body">' +
+              '<div class="opp-card-title">' + _esc(opp.title) + '</div>' +
+              '<div class="opp-card-company">' + _esc(opp.company) + '</div>' +
+            '</div>' +
+            '<div class="match-badge ' + matchClass + '">' + matchLabel + '</div>' +
+          '</div>' +
+          '<div class="opp-card-meta">' +
+            '<span class="opp-type-badge ' + type + '">' + type + '</span>' +
+            (opp.location ? '<span class="opp-location">📍 ' + _esc(opp.location) + '</span>' : '') +
+            (opp.salary_range ? '<span class="opp-salary">' + _esc(opp.salary_range) + '</span>' : '') +
+          '</div>' +
+          '<div class="opp-desc">' + _esc(opp.description || '') + '</div>' +
+          '<div class="opp-actions">' +
+            '<button class="opp-btn primary" onclick="generateKitForOpp(' + JSON.stringify(opp).replace(/"/g,'&quot;') + ')">🚀 Generate Kit</button>' +
+            (isTracked
+              ? '<button class="opp-btn tracked">✓ Tracked</button>'
+              : '<button class="opp-btn ghost" onclick="trackOpp(' + JSON.stringify(opp).replace(/"/g,'&quot;') + ')">+ Track</button>') +
+          '</div>' +
+        '</div>';
+      });
+      feed.innerHTML = html;
+    }
+
+    function _esc(s) {
+      return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    function generateKitForOpp(opp) {
+      // Pre-fill the JD textarea with this opportunity's description + requirements
+      var jdText = opp.title + '\n' + opp.company + '\n\n' + (opp.description || '') + '\n\n' + (opp.requirements || '');
+      // Navigate to JD step
+      var jdInput = document.getElementById('jdInput');
+      if (jdInput) jdInput.value = jdText.trim();
+      // Hide dashboard, show app
+      document.getElementById('stepDash').style.display = 'none';
+      // If profile is already built, skip to step 3; otherwise go to step 0
+      if (profileData && profileData.name) {
+        assembledResume = buildResumeText(profileData);
+        goToStep(3);
+      } else {
+        goToStep(0);
+        setTimeout(function() { showStartOptions(); }, 300);
+      }
+      // Track as "saved"
+      if (currentUser2) trackOpp(opp);
+    }
+
+    async function trackOpp(opp) {
+      if (!currentUser2) { openAuthModal(); return; }
+      if (trackedOppIds.has(opp.id)) { showToast('Already tracking ' + opp.title); return; }
+      try {
+        var r = await fetch(BASE + '/v2/applications', {
+          method: 'POST',
+          headers: Object.assign({ 'Content-Type': 'application/json' }, _authHeaders()),
+          body: JSON.stringify({
+            opportunity_id: opp.id,
+            custom_title: opp.title,
+            custom_company: opp.company,
+            custom_url: opp.url || '',
+            status: 'saved',
+          })
+        });
+        var d = await r.json();
+        if (d.success) {
+          trackedOppIds.add(opp.id);
+          showToast('✓ Added to tracker: ' + opp.title);
+          // Re-render to update button
+          var filtered = dashOppFilter === 'all' ? dashOpps : dashOpps.filter(function(o) { return o.type === dashOppFilter; });
+          renderDashOpps(filtered);
+        }
+      } catch(e) { showToast('Could not track — try again.'); }
+    }
+
+    // ── Application Tracker ─────────────────────────────────────────────────
+    function showTracker() {
+      if (!currentUser2) { openAuthModal(); return; }
+      document.getElementById('stepDash').style.display = 'none';
+      document.getElementById('stepTracker').style.display = 'block';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      loadApplications();
+    }
+
+    async function loadApplications() {
+      var list = document.getElementById('appTrackerList');
+      list.innerHTML = '<div class="app-list-empty">Loading...</div>';
+      try {
+        var r = await fetch(BASE + '/v2/applications', { headers: _authHeaders() });
+        if (r.status === 401) { _clearSession(); updateAuthNav(); openAuthModal(); return; }
+        var d = await r.json();
+        dashApps = d.applications || [];
+        renderApplications();
+      } catch(e) {
+        list.innerHTML = '<div class="app-list-empty">Could not load applications. <span style="color:var(--purple);cursor:pointer;" onclick="loadApplications()">Retry →</span></div>';
+      }
+    }
+
+    var STATUS_LABELS = { saved:'Saved', applied:'Applied', interviewing:'Interviewing', offered:'Offered!', rejected:'Rejected', withdrawn:'Withdrawn' };
+
+    function renderApplications() {
+      var list = document.getElementById('appTrackerList');
+      if (!dashApps || dashApps.length === 0) {
+        list.innerHTML = '<div class="app-list-empty">No applications tracked yet.<br><br>Go to your <span style="color:var(--purple);cursor:pointer;" onclick="showDashboard()">Dashboard →</span> and click "Track" on any opportunity.</div>';
+        return;
+      }
+      var html = '';
+      dashApps.forEach(function(app) {
+        var title = app.custom_title || (app.opportunity ? app.opportunity.title : '') || 'Unnamed role';
+        var company = app.custom_company || (app.opportunity ? app.opportunity.company : '') || '';
+        var status = app.status || 'saved';
+        var date = app.applied_at ? new Date(app.applied_at).toLocaleDateString('en-IN', {day:'numeric',month:'short'}) : '';
+        html += '<div class="app-card" id="appcard-' + app.id + '">' +
+          '<div class="app-card-top">' +
+            '<div>' +
+              '<div class="app-card-title">' + _esc(title) + '</div>' +
+              (company ? '<div class="app-card-company">' + _esc(company) + '</div>' : '') +
+            '</div>' +
+            '<span class="status-pill ' + status + '">' + (STATUS_LABELS[status] || status) + '</span>' +
+          '</div>' +
+          (date ? '<div class="app-card-meta">Applied: ' + date + '</div>' : '') +
+          '<div class="app-card-actions">' +
+            '<select class="app-status-select" onchange="updateAppStatus(\'' + app.id + '\', this.value)">' +
+              Object.keys(STATUS_LABELS).map(function(s) {
+                return '<option value="' + s + '"' + (s === status ? ' selected' : '') + '>' + STATUS_LABELS[s] + '</option>';
+              }).join('') +
+            '</select>' +
+            '<button class="app-delete-btn" onclick="deleteApp(\'' + app.id + '\')">Remove</button>' +
+          '</div>' +
+        '</div>';
+      });
+      list.innerHTML = html;
+    }
+
+    async function updateAppStatus(appId, status) {
+      try {
+        await fetch(BASE + '/v2/applications/' + appId, {
+          method: 'PATCH',
+          headers: Object.assign({ 'Content-Type': 'application/json' }, _authHeaders()),
+          body: JSON.stringify({ status: status })
+        });
+        var app = dashApps.find(function(a) { return a.id === appId; });
+        if (app) { app.status = status; renderApplications(); }
+        showToast('✓ Status updated to ' + STATUS_LABELS[status]);
+      } catch(e) { showToast('Could not update status.'); }
+    }
+
+    async function deleteApp(appId) {
+      if (!confirm('Remove this application from tracker?')) return;
+      try {
+        await fetch(BASE + '/v2/applications/' + appId, {
+          method: 'DELETE',
+          headers: _authHeaders()
+        });
+        dashApps = dashApps.filter(function(a) { return a.id !== appId; });
+        renderApplications();
+        showToast('Removed from tracker.');
+      } catch(e) { showToast('Could not remove.'); }
+    }
+
+    // ── Hook into existing flow ─────────────────────────────────────────────
+    // Patch init() to call tryRestoreSession
+    var _origInit = typeof init === 'function' ? init : null;
+    if (_origInit) {
+      init = function() { _origInit(); tryRestoreSession(); };
+      // Re-run since DOMContentLoaded may have already fired
+      tryRestoreSession();
+    } else {
+      tryRestoreSession();
+    }
+
+    // Patch submitStep1 to sync profile to server after save
+    var _origSubmitStep1 = typeof submitStep1 === 'function' ? submitStep1 : null;
+    if (_origSubmitStep1) {
+      submitStep1 = function() {
+        _origSubmitStep1();
+        setTimeout(function() { if (authToken2) syncProfileToServer(); }, 500);
+      };
+    }
+
+    // Track "Apply for this Job" in step5 to server
+    var _origOpenApplySheet = typeof openApplySheet === 'function' ? openApplySheet : null;
+    if (_origOpenApplySheet) {
+      openApplySheet = function() {
+        _origOpenApplySheet();
+        if (authToken2 && currentCompany) {
+          fetch(BASE + '/v2/applications', {
+            method: 'POST',
+            headers: Object.assign({ 'Content-Type': 'application/json' }, _authHeaders()),
+            body: JSON.stringify({
+              custom_title: currentJobTitle || 'Custom role',
+              custom_company: currentCompany || '',
+              status: 'applied',
+            })
+          }).catch(function() {});
+        }
+      };
+    }
+
   </script>
   <!-- Dark Mode Toggle -->
   <div class="dark-toggle" id="darkToggle" onclick="toggleDarkMode()" title="Toggle dark mode">🌙</div>
@@ -3811,5 +5348,234 @@
   <div class="mobile-gen-bar" id="mobileGenBar">
     <button class="btn-primary" onclick="handleGenerate()">Generate My Kit →</button>
   </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       2.0: AUTH MODAL (OTP)
+  ════════════════════════════════════════════════════════════════════ -->
+  <div class="auth-overlay" id="authOverlay" onclick="if(event.target===this)closeAuthModal()">
+    <div class="auth-sheet">
+      <div class="auth-handle"></div>
+
+      <!-- Step 1: Email input -->
+      <div id="authStepEmail">
+        <div class="auth-sheet-title">Sign in to Nine Lab</div>
+        <div class="auth-sheet-sub">Enter your email — we'll send you a 6-digit code. No password needed.</div>
+        <input class="auth-email-input" type="email" id="authEmailInput" placeholder="you@example.com" />
+        <button class="auth-btn" onclick="handleSendOTP()" id="authSendBtn">Send Code →</button>
+        <div class="auth-error" id="authEmailError"></div>
+        <div class="auth-divider">— or —</div>
+        <div class="auth-pw-toggle" onclick="toggleAuthMode()">Use email & password instead</div>
+      </div>
+
+      <!-- Step 1 (password mode): Email + Password -->
+      <div id="authStepPassword" style="display:none;">
+        <div class="auth-sheet-title">Sign in with password</div>
+        <div class="auth-sheet-sub">Use your email and password to sign in.</div>
+        <input class="auth-email-input" type="email" id="authPwEmailInput" placeholder="you@example.com" />
+        <input class="auth-email-input" type="password" id="authPwInput" placeholder="Password (6+ chars)" />
+        <button class="auth-btn" onclick="handlePasswordLogin()" id="authPwBtn">Sign In →</button>
+        <div class="auth-error" id="authPwError"></div>
+        <div class="auth-pw-toggle" onclick="toggleAuthMode()">← Use magic code instead</div>
+      </div>
+
+      <!-- Step 2: OTP input -->
+      <div id="authStepOTP" style="display:none;">
+        <div class="auth-sheet-title">Check your email</div>
+        <div class="auth-sheet-sub" id="authOTPSub">We sent a 6-digit code to <b id="authEmailDisplay"></b></div>
+        <input class="auth-otp-input" type="text" id="authOTPInput" placeholder="● ● ● ● ● ●"
+               maxlength="6" inputmode="numeric" pattern="[0-9]*"
+               oninput="if(this.value.length===6)handleVerifyOTP()" />
+        <button class="auth-btn" onclick="handleVerifyOTP()" id="authVerifyBtn" style="margin-top:12px;">Verify →</button>
+        <div class="auth-error" id="authOTPError"></div>
+        <div class="auth-sent-note">Didn't get it? Check spam or <span style="color:var(--purple);cursor:pointer;" onclick="showAuthStep('email')">try again</span></div>
+      </div>
+
+      <div class="start-cancel" onclick="closeAuthModal()">Cancel</div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       2.0: DASHBOARD (stepDash)
+  ════════════════════════════════════════════════════════════════════ -->
+  <div id="stepDash">
+    <div class="app">
+      <!-- Header -->
+      <div class="dash-header">
+        <div>
+          <div class="dash-greeting-name" id="dashGreetName">Welcome back!</div>
+          <div class="dash-greeting-sub" id="dashGreetSub">Here's what's new for you</div>
+        </div>
+        <button class="dash-signout-btn" onclick="handleLogout()">Sign out</button>
+      </div>
+
+      <!-- Profile completion -->
+      <div class="dash-profile-bar">
+        <div class="dash-profile-pct" id="dashProfilePct">0%</div>
+        <div class="dash-profile-info">
+          <div class="dash-profile-label" id="dashProfileLabel">Complete your profile</div>
+          <div class="dash-profile-track">
+            <div class="dash-profile-fill" id="dashProfileFill" style="width:0%"></div>
+          </div>
+        </div>
+        <div class="dash-profile-action" onclick="goToStep(1)">Edit →</div>
+      </div>
+
+      <!-- Stats -->
+      <div class="dash-stats">
+        <div class="dash-stat">
+          <div class="dash-stat-num" id="dashStatTotal">0</div>
+          <div class="dash-stat-label">Tracked</div>
+        </div>
+        <div class="dash-stat">
+          <div class="dash-stat-num" id="dashStatInterviews">0</div>
+          <div class="dash-stat-label">Interviews</div>
+        </div>
+        <div class="dash-stat">
+          <div class="dash-stat-num" id="dashStatOffers">0</div>
+          <div class="dash-stat-label">Offers</div>
+        </div>
+      </div>
+
+      <!-- Section heading + Tracker CTA -->
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
+        <div class="lp-section-label" style="margin:0;">Opportunities for you</div>
+        <span style="font-size:12px;color:var(--purple);font-weight:600;cursor:pointer;" onclick="showTracker()">My applications →</span>
+      </div>
+
+      <!-- Filter tabs -->
+      <div class="dash-tabs" id="dashTabs">
+        <button class="dash-tab active" onclick="filterDashOpps('all',this)">All</button>
+        <button class="dash-tab" onclick="filterDashOpps('job',this)">Jobs</button>
+        <button class="dash-tab" onclick="filterDashOpps('internship',this)">Internships</button>
+        <button class="dash-tab" onclick="filterDashOpps('hackathon',this)">Hackathons</button>
+        <button class="dash-tab" onclick="filterDashOpps('opensource',this)">Open Source</button>
+        <button class="dash-tab" onclick="filterDashOpps('scholarship',this)">Scholarships</button>
+      </div>
+
+      <!-- Opportunity feed -->
+      <div class="opp-feed" id="dashOppFeed">
+        <div class="opp-feed-spinner"><div class="spinner"></div></div>
+      </div>
+
+      <!-- Back to kit builder link -->
+      <div style="text-align:center; margin-top:24px; padding-bottom:32px;">
+        <span style="font-size:13px; color:var(--text-muted);">Need to generate a prep kit for a custom role?</span><br>
+        <span style="font-size:13px; color:var(--purple); font-weight:600; cursor:pointer;" onclick="goToStep(0); setTimeout(()=>showStartOptions(),200)">Use the kit builder →</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       2.0: APPLICATION TRACKER (stepTracker)
+  ════════════════════════════════════════════════════════════════════ -->
+  <div id="stepTracker">
+    <div class="app">
+      <div class="tracker-header">
+        <button class="back-btn" onclick="showDashboard()" title="Back">←</button>
+        <div class="step-title">My Applications</div>
+      </div>
+      <div class="app-list" id="appTrackerList">
+        <div class="app-list-empty">Loading your applications...</div>
+      </div>
+      <div style="text-align:center; margin-top:20px; padding-bottom:32px;">
+        <button class="btn-outline" onclick="showDashboard()">← Back to Dashboard</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       PLACEAI: DISCOVER SCREEN (stepDiscover)
+  ════════════════════════════════════════════════════════════════════ -->
+  <div id="stepDiscover" style="display:none;">
+    <div class="app">
+      <!-- Header -->
+      <div style="display:flex;align-items:center;gap:12px;padding:16px 0 8px;">
+        <button class="back-btn" onclick="hideDiscover()" title="Back">←</button>
+        <div>
+          <div class="step-title" style="margin:0;">Find Opportunities</div>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">Live search · 4 agents running in parallel</div>
+        </div>
+      </div>
+
+      <!-- Profile quick-input -->
+      <div id="discoverForm" style="background:#fff;border-radius:16px;border:1px solid var(--border);padding:20px;margin-bottom:16px;">
+        <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:14px;">Your Profile</div>
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <div>
+            <label style="font-size:12px;color:var(--text-muted);font-weight:500;">Skills (comma separated)</label>
+            <input id="discSkills" type="text" placeholder="Python, Machine Learning, SQL, React..."
+              style="width:100%;margin-top:4px;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-family:inherit;outline:none;"
+              onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border)'"/>
+          </div>
+          <div style="display:flex;gap:10px;">
+            <div style="flex:1;">
+              <label style="font-size:12px;color:var(--text-muted);font-weight:500;">Year</label>
+              <select id="discYear"
+                style="width:100%;margin-top:4px;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-family:inherit;outline:none;background:#fff;">
+                <option>1st Year</option><option>2nd Year</option>
+                <option selected>3rd Year</option><option>4th Year</option><option>Fresher</option>
+              </select>
+            </div>
+            <div style="flex:1;">
+              <label style="font-size:12px;color:var(--text-muted);font-weight:500;">Degree</label>
+              <select id="discDegree"
+                style="width:100%;margin-top:4px;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-family:inherit;outline:none;background:#fff;">
+                <option selected>B.Tech</option><option>B.E.</option>
+                <option>M.Tech</option><option>MCA</option><option>Diploma</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label style="font-size:12px;color:var(--text-muted);font-weight:500;">Job title interest <span style="font-weight:400;">(optional)</span></label>
+            <input id="discTitle" type="text" placeholder="e.g. Data Analyst, Backend Developer..."
+              style="width:100%;margin-top:4px;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-family:inherit;outline:none;"
+              onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border)'"/>
+          </div>
+        </div>
+        <button onclick="runDiscover()" id="discSearchBtn"
+          style="width:100%;margin-top:16px;padding:13px;background:var(--purple);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;">
+          🔍 Find Opportunities
+        </button>
+      </div>
+
+      <!-- Agent status bar (shown during search) -->
+      <div id="discAgentStatus" style="display:none;background:#fff;border-radius:12px;border:1px solid var(--border);padding:14px 16px;margin-bottom:14px;">
+        <div style="font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:10px;">Agents running...</div>
+        <div style="display:flex;flex-direction:column;gap:6px;" id="discAgentRows">
+          <div class="disc-agent-row" id="dagent-jobs">💼 Jobs Agent <span class="disc-agent-badge searching">searching</span></div>
+          <div class="disc-agent-row" id="dagent-internships">🎓 Internships Agent <span class="disc-agent-badge searching">searching</span></div>
+          <div class="disc-agent-row" id="dagent-freelancing">💻 Freelancing Agent <span class="disc-agent-badge searching">searching</span></div>
+          <div class="disc-agent-row" id="dagent-scholarships">🏅 Scholarships Agent <span class="disc-agent-badge searching">searching</span></div>
+        </div>
+      </div>
+
+      <!-- Results tabs + cards -->
+      <div id="discResults" style="display:none;">
+        <div class="disc-tabs" id="discTabs">
+          <button class="disc-tab active" onclick="switchDiscTab('jobs')" id="dtab-jobs">💼 Jobs <span id="djobs-count" class="disc-count">0</span></button>
+          <button class="disc-tab" onclick="switchDiscTab('internships')" id="dtab-internships">🎓 Intern <span id="dinternships-count" class="disc-count">0</span></button>
+          <button class="disc-tab" onclick="switchDiscTab('freelancing')" id="dtab-freelancing">💻 Freelance <span id="dfreelancing-count" class="disc-count">0</span></button>
+          <button class="disc-tab" onclick="switchDiscTab('scholarships')" id="dtab-scholarships">🏅 Scholar <span id="dscholarships-count" class="disc-count">0</span></button>
+        </div>
+        <div id="disc-jobs-panel" class="disc-panel"></div>
+        <div id="disc-internships-panel" class="disc-panel" style="display:none;"></div>
+        <div id="disc-freelancing-panel" class="disc-panel" style="display:none;"></div>
+        <div id="disc-scholarships-panel" class="disc-panel" style="display:none;"></div>
+      </div>
+
+      <!-- Empty state -->
+      <div id="discEmpty" style="display:none;text-align:center;padding:40px 20px;color:var(--text-muted);">
+        <div style="font-size:32px;margin-bottom:12px;">🔍</div>
+        <div style="font-size:15px;font-weight:600;color:var(--text);margin-bottom:6px;">No results found</div>
+        <div style="font-size:13px;">Try different skills or check your internet connection.</div>
+      </div>
+
+      <div style="padding-bottom:40px;"></div>
+    </div>
+  </div>
+
+  <!-- Toast notification -->
+  <div class="nl-toast" id="nlToast"></div>
+
   </body>
 </html>

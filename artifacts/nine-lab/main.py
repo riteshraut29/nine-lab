@@ -26,6 +26,9 @@ TAVILY_API_KEY = os.getenv("TAVILY_API_KEY", "")
 SUPABASE_URL = os.getenv("SUPABASE_URL", "")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY", "")
 SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SERVICE_KEY", "")
+JSEARCH_API_KEY = os.getenv("JSEARCH_API_KEY", "d478886deemshee1d5a113b51de6p1d199ajsnee586dc31325")
+ADZUNA_APP_ID   = os.getenv("ADZUNA_APP_ID", "")
+ADZUNA_APP_KEY  = os.getenv("ADZUNA_APP_KEY", "")
 
 jobs: dict[str, dict] = {}
 executor = ThreadPoolExecutor(max_workers=8)
@@ -178,6 +181,23 @@ def tavily_search(query: str, retries: int = 1) -> list[dict]:
                 time.sleep(2)
             else:
                 raise e
+
+# ── Job board domain detector (used by /real-jobs) ───────────────────────────
+
+_JOB_BOARD_DOMAINS = {
+    "linkedin.com/jobs": "LinkedIn", "linkedin.com/job": "LinkedIn",
+    "naukri.com": "Naukri", "internshala.com": "Internshala",
+    "indeed.in": "Indeed", "in.indeed.com": "Indeed",
+    "foundit.in": "Foundit", "glassdoor.co.in": "Glassdoor",
+    "glassdoor.com": "Glassdoor", "shine.com": "Shine",
+}
+
+def _detect_job_board(url: str):
+    url_lower = url.lower()
+    for domain, source in _JOB_BOARD_DOMAINS.items():
+        if domain in url_lower:
+            return source
+    return None
 
 # ── Text helpers ──────────────────────────────────────────────────────────────
 
@@ -1807,6 +1827,375 @@ async def extract_resume(file: UploadFile = File(...)):
         raise HTTPException(500, detail=f"Error reading PDF: {str(e)}")
 
 
+class FindJDsRequest(BaseModel):
+    resume: str
+
+@app.post("/ninelab/find-jds")
+async def find_matching_jds(req: FindJDsRequest):
+    """Given a user's resume/profile text, return 4 AI-matched job descriptions."""
+    profile = req.resume[:3000]  # cap context
+    prompt = f"""You are a career advisor. Based on this candidate profile, suggest 4 realistic job roles they should apply for.
+
+CANDIDATE PROFILE:
+{profile}
+
+Return ONLY a valid JSON array of 4 objects. No markdown, no explanation.
+Each object must have exactly these fields:
+- "title": job role title (e.g. "Backend Developer", "Data Analyst")
+- "company_type": type of company (e.g. "Product Startup", "MNC", "Consultancy", "Fintech")
+- "skills": array of 4–5 key skills required (strings)
+- "jd": a realistic 150-word job description for this role
+- "why": one sentence explaining why this matches the candidate
+
+Example format:
+[
+  {{
+    "title": "Backend Developer",
+    "company_type": "Product Startup",
+    "skills": ["Python", "FastAPI", "PostgreSQL", "REST APIs"],
+    "jd": "We are looking for...",
+    "why": "Your Python and API experience directly matches this role."
+  }}
+]
+
+Return exactly 4 objects."""
+
+    try:
+        raw = gemini_call(prompt, temperature=0.7)
+        # Strip markdown fences if present
+        raw = re.sub(r'```(?:json)?', '', raw).strip().strip('`').strip()
+        start = raw.find('[')
+        end = raw.rfind(']') + 1
+        if start == -1 or end == 0:
+            raise ValueError("No JSON array found")
+        jobs_data = json.loads(raw[start:end])
+        if not isinstance(jobs_data, list):
+            raise ValueError("Not a list")
+        # Validate and sanitize
+        clean = []
+        for j in jobs_data[:4]:
+            clean.append({
+                "title": str(j.get("title", "Software Developer")),
+                "company_type": str(j.get("company_type", "Tech Company")),
+                "skills": [str(s) for s in j.get("skills", [])[:5]],
+                "jd": str(j.get("jd", ""))[:500],
+                "why": str(j.get("why", ""))[:200],
+            })
+        return JSONResponse({"jobs": clean})
+    except Exception as e:
+        # Fallback: return generic suggestions
+        return JSONResponse({"jobs": [
+            {"title": "Software Developer", "company_type": "Product Startup", "skills": ["Python", "JavaScript", "REST APIs", "Git"], "jd": "Join our team to build scalable web applications. You will design and implement backend services, work with frontend teams, and deploy on cloud infrastructure.", "why": "Your technical skills match a typical full-stack developer role."},
+            {"title": "Data Analyst", "company_type": "MNC", "skills": ["Python", "SQL", "Excel", "Data Visualization"], "jd": "We are looking for a data analyst to help interpret data and turn it into information that can offer ways to improve our business.", "why": "Analytical and technical skills make you a strong data analyst candidate."},
+            {"title": "Backend Engineer", "company_type": "Fintech", "skills": ["Java", "Spring Boot", "MySQL", "Microservices"], "jd": "Design and build high-performance backend systems for our payment platform. Work in an agile team to deliver reliable, scalable services.", "why": "Strong programming fundamentals fit backend engineering roles well."},
+            {"title": "Associate Software Engineer", "company_type": "IT Services", "skills": ["Java", "SQL", "Problem Solving", "Communication"], "jd": "Work on client projects across domains. You'll develop, test, and maintain software solutions while learning from senior engineers.", "why": "Good entry-level opportunity matching your academic and project background."},
+        ]})
+
+
+# ── PlaceAI: Multi-Agent Discovery System ────────────────────────────────────
+
+async def _safe_agent(coro, name: str, timeout: float = 9.0) -> dict:
+    """Wrap any agent coroutine with timeout + exception safety."""
+    try:
+        return await asyncio.wait_for(coro, timeout=timeout)
+    except asyncio.TimeoutError:
+        return {"source": name, "data": [], "status": "timeout"}
+    except Exception as e:
+        return {"source": name, "data": [], "status": "error", "err": str(e)}
+
+
+def _skill_match(text: str, skills: list) -> tuple:
+    """Returns (match_pct: int, missing: list[str])"""
+    if not skills:
+        return 50, []
+    tl = text.lower()
+    matched = [s for s in skills if s.lower() in tl]
+    missing = [s for s in skills if s.lower() not in tl]
+    pct = int(len(matched) / len(skills) * 100)
+    return max(pct, 15), missing[:2]
+
+
+async def _agent_jobs(profile: dict) -> dict:
+    import httpx
+    skills = profile.get("skills", [])
+    title  = profile.get("title") or (skills[0] if skills else "Software Developer")
+    out = []
+    try:
+        async with httpx.AsyncClient() as c:
+            r = await c.get(
+                "https://jsearch.p.rapidapi.com/search",
+                headers={"x-rapidapi-key": JSEARCH_API_KEY,
+                         "x-rapidapi-host": "jsearch.p.rapidapi.com"},
+                params={"query": f"{title} India", "page": "1",
+                        "num_pages": "1", "date_posted": "month"},
+                timeout=8,
+            )
+        if r.status_code == 200:
+            for job in r.json().get("data", [])[:8]:
+                url = job.get("job_apply_link") or job.get("job_google_link", "")
+                if not url:
+                    continue
+                t = job.get("job_title") or title
+                if "intern" in t.lower():
+                    continue
+                desc = job.get("job_description") or ""
+                pct, miss = _skill_match(desc + " " + t, skills)
+                pub = (job.get("job_publisher") or "").lower()
+                src = "LinkedIn" if "linkedin" in pub else \
+                      "Indeed"   if "indeed"   in pub else \
+                      "Glassdoor"if "glassdoor"in pub else "Job Board"
+                out.append({"title": t[:80], "company": (job.get("employer_name") or "")[:50],
+                            "url": url, "source": src, "match": pct,
+                            "gap": miss[0] if miss else "",
+                            "snippet": desc[:160].strip()})
+                if len(out) >= 5: break
+    except Exception:
+        pass
+    return {"source": "jobs", "data": out}
+
+
+async def _agent_internships(profile: dict) -> dict:
+    import httpx
+    skills = profile.get("skills", [])
+    title  = profile.get("title") or (skills[0] if skills else "Developer")
+    out = []
+    # JSearch internship search
+    try:
+        async with httpx.AsyncClient() as c:
+            r = await c.get(
+                "https://jsearch.p.rapidapi.com/search",
+                headers={"x-rapidapi-key": JSEARCH_API_KEY,
+                         "x-rapidapi-host": "jsearch.p.rapidapi.com"},
+                params={"query": f"{title} internship India", "page": "1",
+                        "num_pages": "1", "date_posted": "month"},
+                timeout=8,
+            )
+        if r.status_code == 200:
+            for job in r.json().get("data", [])[:6]:
+                url = job.get("job_apply_link") or job.get("job_google_link", "")
+                if not url: continue
+                t = job.get("job_title") or f"{title} Intern"
+                desc = job.get("job_description") or ""
+                pct, miss = _skill_match(desc + " " + t, skills)
+                pub = (job.get("job_publisher") or "").lower()
+                src = "LinkedIn" if "linkedin" in pub else \
+                      "Indeed"   if "indeed"   in pub else "JSearch"
+                out.append({"title": t[:80], "company": (job.get("employer_name") or "")[:50],
+                            "url": url, "source": src, "match": pct,
+                            "gap": miss[0] if miss else "",
+                            "snippet": desc[:160].strip()})
+                if len(out) >= 5: break
+    except Exception:
+        pass
+    # Adzuna fallback if < 3 results
+    if ADZUNA_APP_ID and ADZUNA_APP_KEY and len(out) < 3:
+        try:
+            async with httpx.AsyncClient() as c:
+                r = await c.get(
+                    "https://api.adzuna.com/v1/api/jobs/in/search/1",
+                    params={"app_id": ADZUNA_APP_ID, "app_key": ADZUNA_APP_KEY,
+                            "results_per_page": 5, "what": f"{title} internship"},
+                    timeout=8,
+                )
+            if r.status_code == 200:
+                for job in r.json().get("results", [])[:5]:
+                    url = job.get("redirect_url", "")
+                    if not url: continue
+                    t = job.get("title", "Internship")
+                    desc = job.get("description") or ""
+                    pct, miss = _skill_match(desc + " " + t, skills)
+                    out.append({"title": t[:80],
+                                "company": job.get("company", {}).get("display_name", "")[:50],
+                                "url": url, "source": "Adzuna", "match": pct,
+                                "gap": miss[0] if miss else "",
+                                "snippet": desc[:160].strip()})
+        except Exception:
+            pass
+    return {"source": "internships", "data": out[:5]}
+
+
+async def _agent_freelancing(profile: dict) -> dict:
+    import httpx
+    skills = profile.get("skills", [])
+    out = []
+    try:
+        async with httpx.AsyncClient() as c:
+            r = await c.get("https://remoteok.com/api",
+                            headers={"User-Agent": "PlaceAI/1.0"}, timeout=8)
+        if r.status_code == 200:
+            for job in r.json()[1:]:          # index 0 is metadata
+                if not isinstance(job, dict): continue
+                url = job.get("url", "")
+                if not url: continue
+                tags = " ".join(job.get("tags") or [])
+                desc = tags + " " + (job.get("description") or "")
+                pct, miss = _skill_match(desc, skills)
+                if pct < 20: continue
+                full_url = url if url.startswith("http") else f"https://remoteok.com{url}"
+                out.append({"title": (job.get("position") or "Remote Role")[:80],
+                            "company": (job.get("company") or "")[:50],
+                            "url": full_url, "source": "RemoteOK", "match": pct,
+                            "gap": miss[0] if miss else "",
+                            "snippet": (job.get("description") or "")[:160].strip()})
+                if len(out) >= 5: break
+    except Exception:
+        pass
+    return {"source": "freelancing", "data": out}
+
+
+async def _agent_scholarships(profile: dict) -> dict:
+    if not TAVILY_API_KEY:
+        return {"source": "scholarships", "data": []}
+    skills = profile.get("skills", [])
+    degree = profile.get("degree", "engineering")
+    out = []
+    try:
+        results = tavily_search(
+            f"engineering student scholarship grant fellowship India 2025 2026 {degree}", retries=0)
+        for r in results[:8]:
+            url = r.get("url", "")
+            t   = r.get("title", "")
+            content = r.get("content") or ""
+            if not url: continue
+            kws = ["scholarship", "grant", "fellowship", "award", "stipend", "prize"]
+            if not any(k in (t + content).lower() for k in kws): continue
+            pct, miss = _skill_match(content + " " + t, skills)
+            out.append({"title": t[:80], "company": "Scholarship Program",
+                        "url": url, "source": "Web", "match": pct,
+                        "gap": "", "snippet": content[:160].strip()})
+            if len(out) >= 4: break
+    except Exception:
+        pass
+    return {"source": "scholarships", "data": out}
+
+
+class DiscoverRequest(BaseModel):
+    name:   str = ""
+    degree: str = "B.Tech"
+    year:   str = "3rd Year"
+    skills: list = []
+    title:  str = ""
+
+
+@app.post("/ninelab/discover")
+async def discover_opportunities(req: DiscoverRequest):
+    """Run 4 agents in parallel and return ranked results per category."""
+    profile = {
+        "name":   req.name.strip()[:60],
+        "degree": req.degree.strip()[:40],
+        "year":   req.year.strip()[:20],
+        "skills": [s.strip() for s in req.skills if s.strip()][:12],
+        "title":  req.title.strip()[:60] or
+                  (req.skills[0].strip() if req.skills else "Software Developer"),
+    }
+    results = await asyncio.gather(
+        _safe_agent(_agent_jobs(profile),         "jobs"),
+        _safe_agent(_agent_internships(profile),  "internships"),
+        _safe_agent(_agent_freelancing(profile),  "freelancing"),
+        _safe_agent(_agent_scholarships(profile), "scholarships"),
+    )
+    out = {}
+    for r in results:
+        if isinstance(r, dict) and "source" in r:
+            out[r["source"]] = sorted(r.get("data", []),
+                                      key=lambda x: x.get("match", 0), reverse=True)
+    return JSONResponse({
+        "jobs":         out.get("jobs", []),
+        "internships":  out.get("internships", []),
+        "freelancing":  out.get("freelancing", []),
+        "scholarships": out.get("scholarships", []),
+    })
+
+
+# ── (existing) JSearch sync helper ───────────────────────────────────────────
+
+def _fetch_jsearch_jobs(title: str, company: str) -> list[dict]:
+    """Fetch real job/internship listings from JSearch (LinkedIn/Indeed/Glassdoor)."""
+    if not JSEARCH_API_KEY:
+        return []
+    import httpx
+    try:
+        query = f"{title} India"
+        r = httpx.get(
+            "https://jsearch.p.rapidapi.com/search",
+            headers={
+                "x-rapidapi-key": JSEARCH_API_KEY,
+                "x-rapidapi-host": "jsearch.p.rapidapi.com",
+            },
+            params={"query": query, "page": "1", "num_pages": "1", "date_posted": "month"},
+            timeout=8,
+        )
+        if r.status_code != 200:
+            return []
+        out = []
+        for job in r.json().get("data", [])[:8]:
+            url = job.get("job_apply_link") or job.get("job_google_link", "")
+            if not url:
+                continue
+            pub = (job.get("job_publisher") or "").lower()
+            source = "LinkedIn" if "linkedin" in pub else \
+                     "Indeed"   if "indeed"   in pub else \
+                     "Glassdoor"if "glassdoor"in pub else \
+                     (job.get("job_publisher") or "Job Board")
+            title_raw = job.get("job_title") or title
+            is_intern = "intern" in title_raw.lower()
+            out.append({
+                "title":   title_raw[:100],
+                "company": (job.get("employer_name") or "")[:60],
+                "url":     url,
+                "source":  source,
+                "type":    "internship" if is_intern else "job",
+                "snippet": (job.get("job_description") or "")[:200].strip(),
+            })
+        return out
+    except Exception:
+        return []
+
+
+@app.get("/ninelab/real-jobs")
+async def real_jobs(title: str = "", company: str = "", type: str = "both"):
+    """Fetch real job listings from JSearch; Tavily as last-resort fallback."""
+    title   = title.strip()[:80]
+    company = company.strip()[:60]
+    if not title:
+        return JSONResponse({"jobs": [], "internships": []})
+
+    raw = _fetch_jsearch_jobs(title, company)
+
+    # Tavily fallback only if JSearch unavailable
+    if not raw and TAVILY_API_KEY:
+        try:
+            for r in tavily_search(f'"{title}" job apply 2025 India', retries=0):
+                url = r.get("url", "")
+                source = _detect_job_board(url) if url else None
+                if source:
+                    raw.append({
+                        "title":   r.get("title", title)[:100],
+                        "company": "",
+                        "url":     url,
+                        "source":  source,
+                        "type":    "job",
+                        "snippet": (r.get("content") or "")[:200].strip(),
+                    })
+        except Exception:
+            pass
+
+    seen, result_jobs, result_interns = set(), [], []
+    for r in raw:
+        url = r.get("url", "")
+        if not url or url in seen:
+            continue
+        seen.add(url)
+        if r.get("type") == "internship":
+            if len(result_interns) < 5:
+                result_interns.append(r)
+        else:
+            if len(result_jobs) < 5:
+                result_jobs.append(r)
+
+    return JSONResponse({"jobs": result_jobs, "internships": result_interns})
+
+
 @app.get("/", response_class=RedirectResponse)
 async def root_redirect():
     return RedirectResponse(url="/ninelab/", status_code=302)
@@ -1834,8 +2223,7 @@ async def generate(req: GenerateRequest, request: Request,
         raise HTTPException(400, detail="Please provide your resume.")
     if not req.jd.strip():
         raise HTTPException(400, detail="Please provide the job description.")
-    if len(req.company.strip()) < 2:
-        raise HTTPException(400, detail="Please enter the company name.")
+    # company name is optional — auto-extracted from JD if not provided
 
     if not GEMINI_API_KEY and not GROQ_API_KEY:
         raise HTTPException(400, detail="No AI API key configured. Add GROQ_API_KEY or GEMINI_API_KEY.")
@@ -2714,3 +3102,695 @@ async def health():
         "tavily": bool(TAVILY_API_KEY),
         "supabase": bool(SUPABASE_URL and SUPABASE_KEY),
     }}
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  NINE LAB 2.0 — Complete Career Platform
+# ══════════════════════════════════════════════════════════════════════════════
+
+# ── Supabase REST helper ───────────────────────────────────────────────────────
+
+def supabase_rest(method: str, table: str, *, payload=None, params: dict = None,
+                  token: str = None, use_service_key: bool = False,
+                  upsert: bool = False) -> dict:
+    """Hit Supabase PostgREST API. Always use service key server-side for writes."""
+    import httpx
+    auth_key = SUPABASE_SERVICE_KEY if use_service_key else (token or SUPABASE_KEY)
+    prefer = "return=representation"
+    if upsert:
+        prefer += ",resolution=merge-duplicates"
+    headers = {
+        "apikey": SUPABASE_KEY,
+        "Authorization": f"Bearer {auth_key}",
+        "Content-Type": "application/json",
+        "Prefer": prefer,
+    }
+    url = f"{SUPABASE_URL}/rest/v1/{table}"
+    qp = dict(params or {})
+    if "select" not in qp:
+        qp["select"] = "*"
+    try:
+        import httpx as _hx
+        if method == "GET":
+            r = _hx.get(url, headers=headers, params=qp, timeout=10)
+        elif method == "POST":
+            r = _hx.post(url, headers=headers, json=payload, params=qp, timeout=10)
+        elif method == "PATCH":
+            r = _hx.patch(url, headers=headers, json=payload, params=qp, timeout=10)
+        elif method == "DELETE":
+            r = _hx.delete(url, headers=headers, params=qp, timeout=10)
+        else:
+            return {"status": 405, "data": {"error": "Unsupported method"}}
+        data = r.json() if r.text else []
+        return {"status": r.status_code, "data": data}
+    except Exception as e:
+        return {"status": 500, "data": {"error": str(e)}}
+
+
+def _get_auth_user_v2(authorization: Optional[str]) -> Optional[dict]:
+    """Extract and validate user from 'Bearer <token>' header."""
+    if not authorization:
+        return None
+    token = authorization.removeprefix("Bearer ").strip()
+    if not token:
+        return None
+    return get_user_from_token(token)
+
+
+def _require_auth_v2(authorization: Optional[str]) -> dict:
+    user = _get_auth_user_v2(authorization)
+    if not user:
+        raise HTTPException(401, detail="Authentication required. Please sign in.")
+    return user
+
+
+# ── New Pydantic Models ────────────────────────────────────────────────────────
+
+class MagicLinkRequest(BaseModel):
+    email: str
+
+class OTPVerifyRequest(BaseModel):
+    email: str
+    token: str
+
+class ProfileSaveRequest(BaseModel):
+    full_name: Optional[str] = None
+    phone: Optional[str] = None
+    linkedin_url: Optional[str] = None
+    city: Optional[str] = None
+    degree: Optional[str] = None
+    field_of_study: Optional[str] = None
+    college: Optional[str] = None
+    grad_year: Optional[str] = None
+    cgpa: Optional[str] = None
+    is_fresher: Optional[bool] = None
+    skills: Optional[str] = None
+    projects: Optional[str] = None
+    achievements: Optional[str] = None
+    roles: Optional[list] = None
+
+class ApplicationCreateRequest(BaseModel):
+    opportunity_id: Optional[str] = None
+    custom_title: Optional[str] = None
+    custom_company: Optional[str] = None
+    custom_url: Optional[str] = None
+    status: str = "saved"
+    notes: Optional[str] = None
+    resume_generated: Optional[bool] = False
+    prep_downloaded: Optional[bool] = False
+
+class ApplicationUpdateRequest(BaseModel):
+    status: Optional[str] = None
+    notes: Optional[str] = None
+    resume_generated: Optional[bool] = None
+    prep_downloaded: Optional[bool] = None
+    redirect_clicked: Optional[bool] = None
+
+class ActivityRequest(BaseModel):
+    action_type: str
+    metadata: Optional[dict] = None
+
+
+# ── Profile completion calculator ─────────────────────────────────────────────
+
+def _calc_profile_pct(row: dict) -> int:
+    fields = ["full_name", "degree", "college", "skills", "grad_year"]
+    exp_ok = bool(row.get("roles")) or row.get("is_fresher", False)
+    filled = sum(1 for f in fields if (row.get(f) or "").strip()) + (1 if exp_ok else 0)
+    return int(filled / (len(fields) + 1) * 100)
+
+
+# ── Seed opportunities (in-memory, also used as DB fallback) ──────────────────
+
+SEED_OPPS = [
+    {"id":"opp-001","title":"Software Developer Trainee","company":"TCS","type":"job",
+     "location":"Pan India","salary_range":"₹3.5L–₹4.5L/yr","url":"https://nextstep.tcs.com",
+     "description":"Build enterprise software across banking, healthcare, and retail. 15-step training program. Strong Java/Python fundamentals required.",
+     "requirements":"B.Tech/MCA/M.Sc with 60%+. Proficient in Java or Python. No active backlogs.",
+     "tags":["fresher","b.tech","mca","java","python","it"],"match_fields":"java python sql btech mca fresher software developer it"},
+    {"id":"opp-002","title":"System Engineer","company":"Infosys","type":"job",
+     "location":"Bengaluru / Pune / Hyderabad","salary_range":"₹3.6L–₹4.2L/yr","url":"https://career.infosys.com",
+     "description":"Work on Fortune 500 client projects. Infosys InStep training included. Rotational assignments across verticals.",
+     "requirements":"B.Tech/BCA/MCA with 65%+. Any programming language. Good communication.",
+     "tags":["fresher","b.tech","java","it","bca"],"match_fields":"java c++ sql btech bca mca fresher infosys system engineer"},
+    {"id":"opp-003","title":"Associate Engineer","company":"Wipro","type":"job",
+     "location":"Multi-location","salary_range":"₹3.5L/yr","url":"https://careers.wipro.com",
+     "description":"Application development, testing, and support. 90-day Talent Transformation training.",
+     "requirements":"B.Tech/BE/MCA with 60%+. No arrears. Proficient in one language.",
+     "tags":["fresher","b.tech","java","it"],"match_fields":"java python btech mca fresher wipro associate engineer"},
+    {"id":"opp-004","title":"Junior Software Engineer","company":"Razorpay","type":"job",
+     "location":"Bengaluru","salary_range":"₹12L–₹18L/yr","url":"https://razorpay.com/jobs",
+     "description":"Build India's payment infrastructure. High-scale systems processing millions of transactions daily. Strong DSA required.",
+     "requirements":"B.Tech CS/related. Strong DSA, backend development. Go/Java/Python preferred.",
+     "tags":["startup","fintech","java","python","backend","b.tech"],"match_fields":"java python go backend api fintech payments btech software engineer"},
+    {"id":"opp-005","title":"Backend Engineer","company":"Zepto","type":"job",
+     "location":"Mumbai","salary_range":"₹15L–₹25L/yr","url":"https://zepto.com/careers",
+     "description":"Build real-time inventory, order management, and logistics systems for India's fastest-growing quick commerce startup.",
+     "requirements":"B.Tech CS. Node.js, Go, or Java. Microservices. Strong problem-solving.",
+     "tags":["startup","backend","node.js","java","b.tech"],"match_fields":"node.js java go backend microservices api btech"},
+    {"id":"opp-006","title":"Data Analyst","company":"Flipkart","type":"job",
+     "location":"Bengaluru","salary_range":"₹8L–₹14L/yr","url":"https://www.flipkartcareers.com",
+     "description":"Analyze large datasets, build dashboards, run A/B tests, and present insights to leadership at India's top e-commerce platform.",
+     "requirements":"B.Tech/B.Sc/MCA. SQL, Python (Pandas). Tableau/PowerBI preferred.",
+     "tags":["data","sql","python","analytics","b.tech","mca"],"match_fields":"python sql pandas data analytics tableau power bi btech mca data analyst"},
+    {"id":"opp-007","title":"Frontend Engineer","company":"Swiggy","type":"job",
+     "location":"Bengaluru","salary_range":"₹12L–₹20L/yr","url":"https://careers.swiggy.com",
+     "description":"Build consumer-facing React features for Swiggy's apps used by 50M+ users. Focus on performance and UX.",
+     "requirements":"B.Tech CS. React, JavaScript, HTML/CSS. Redux, TypeScript preferred.",
+     "tags":["frontend","react","javascript","b.tech"],"match_fields":"react javascript typescript html css redux frontend btech engineer"},
+    {"id":"opp-008","title":"ML Engineer","company":"CRED","type":"job",
+     "location":"Bengaluru","salary_range":"₹18L–₹30L/yr","url":"https://careers.cred.club",
+     "description":"Build ML models for credit scoring, fraud detection, and personalization.",
+     "requirements":"B.Tech CS. Python, scikit-learn, TensorFlow/PyTorch. Large-scale data experience.",
+     "tags":["ml","ai","python","b.tech","data science"],"match_fields":"python machine learning ml tensorflow pytorch sklearn data science ai btech"},
+    {"id":"opp-009","title":"Full Stack Developer","company":"Zoho","type":"job",
+     "location":"Chennai / Bengaluru","salary_range":"₹5L–₹9L/yr","url":"https://careers.zohocorp.com",
+     "description":"Build features for Zoho's 50+ business apps used by 100M+ users worldwide.",
+     "requirements":"B.Tech CS. Java or any backend. JavaScript, HTML/CSS. Problem-solving.",
+     "tags":["full stack","java","javascript","b.tech"],"match_fields":"java javascript html css fullstack full stack btech zoho"},
+    {"id":"opp-010","title":"DevOps Engineer","company":"Freshworks","type":"job",
+     "location":"Chennai","salary_range":"₹8L–₹14L/yr","url":"https://careers.freshworks.com",
+     "description":"Manage CI/CD pipelines, cloud infrastructure, and reliability for SaaS products.",
+     "requirements":"B.Tech CS. AWS/GCP, Docker, Kubernetes, CI/CD. Python/Bash scripting.",
+     "tags":["devops","aws","cloud","kubernetes","b.tech"],"match_fields":"aws gcp docker kubernetes devops cicd linux python bash cloud btech"},
+    {"id":"opp-011","title":"Android Developer","company":"Dream11","type":"job",
+     "location":"Mumbai","salary_range":"₹12L–₹22L/yr","url":"https://careers.dream11.com",
+     "description":"Build Android features for India's largest fantasy sports platform with 200M+ users.",
+     "requirements":"B.Tech CS. Kotlin/Java Android. Jetpack Compose, MVVM architecture.",
+     "tags":["android","kotlin","mobile","b.tech"],"match_fields":"android kotlin java mobile mvvm jetpack btech"},
+    {"id":"opp-012","title":"Cloud Engineer","company":"Accenture","type":"job",
+     "location":"Bengaluru / Pune / Hyderabad","salary_range":"₹4.5L–₹8L/yr","url":"https://www.accenture.com/in-en/careers",
+     "description":"Cloud migration and modernization projects for Fortune 500 clients on AWS, Azure, GCP.",
+     "requirements":"B.Tech/MCA/BCA. Cloud platform knowledge. Cloud cert a plus.",
+     "tags":["cloud","aws","azure","b.tech","mca","bca"],"match_fields":"aws azure gcp cloud btech mca bca accenture"},
+    # Internships
+    {"id":"opp-013","title":"Software Engineering Intern","company":"Google","type":"internship",
+     "location":"Bengaluru / Hyderabad","salary_range":"₹1.2L–₹1.8L/month","url":"https://careers.google.com/students/",
+     "description":"12-week internship on real products used by billions. Projects in Search, Maps, YouTube, or Cloud.",
+     "requirements":"B.Tech 2nd/3rd year. Strong CS fundamentals, DSA, algorithms.",
+     "tags":["internship","b.tech","algorithms","dsa"],"match_fields":"algorithms dsa data structures google intern btech software"},
+    {"id":"opp-014","title":"Data Science Intern","company":"Paytm","type":"internship",
+     "location":"Noida","salary_range":"₹25K–₹40K/month","url":"https://paytm.com/about-us/careers",
+     "description":"Build ML models and data pipelines. Work on fraud detection and recommendation systems.",
+     "requirements":"B.Tech/M.Sc CS with ML coursework. Python, SQL, ML fundamentals.",
+     "tags":["internship","data science","ml","python","b.tech"],"match_fields":"python sql machine learning ml data science intern btech paytm"},
+    {"id":"opp-015","title":"Backend Development Intern","company":"Ola","type":"internship",
+     "location":"Bengaluru","salary_range":"₹35K–₹50K/month","url":"https://jobs.olacabs.com",
+     "description":"Build APIs and backend systems for Ola's mobility platform. Ride-matching, surge pricing, driver management.",
+     "requirements":"B.Tech 2nd/3rd year. Java/Python/Node.js. REST APIs and databases.",
+     "tags":["internship","backend","java","python","b.tech"],"match_fields":"java python node backend api databases intern btech ola"},
+    {"id":"opp-016","title":"Product Management Intern","company":"Meesho","type":"internship",
+     "location":"Bengaluru","salary_range":"₹60K–₹80K/month","url":"https://careers.meesho.com",
+     "description":"Drive product initiatives for India's social commerce platform with 140M+ users.",
+     "requirements":"MBA/B.Tech final year. Analytical mindset. Data-driven decision making.",
+     "tags":["internship","product","mba","b.tech"],"match_fields":"product management analytics data mba btech meesho intern"},
+    {"id":"opp-017","title":"iOS Development Intern","company":"PhonePe","type":"internship",
+     "location":"Bengaluru","salary_range":"₹50K–₹70K/month","url":"https://careers.phonepe.com",
+     "description":"Build iOS features for PhonePe with 500M+ users. Payments, UPI, insurance modules.",
+     "requirements":"B.Tech CS. Swift, iOS development basics. Swift/SwiftUI.",
+     "tags":["internship","ios","swift","mobile","b.tech"],"match_fields":"swift ios mobile xcode intern btech phonepe"},
+    # Hackathons
+    {"id":"opp-018","title":"Smart India Hackathon 2025","company":"Government of India","type":"hackathon",
+     "location":"Pan India","salary_range":"Prize: ₹1L–₹5L","url":"https://www.sih.gov.in",
+     "description":"India's largest hackathon with 50,000+ participants. Solve real government and industry problems across 17+ categories.",
+     "requirements":"Any student. Team of 6. Working prototype in 36 hours.",
+     "tags":["hackathon","b.tech","mca","competition"],"match_fields":"hackathon competition prototype team government btech mca"},
+    {"id":"opp-019","title":"HackWithInfy 2025","company":"Infosys","type":"hackathon",
+     "location":"Online → Bengaluru Finals","salary_range":"Prize: ₹2L + PPO","url":"https://hackwithinfy.com",
+     "description":"Solve real-world problems using AI/ML, cloud, and data. Top performers get Pre-Placement Offer.",
+     "requirements":"B.Tech/B.E 3rd or final year. Team of 2-4.",
+     "tags":["hackathon","b.tech","ml","ai","infosys"],"match_fields":"hackathon ai ml cloud infosys btech ppo competition"},
+    {"id":"opp-020","title":"Google Summer of Code 2025","company":"Google / OSS Orgs","type":"opensource",
+     "location":"Remote","salary_range":"$1,500–$6,600 (USD)","url":"https://summerofcode.withgoogle.com",
+     "description":"12–22 week paid open source contribution. Work with an OSS org on a significant project under mentorship.",
+     "requirements":"18+ enrolled student or recent grad. Strong programming. OSS contribution experience preferred.",
+     "tags":["open source","gsoc","remote","b.tech","mca"],"match_fields":"open source github contribution remote gsoc btech mca programming"},
+    {"id":"opp-021","title":"Microsoft Learn Student Ambassadors","company":"Microsoft","type":"scholarship",
+     "location":"College / Remote","salary_range":"Azure Credits + Mentorship","url":"https://studentambassadors.microsoft.com",
+     "description":"Become a Microsoft ambassador at your college. Azure credits, certifications, access to Microsoft tools.",
+     "requirements":"Enrolled student. Passion for tech. Run 1 event/semester.",
+     "tags":["scholarship","microsoft","azure","cloud","b.tech"],"match_fields":"microsoft azure cloud scholarship ambassador student btech"},
+    {"id":"opp-022","title":"QA Engineer","company":"Myntra","type":"job",
+     "location":"Bengaluru","salary_range":"₹6L–₹10L/yr","url":"https://careers.myntra.com",
+     "description":"Ensure quality of Myntra's fashion e-commerce platform. Design test plans, automation frameworks, performance tests.",
+     "requirements":"B.Tech CS. Selenium, Appium, or Cypress. Python/Java for automation. CI/CD understanding.",
+     "tags":["qa","testing","selenium","b.tech"],"match_fields":"testing qa selenium appium cypress python java automation btech"},
+    {"id":"opp-023","title":"Business Analyst Trainee","company":"Cognizant","type":"job",
+     "location":"Pan India","salary_range":"₹4L–₹5.5L/yr","url":"https://careers.cognizant.com",
+     "description":"Bridge technology and business for Cognizant clients. User stories, requirement analysis, Agile support.",
+     "requirements":"B.Tech/MBA/BCA/MCA with 60%+. Analytical skills, SDLC, Agile basics.",
+     "tags":["business analyst","ba","agile","b.tech","mba"],"match_fields":"business analyst agile scrum sdlc btech mba bca cognizant"},
+    {"id":"opp-024","title":"Cybersecurity Analyst","company":"HCL Technologies","type":"job",
+     "location":"Noida / Chennai","salary_range":"₹4.5L–₹7L/yr","url":"https://www.hcltech.com/careers",
+     "description":"Monitor, detect, and respond to security threats for banking, healthcare, and government clients.",
+     "requirements":"B.Tech CS/IT/ECE. Networking, security fundamentals. CEH/Security+ a plus.",
+     "tags":["cybersecurity","security","networking","b.tech"],"match_fields":"cybersecurity security networking ceh btech it ece hcl"},
+    {"id":"opp-025","title":"React Native Developer","company":"Urban Company","type":"job",
+     "location":"Bengaluru","salary_range":"₹10L–₹18L/yr","url":"https://urbancompany.com/careers",
+     "description":"Build cross-platform mobile features for Urban Company's service marketplace used in 50+ cities.",
+     "requirements":"B.Tech CS. React Native, JavaScript. 1+ yr experience or strong portfolio.",
+     "tags":["react native","mobile","javascript","b.tech"],"match_fields":"react native mobile javascript ios android btech urban company"},
+]
+
+def _match_score(opp: dict, skills_text: str, degree_text: str) -> int:
+    """Simple keyword overlap score for opportunity ranking."""
+    combined = (skills_text + " " + degree_text).lower()
+    tokens = set(re.findall(r'\w+', combined))
+    match_tokens = set(re.findall(r'\w+', (opp.get("match_fields") or "").lower()))
+    return len(tokens & match_tokens)
+
+
+def _rank_opps(opps: list, profile_row: dict) -> list:
+    """Rank opportunities by match score with user profile."""
+    skills = (profile_row.get("skills") or "").lower()
+    degree = (profile_row.get("degree") or "").lower()
+    is_fresher = profile_row.get("is_fresher", True)
+    has_roles = bool(profile_row.get("roles"))
+
+    scored = []
+    for opp in opps:
+        score = _match_score(opp, skills, degree)
+        # Boost internships/hackathons for freshers
+        if is_fresher and opp["type"] in ("internship", "hackathon", "opensource", "scholarship"):
+            score += 3
+        if not is_fresher and has_roles and opp["type"] == "job":
+            score += 2
+        scored.append((score, opp))
+    scored.sort(key=lambda x: -x[0])
+    return [o for _, o in scored]
+
+
+# ── OTP / Magic Link auth routes ──────────────────────────────────────────────
+
+@app.post("/ninelab/auth/otp")
+async def send_otp(req: MagicLinkRequest):
+    """Send 6-digit OTP to user email via Supabase."""
+    email = (req.email or "").strip().lower()
+    if "@" not in email:
+        raise HTTPException(400, detail="Please enter a valid email address.")
+    if not SUPABASE_URL or not SUPABASE_KEY:
+        raise HTTPException(503, detail="Auth not configured. Set SUPABASE_URL and SUPABASE_KEY.")
+
+    import httpx as _hx
+    headers = {"apikey": SUPABASE_KEY, "Authorization": f"Bearer {SUPABASE_KEY}",
+               "Content-Type": "application/json"}
+    try:
+        r = _hx.post(f"{SUPABASE_URL}/auth/v1/otp", headers=headers,
+                     json={"email": email, "create_user": True}, timeout=10)
+        if r.status_code == 200:
+            return JSONResponse({"success": True, "message": "OTP sent! Check your email — valid for 10 minutes."})
+        data = r.json() if r.text else {}
+        msg = data.get("msg") or data.get("message") or data.get("error") or "Could not send OTP."
+        raise HTTPException(400, detail=str(msg)[:200])
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(500, detail=f"Email service error: {str(e)[:100]}")
+
+
+@app.post("/ninelab/auth/verify-otp")
+async def verify_otp_route(req: OTPVerifyRequest):
+    """Verify 6-digit OTP and return session tokens."""
+    email = (req.email or "").strip().lower()
+    token = (req.token or "").strip()
+    if not email or not token:
+        raise HTTPException(400, detail="Email and OTP code are required.")
+    if not SUPABASE_URL or not SUPABASE_KEY:
+        raise HTTPException(503, detail="Auth not configured.")
+
+    import httpx as _hx
+    headers = {"apikey": SUPABASE_KEY, "Authorization": f"Bearer {SUPABASE_KEY}",
+               "Content-Type": "application/json"}
+    try:
+        r = _hx.post(f"{SUPABASE_URL}/auth/v1/verify", headers=headers,
+                     json={"email": email, "token": token, "type": "email"}, timeout=10)
+        data = r.json() if r.text else {}
+        if r.status_code == 200 and data.get("access_token"):
+            user = data.get("user") or {}
+            meta = user.get("user_metadata") or {}
+            return JSONResponse({
+                "success": True,
+                "access_token": data["access_token"],
+                "refresh_token": data.get("refresh_token", ""),
+                "user": {
+                    "id": user.get("id", ""),
+                    "email": user.get("email", email),
+                    "full_name": meta.get("full_name") or meta.get("name") or "",
+                },
+            })
+        msg = data.get("msg") or data.get("message") or data.get("error") or "Invalid or expired OTP."
+        raise HTTPException(400, detail=str(msg)[:200])
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(500, detail=f"Verification error: {str(e)[:100]}")
+
+
+# ── Profile routes ────────────────────────────────────────────────────────────
+
+@app.get("/ninelab/v2/profile")
+async def get_profile_v2(authorization: Optional[str] = Header(None)):
+    user = _require_auth_v2(authorization)
+    uid = user["id"]
+
+    if not SUPABASE_URL or not SUPABASE_KEY:
+        return JSONResponse({"success": True, "profile": {}, "pct": 0})
+
+    token = authorization.removeprefix("Bearer ").strip()
+    result = supabase_rest("GET", "user_profiles", params={"id": f"eq.{uid}"}, token=token)
+    rows = result.get("data", [])
+    if isinstance(rows, list) and rows:
+        row = rows[0]
+        pct = row.get("profile_pct") or _calc_profile_pct(row)
+        return JSONResponse({"success": True, "profile": row, "pct": pct})
+    return JSONResponse({"success": True, "profile": {
+        "id": uid, "email": user.get("email", ""),
+        "full_name": (user.get("user_metadata") or {}).get("full_name", ""),
+    }, "pct": 0})
+
+
+@app.post("/ninelab/v2/profile")
+async def save_profile_v2(req: ProfileSaveRequest, authorization: Optional[str] = Header(None)):
+    user = _require_auth_v2(authorization)
+    uid = user["id"]
+    email = user.get("email", "")
+
+    row = {
+        "id": uid, "email": email,
+        "full_name": req.full_name or "",
+        "phone": req.phone or "",
+        "linkedin_url": req.linkedin_url or "",
+        "city": req.city or "",
+        "degree": req.degree or "",
+        "field_of_study": req.field_of_study or "",
+        "college": req.college or "",
+        "grad_year": req.grad_year or "",
+        "cgpa": req.cgpa or "",
+        "is_fresher": req.is_fresher if req.is_fresher is not None else True,
+        "skills": req.skills or "",
+        "projects": req.projects or "",
+        "achievements": req.achievements or "",
+        "roles": req.roles or [],
+        "updated_at": datetime.utcnow().isoformat(),
+    }
+    row["profile_pct"] = _calc_profile_pct(row)
+    row["profile_complete"] = row["profile_pct"] >= 80
+
+    if not SUPABASE_URL or not SUPABASE_KEY:
+        return JSONResponse({"success": True, "pct": row["profile_pct"]})
+
+    result = supabase_rest("POST", "user_profiles", payload=row,
+                           use_service_key=True, upsert=True)
+    return JSONResponse({
+        "success": result["status"] in (200, 201),
+        "pct": row["profile_pct"],
+    })
+
+
+# ── Opportunities feed routes ─────────────────────────────────────────────────
+
+@app.get("/ninelab/v2/opportunities")
+async def get_opportunities(
+    type: Optional[str] = None,
+    search: Optional[str] = None,
+    limit: int = 25,
+    authorization: Optional[str] = Header(None)
+):
+    profile_row: dict = {}
+    if authorization:
+        user = _get_auth_user_v2(authorization)
+        if user and SUPABASE_URL:
+            token = authorization.removeprefix("Bearer ").strip()
+            r = supabase_rest("GET", "user_profiles",
+                              params={"id": f"eq.{user['id']}"}, token=token)
+            rows = r.get("data", [])
+            if isinstance(rows, list) and rows:
+                profile_row = rows[0]
+
+    # Try DB first
+    opps: list = []
+    if SUPABASE_URL and SUPABASE_KEY:
+        params: dict = {"is_active": "eq.true", "order": "created_at.desc",
+                        "limit": str(limit * 2), "select": "*"}
+        if type and type != "all":
+            params["type"] = f"eq.{type}"
+        result = supabase_rest("GET", "opportunities", params=params,
+                               use_service_key=True)
+        rows2 = result.get("data", [])
+        if isinstance(rows2, list) and rows2:
+            opps = rows2
+
+    # Fallback to seed data
+    if not opps:
+        opps = list(SEED_OPPS)
+
+    # Type filter on seed data
+    if type and type != "all":
+        opps = [o for o in opps if o.get("type") == type]
+
+    # Search filter
+    if search:
+        sq = search.lower()
+        opps = [o for o in opps if
+                sq in (o.get("title") or "").lower() or
+                sq in (o.get("company") or "").lower() or
+                sq in (o.get("description") or "").lower() or
+                any(sq in t for t in (o.get("tags") or []))]
+
+    # Rank by profile match
+    if profile_row:
+        opps = _rank_opps(opps, profile_row)
+
+    opps = opps[:limit]
+
+    # Attach match score
+    skills = (profile_row.get("skills") or "").lower()
+    degree = (profile_row.get("degree") or "").lower()
+    for opp in opps:
+        opp["match_score"] = _match_score(opp, skills, degree)
+
+    return JSONResponse({"success": True, "opportunities": opps, "total": len(opps)})
+
+
+@app.get("/ninelab/v2/opportunities/{opp_id}")
+async def get_opportunity_v2(opp_id: str):
+    for opp in SEED_OPPS:
+        if opp.get("id") == opp_id:
+            return JSONResponse({"success": True, "opportunity": opp})
+    if SUPABASE_URL and SUPABASE_KEY:
+        result = supabase_rest("GET", "opportunities",
+                               params={"id": f"eq.{opp_id}"}, use_service_key=True)
+        rows = result.get("data", [])
+        if isinstance(rows, list) and rows:
+            return JSONResponse({"success": True, "opportunity": rows[0]})
+    raise HTTPException(404, detail="Opportunity not found.")
+
+
+# ── Application tracking routes ───────────────────────────────────────────────
+
+@app.get("/ninelab/v2/applications")
+async def get_applications(authorization: Optional[str] = Header(None)):
+    user = _require_auth_v2(authorization)
+    uid = user["id"]
+
+    if not SUPABASE_URL or not SUPABASE_KEY:
+        return JSONResponse({"success": True, "applications": []})
+
+    token = authorization.removeprefix("Bearer ").strip()
+    result = supabase_rest("GET", "applications",
+                           params={"user_id": f"eq.{uid}", "order": "updated_at.desc",
+                                   "select": "*"}, token=token)
+    apps = result.get("data", []) if isinstance(result.get("data"), list) else []
+    return JSONResponse({"success": True, "applications": apps})
+
+
+@app.post("/ninelab/v2/applications")
+async def create_application_v2(req: ApplicationCreateRequest,
+                                  authorization: Optional[str] = Header(None)):
+    user = _require_auth_v2(authorization)
+    uid = user["id"]
+
+    if not SUPABASE_URL or not SUPABASE_KEY:
+        return JSONResponse({"success": True, "id": str(uuid.uuid4())})
+
+    token = authorization.removeprefix("Bearer ").strip()
+
+    # Check for duplicate
+    dup_params: dict = {"user_id": f"eq.{uid}"}
+    if req.opportunity_id:
+        dup_params["opportunity_id"] = f"eq.{req.opportunity_id}"
+    elif req.custom_title:
+        dup_params["custom_title"] = f"eq.{req.custom_title}"
+        dup_params["custom_company"] = f"eq.{req.custom_company or ''}"
+
+    dup = supabase_rest("GET", "applications", params=dup_params, token=token)
+    if isinstance(dup.get("data"), list) and dup["data"]:
+        return JSONResponse({"success": True, "id": dup["data"][0].get("id"), "existing": True})
+
+    valid_statuses = {"saved", "applied", "interviewing", "offered", "rejected", "withdrawn"}
+    status = req.status if req.status in valid_statuses else "saved"
+
+    payload = {
+        "user_id": uid,
+        "opportunity_id": req.opportunity_id,
+        "custom_title": req.custom_title or "",
+        "custom_company": req.custom_company or "",
+        "custom_url": req.custom_url or "",
+        "status": status,
+        "resume_generated": bool(req.resume_generated),
+        "prep_downloaded": bool(req.prep_downloaded),
+        "notes": req.notes or "",
+        "applied_at": datetime.utcnow().isoformat() if status == "applied" else None,
+    }
+    result = supabase_rest("POST", "applications", payload=payload, token=token)
+    data = result.get("data")
+    app_id = data[0].get("id") if isinstance(data, list) and data else str(uuid.uuid4())
+    return JSONResponse({"success": True, "id": app_id})
+
+
+@app.patch("/ninelab/v2/applications/{app_id}")
+async def update_application_v2(app_id: str, req: ApplicationUpdateRequest,
+                                  authorization: Optional[str] = Header(None)):
+    user = _require_auth_v2(authorization)
+    uid = user["id"]
+
+    valid_statuses = {"saved", "applied", "interviewing", "offered", "rejected", "withdrawn"}
+    if req.status and req.status not in valid_statuses:
+        raise HTTPException(400, detail=f"Invalid status. Choose: {', '.join(valid_statuses)}")
+
+    if not SUPABASE_URL or not SUPABASE_KEY:
+        return JSONResponse({"success": True})
+
+    token = authorization.removeprefix("Bearer ").strip()
+    payload: dict = {"updated_at": datetime.utcnow().isoformat()}
+    if req.status:
+        payload["status"] = req.status
+        if req.status == "applied":
+            payload["applied_at"] = datetime.utcnow().isoformat()
+    if req.notes is not None:
+        payload["notes"] = req.notes
+    if req.resume_generated is not None:
+        payload["resume_generated"] = req.resume_generated
+    if req.prep_downloaded is not None:
+        payload["prep_downloaded"] = req.prep_downloaded
+    if req.redirect_clicked is not None:
+        payload["redirect_clicked"] = req.redirect_clicked
+
+    result = supabase_rest("PATCH", "applications", payload=payload,
+                           params={"id": f"eq.{app_id}", "user_id": f"eq.{uid}"},
+                           token=token)
+    return JSONResponse({"success": result["status"] in (200, 201, 204)})
+
+
+@app.delete("/ninelab/v2/applications/{app_id}")
+async def delete_application_v2(app_id: str, authorization: Optional[str] = Header(None)):
+    user = _require_auth_v2(authorization)
+    uid = user["id"]
+
+    if not SUPABASE_URL or not SUPABASE_KEY:
+        return JSONResponse({"success": True})
+
+    token = authorization.removeprefix("Bearer ").strip()
+    result = supabase_rest("DELETE", "applications",
+                           params={"id": f"eq.{app_id}", "user_id": f"eq.{uid}"},
+                           token=token)
+    return JSONResponse({"success": result["status"] in (200, 204)})
+
+
+# ── Activity logging ──────────────────────────────────────────────────────────
+
+@app.post("/ninelab/v2/activity")
+async def log_activity_v2(req: ActivityRequest, authorization: Optional[str] = Header(None)):
+    user = _get_auth_user_v2(authorization)
+    if not user or not SUPABASE_URL or not SUPABASE_KEY:
+        return JSONResponse({"success": True})
+
+    token = authorization.removeprefix("Bearer ").strip()
+    payload = {
+        "user_id": user["id"],
+        "action_type": (req.action_type or "")[:50],
+        "metadata": req.metadata or {},
+    }
+    supabase_rest("POST", "activity_logs", payload=payload, token=token)
+    return JSONResponse({"success": True})
+
+
+# ── Admin: seed opportunities ─────────────────────────────────────────────────
+
+@app.post("/ninelab/admin/seed-opportunities")
+async def seed_opportunities_admin(request: Request):
+    """One-time endpoint to seed opportunities table. Protected by service key."""
+    x_key = request.headers.get("x-admin-key", "")
+    if not x_key or x_key != SUPABASE_SERVICE_KEY:
+        raise HTTPException(403, detail="Forbidden.")
+    if not SUPABASE_URL or not SUPABASE_KEY:
+        raise HTTPException(503, detail="Supabase not configured.")
+
+    inserted, skipped = 0, 0
+    for opp in SEED_OPPS:
+        row = {
+            "title": opp["title"], "company": opp["company"],
+            "type": opp["type"], "location": opp.get("location", "India"),
+            "url": opp.get("url", ""), "description": opp.get("description", ""),
+            "requirements": opp.get("requirements", ""),
+            "salary_range": opp.get("salary_range", ""),
+            "tags": opp.get("tags", []),
+            "match_fields": opp.get("match_fields", ""),
+            "is_active": True,
+        }
+        result = supabase_rest("POST", "opportunities", payload=row, use_service_key=True)
+        if result["status"] in (200, 201):
+            inserted += 1
+        else:
+            skipped += 1
+
+    return JSONResponse({"seeded": inserted, "skipped": skipped})
+
+
+# ── Dashboard ─────────────────────────────────────────────────────────────────
+
+@app.get("/ninelab/v2/dashboard")
+async def get_dashboard_v2(authorization: Optional[str] = Header(None)):
+    user = _require_auth_v2(authorization)
+    uid = user["id"]
+    email = user.get("email", "")
+    meta = user.get("user_metadata") or {}
+
+    profile_row: dict = {}
+    apps: list = []
+
+    if SUPABASE_URL and SUPABASE_KEY:
+        token = authorization.removeprefix("Bearer ").strip()
+        pr = supabase_rest("GET", "user_profiles", params={"id": f"eq.{uid}"}, token=token)
+        rows = pr.get("data", [])
+        if isinstance(rows, list) and rows:
+            profile_row = rows[0]
+
+        ar = supabase_rest("GET", "applications",
+                           params={"user_id": f"eq.{uid}", "order": "updated_at.desc",
+                                   "limit": "10"}, token=token)
+        apps = ar.get("data", []) if isinstance(ar.get("data"), list) else []
+
+    opps = _rank_opps(list(SEED_OPPS), profile_row)[:12]
+    skills = (profile_row.get("skills") or "").lower()
+    degree = (profile_row.get("degree") or "").lower()
+    for opp in opps:
+        opp["match_score"] = _match_score(opp, skills, degree)
+
+    pct = profile_row.get("profile_pct") or _calc_profile_pct(profile_row)
+
+    return JSONResponse({
+        "success": True,
+        "user": {
+            "id": uid, "email": email,
+            "full_name": profile_row.get("full_name") or meta.get("full_name") or "",
+        },
+        "profile_pct": pct,
+        "opportunities": opps,
+        "recent_applications": apps,
+        "stats": {
+            "total": len(apps),
+            "interviews": sum(1 for a in apps if a.get("status") == "interviewing"),
+            "offers": sum(1 for a in apps if a.get("status") == "offered"),
+        },
+    })
