@@ -2205,7 +2205,7 @@ async def root_redirect():
 async def index():
     html_path = STATIC_DIR / "index.html"
     if html_path.exists():
-        return HTMLResponse(content=html_path.read_text(), status_code=200)
+        return HTMLResponse(content=html_path.read_text(encoding="utf-8"), status_code=200)
     return HTMLResponse(content="<h1>Nine Lab loading...</h1>", status_code=200)
 
 
