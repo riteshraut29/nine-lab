@@ -2835,6 +2835,277 @@ window.addEventListener('load', ()=>{ setTimeout(initOverviewCharts, 400); });
 </body></html>""")
 
 
+@app.get("/ninelab/govt", response_class=HTMLResponse)
+async def govt_page():
+    """Government initiative style page for Vertical AI."""
+    return HTMLResponse("""<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Vertical AI — National Placement Intelligence Initiative</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Inter',sans-serif;background:#fff;color:#1a1a2e;}
+
+/* TOP STRIP */
+.top-strip{background:#1a2744;color:#fff;font-size:11px;padding:6px 20px;display:flex;justify-content:space-between;align-items:center;}
+.top-strip-right{display:flex;gap:16px;opacity:0.7;}
+
+/* HEADER */
+.header{border-bottom:4px solid #6c63ff;padding:16px 20px;background:#fff;}
+.header-inner{display:flex;align-items:center;justify-content:space-between;max-width:960px;margin:0 auto;}
+.logo-block{display:flex;align-items:center;gap:12px;}
+.logo-box{width:48px;height:48px;background:#1a2744;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:20px;font-weight:900;}
+.logo-text h1{font-size:18px;font-weight:800;color:#1a2744;line-height:1.2;}
+.logo-text p{font-size:11px;color:#64748b;margin-top:2px;}
+.header-badges{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;}
+.badge{font-size:10px;font-weight:600;padding:4px 10px;border-radius:20px;border:1px solid;}
+.badge-blue{color:#1a2744;border-color:#1a2744;background:#f0f4ff;}
+.badge-green{color:#166534;border-color:#16a34a;background:#f0fdf4;}
+
+/* NAV */
+.nav{background:#f8fafc;border-bottom:1px solid #e5e7eb;padding:0 20px;}
+.nav-inner{display:flex;gap:0;max-width:960px;margin:0 auto;}
+.nav-item{padding:12px 16px;font-size:12px;font-weight:600;color:#64748b;cursor:pointer;border-bottom:2px solid transparent;}
+.nav-item.active{color:#6c63ff;border-bottom-color:#6c63ff;}
+
+/* HERO BANNER */
+.hero{background:linear-gradient(135deg,#1a2744 0%,#2d3a6b 100%);color:#fff;padding:36px 20px;}
+.hero-inner{max-width:960px;margin:0 auto;}
+.hero-tag{display:inline-block;background:rgba(108,99,255,0.3);border:1px solid rgba(108,99,255,0.5);color:#a5b4fc;font-size:10px;font-weight:700;padding:4px 12px;border-radius:20px;letter-spacing:1px;margin-bottom:14px;}
+.hero h2{font-size:28px;font-weight:800;line-height:1.2;margin-bottom:10px;}
+.hero p{font-size:14px;opacity:0.8;line-height:1.6;max-width:560px;margin-bottom:20px;}
+.hero-btns{display:flex;gap:10px;flex-wrap:wrap;}
+.btn-primary{padding:11px 22px;background:#6c63ff;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;text-decoration:none;display:inline-block;}
+.btn-secondary{padding:11px 22px;background:transparent;color:#fff;border:1.5px solid rgba(255,255,255,0.4);border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;text-decoration:none;display:inline-block;}
+
+/* STATS BAR */
+.stats-bar{background:#6c63ff;padding:20px;color:#fff;}
+.stats-inner{max-width:960px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);gap:0;}
+.stat-item{text-align:center;padding:8px;border-right:1px solid rgba(255,255,255,0.2);}
+.stat-item:last-child{border-right:none;}
+.stat-num{font-size:28px;font-weight:800;line-height:1;}
+.stat-label{font-size:10px;opacity:0.8;margin-top:4px;line-height:1.3;}
+
+/* MAIN CONTENT */
+.main{max-width:960px;margin:0 auto;padding:28px 20px;}
+.section-title{font-size:11px;font-weight:700;color:#6c63ff;letter-spacing:1.5px;margin-bottom:16px;text-transform:uppercase;}
+
+/* OVERVIEW CARDS */
+.cards{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-bottom:28px;}
+.card{background:#f8fafc;border:1px solid #e5e7eb;border-radius:12px;padding:18px;}
+.card-icon{font-size:22px;margin-bottom:10px;}
+.card h3{font-size:13px;font-weight:700;color:#1a1a2e;margin-bottom:6px;}
+.card p{font-size:12px;color:#64748b;line-height:1.5;}
+
+/* FRAMEWORK TABLE */
+.table-wrap{border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;margin-bottom:28px;}
+.table-header{background:#1a2744;color:#fff;display:grid;grid-template-columns:1.2fr 1fr 1fr 1fr;padding:12px 16px;font-size:11px;font-weight:700;letter-spacing:0.5px;}
+.table-row{display:grid;grid-template-columns:1.2fr 1fr 1fr 1fr;padding:12px 16px;font-size:12px;border-bottom:1px solid #f0f0f0;align-items:center;}
+.table-row:last-child{border-bottom:none;}
+.table-row:nth-child(even){background:#fafafa;}
+.check{color:#22c55e;font-weight:700;}
+.cross{color:#ef4444;}
+
+/* ELIGIBILITY */
+.elig-list{display:flex;flex-direction:column;gap:8px;margin-bottom:28px;}
+.elig-item{display:flex;align-items:center;gap:10px;padding:12px 16px;background:#f8fafc;border-radius:10px;border:1px solid #e5e7eb;font-size:13px;}
+.elig-dot{width:8px;height:8px;border-radius:50%;background:#6c63ff;flex-shrink:0;}
+
+/* FOOTER */
+.footer{background:#1a2744;color:#fff;padding:20px;margin-top:20px;}
+.footer-inner{max-width:960px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;}
+.footer-left p{font-size:11px;opacity:0.6;margin-top:4px;}
+.footer-right{font-size:11px;opacity:0.6;text-align:right;}
+</style>
+</head>
+<body>
+
+<!-- TOP STRIP -->
+<div class="top-strip">
+  <span>🇮🇳 &nbsp;Government Research Initiative — AI for Skill Development</span>
+  <div class="top-strip-right">
+    <span>NLPC 2026</span>
+    <span>GHRCE Nagpur</span>
+    <span>April 2026</span>
+  </div>
+</div>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-inner">
+    <div class="logo-block">
+      <div class="logo-box">9L</div>
+      <div class="logo-text">
+        <h1>Vertical AI</h1>
+        <p>National Placement Intelligence Initiative</p>
+      </div>
+    </div>
+    <div class="header-badges">
+      <span class="badge badge-blue">Research Based</span>
+      <span class="badge badge-green">Live Prototype</span>
+      <span class="badge badge-blue">NLPC 2026</span>
+    </div>
+  </div>
+</div>
+
+<!-- NAV -->
+<div class="nav">
+  <div class="nav-inner">
+    <div class="nav-item active">Overview</div>
+    <div class="nav-item">For Colleges</div>
+    <div class="nav-item">For Students</div>
+    <div class="nav-item">Research</div>
+  </div>
+</div>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-tag">AI AGENT · PLACEMENT INTELLIGENCE · 2026</div>
+    <h2>Bridging India's Placement Gap<br>with Persistent Agentic AI</h2>
+    <p>15 lakh engineers graduate every year. 70% are not job-ready. Vertical AI is the first system that remembers every student — and acts on their behalf, every session.</p>
+    <div class="hero-btns">
+      <a href="/ninelab" class="btn-primary">⚡ Try Live Prototype</a>
+      <a href="/ninelab/college-demo" class="btn-secondary">College Dashboard →</a>
+    </div>
+  </div>
+</div>
+
+<!-- STATS BAR -->
+<div class="stats-bar">
+  <div class="stats-inner">
+    <div class="stat-item">
+      <div class="stat-num">15L+</div>
+      <div class="stat-label">Engineers<br>Per Year</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">70%</div>
+      <div class="stat-label">Not Job-Ready<br>NASSCOM 2024</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">38K</div>
+      <div class="stat-label">Engineering<br>Colleges India</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">40yr</div>
+      <div class="stat-label">Bloom Problem<br>Unsolved</div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- WHAT IT DOES -->
+  <div class="section-title">Initiative Overview</div>
+  <div class="cards">
+    <div class="card">
+      <div class="card-icon">🧠</div>
+      <h3>Persistent Student Intelligence</h3>
+      <p>First system to maintain cross-session student state — skills, gaps, readiness score remembered after every visit.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon">⚡</div>
+      <h3>Agentic AI — Acts, Not Just Answers</h3>
+      <p>Student says "find internship" — agent navigates, loads profile, runs analysis, shows results. No manual steps.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon">📊</div>
+      <h3>4 Parallel Analysis Agents</h3>
+      <p>Jobs, Internships, Skill Gaps, Readiness Score — all analyzed simultaneously. Results in under 30 seconds.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon">🏛️</div>
+      <h3>Institutional Dashboard</h3>
+      <p>T&P offices track 400+ students — placement readiness, skill gaps, company targets — in one view.</p>
+    </div>
+  </div>
+
+  <!-- COMPARISON -->
+  <div class="section-title">Capability Comparison</div>
+  <div class="table-wrap">
+    <div class="table-header">
+      <span>Capability</span>
+      <span>Traditional Tools</span>
+      <span>Existing EdTech</span>
+      <span>Vertical AI</span>
+    </div>
+    <div class="table-row">
+      <span>Remembers student</span>
+      <span class="cross">✗</span>
+      <span class="cross">✗</span>
+      <span class="check">✓</span>
+    </div>
+    <div class="table-row">
+      <span>Acts on commands</span>
+      <span class="cross">✗</span>
+      <span class="cross">✗</span>
+      <span class="check">✓</span>
+    </div>
+    <div class="table-row">
+      <span>Skill gap + market linked</span>
+      <span class="cross">✗</span>
+      <span class="cross">✗</span>
+      <span class="check">✓</span>
+    </div>
+    <div class="table-row">
+      <span>College dashboard</span>
+      <span class="cross">✗</span>
+      <span class="cross">✗</span>
+      <span class="check">✓</span>
+    </div>
+    <div class="table-row">
+      <span>Patent prior art</span>
+      <span>—</span>
+      <span>—</span>
+      <span class="check">None found</span>
+    </div>
+  </div>
+
+  <!-- ELIGIBILITY -->
+  <div class="section-title">Who This Serves</div>
+  <div class="elig-list">
+    <div class="elig-item"><div class="elig-dot"></div><span><strong>Engineering Students</strong> — B.Tech / B.E. / M.Tech / MCA seeking placement guidance</span></div>
+    <div class="elig-item"><div class="elig-dot"></div><span><strong>T&P Departments</strong> — Track 400+ students, identify at-risk candidates early</span></div>
+    <div class="elig-item"><div class="elig-dot"></div><span><strong>College Administration</strong> — Data-driven placement planning and company engagement</span></div>
+    <div class="elig-item"><div class="elig-dot"></div><span><strong>Government Skill Initiatives</strong> — Integration with national skill development platforms</span></div>
+  </div>
+
+  <!-- RESEARCH BASE -->
+  <div class="section-title">Research Foundation</div>
+  <div class="cards">
+    <div class="card">
+      <div class="card-icon">📑</div>
+      <h3>Bloom's Two Sigma Problem (1984)</h3>
+      <p>Personalized 1-on-1 guidance improves student performance by 2 standard deviations. Unsolved at scale for 40 years.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon">🏆</div>
+      <h3>Best Research Paper — Kaveri ThinkFest 2026</h3>
+      <p>IEEE-adjacent conference, GHRCE Pune. Patent landscape confirmed zero prior art for persistent student intelligence model.</p>
+    </div>
+  </div>
+
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+  <div class="footer-inner">
+    <div class="footer-left">
+      <strong>Vertical AI — National Placement Intelligence Initiative</strong>
+      <p>NLPC 2026 · Team RCM-G2-091 · GHRCE Nagpur · April 2026</p>
+    </div>
+    <div class="footer-right">
+      <div>ninelab.in/ninelab</div>
+      <div style="margin-top:4px;">Research · Prototype · Impact</div>
+    </div>
+  </div>
+</div>
+
+</body></html>""")
+
+
 @app.get("/ninelab/live", response_class=HTMLResponse)
 async def live_dashboard():
     """Live projector dashboard — shows real-time pitch day stats."""
