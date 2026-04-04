@@ -2835,6 +2835,259 @@ window.addEventListener('load', ()=>{ setTimeout(initOverviewCharts, 400); });
 </body></html>""")
 
 
+@app.get("/ninelab/govtdash", response_class=HTMLResponse)
+async def govt_dashboard():
+    """Government national dashboard — Ministry of Education style."""
+    return HTMLResponse("""<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>NPIS — National Placement Intelligence System</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Inter',sans-serif;background:#f0f2f5;color:#1a1a2e;min-height:100vh;}
+
+/* GOV TOP BAR */
+.gov-bar{background:#1a2744;padding:8px 24px;display:flex;align-items:center;justify-content:space-between;}
+.gov-bar-left{display:flex;align-items:center;gap:12px;}
+.gov-emblem{width:36px;height:36px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;}
+.gov-title{color:#fff;}
+.gov-title h1{font-size:13px;font-weight:700;line-height:1.2;}
+.gov-title p{font-size:10px;opacity:0.6;margin-top:1px;}
+.gov-bar-right{display:flex;align-items:center;gap:16px;}
+.live-dot{display:flex;align-items:center;gap:6px;color:#4ade80;font-size:11px;font-weight:600;}
+.live-dot::before{content:'';width:8px;height:8px;border-radius:50%;background:#4ade80;animation:blink 1.5s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+.gov-time{color:rgba(255,255,255,0.5);font-size:11px;}
+
+/* SCHEME HEADER */
+.scheme-header{background:linear-gradient(135deg,#1a2744,#2d3a6b);padding:20px 24px;border-bottom:3px solid #6c63ff;}
+.scheme-inner{max-width:1100px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;}
+.scheme-left h2{font-size:20px;font-weight:800;color:#fff;line-height:1.2;}
+.scheme-left p{font-size:11px;color:rgba(255,255,255,0.6);margin-top:4px;}
+.scheme-badges{display:flex;gap:8px;flex-wrap:wrap;}
+.sbadge{font-size:10px;font-weight:700;padding:4px 10px;border-radius:4px;letter-spacing:0.5px;}
+.sbadge-orange{background:#f97316;color:#fff;}
+.sbadge-green{background:#16a34a;color:#fff;}
+.sbadge-blue{background:#6c63ff;color:#fff;}
+
+/* NAV TABS */
+.nav-tabs{background:#fff;border-bottom:1px solid #e5e7eb;padding:0 24px;display:flex;gap:0;overflow-x:auto;}
+.nav-tab{padding:12px 18px;font-size:12px;font-weight:600;color:#64748b;cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap;}
+.nav-tab.active{color:#1a2744;border-bottom-color:#6c63ff;}
+
+/* MAIN */
+.main{max-width:1100px;margin:0 auto;padding:20px 16px;}
+
+/* KPI ROW */
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;}
+.kpi{background:#fff;border-radius:10px;padding:16px 18px;border-left:4px solid;box-shadow:0 1px 4px rgba(0,0,0,0.06);}
+.kpi-num{font-size:28px;font-weight:800;line-height:1;}
+.kpi-label{font-size:11px;color:#64748b;margin-top:4px;line-height:1.3;}
+.kpi-change{font-size:10px;font-weight:600;margin-top:6px;}
+.kpi-up{color:#16a34a;}
+.kpi-down{color:#ef4444;}
+
+/* GRID 2 COL */
+.grid2{display:grid;grid-template-columns:1.4fr 1fr;gap:16px;margin-bottom:20px;}
+.card{background:#fff;border-radius:10px;padding:18px;box-shadow:0 1px 4px rgba(0,0,0,0.06);}
+.card-title{font-size:12px;font-weight:700;color:#1a1a2e;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;}
+.card-title span{font-size:10px;font-weight:500;color:#64748b;}
+
+/* STATE TABLE */
+.state-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #f5f5f5;font-size:12px;}
+.state-row:last-child{border-bottom:none;}
+.state-name{flex:1;font-weight:500;}
+.state-bar-wrap{flex:2;background:#f0f0f0;border-radius:4px;height:6px;}
+.state-bar{height:6px;border-radius:4px;background:linear-gradient(90deg,#6c63ff,#a78bfa);}
+.state-pct{width:36px;text-align:right;font-weight:600;color:#6c63ff;font-size:11px;}
+
+/* ALERT BOX */
+.alerts{display:flex;flex-direction:column;gap:8px;}
+.alert-item{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border-radius:8px;font-size:12px;}
+.alert-red{background:#fef2f2;border-left:3px solid #ef4444;}
+.alert-yellow{background:#fffbeb;border-left:3px solid #f59e0b;}
+.alert-green{background:#f0fdf4;border-left:3px solid #22c55e;}
+.alert-icon{font-size:14px;flex-shrink:0;margin-top:1px;}
+.alert-text{line-height:1.4;}
+.alert-text strong{display:block;font-weight:600;color:#1a1a2e;}
+
+/* COLLEGE TABLE */
+.college-table{width:100%;border-collapse:collapse;font-size:12px;}
+.college-table th{background:#f8fafc;padding:10px 12px;text-align:left;font-size:10px;font-weight:700;color:#64748b;letter-spacing:0.5px;border-bottom:1px solid #e5e7eb;}
+.college-table td{padding:10px 12px;border-bottom:1px solid #f5f5f5;color:#1a1a2e;}
+.college-table tr:last-child td{border-bottom:none;}
+.status-pill{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:600;}
+.pill-green{background:#dcfce7;color:#16a34a;}
+.pill-yellow{background:#fef9c3;color:#854d0e;}
+.pill-blue{background:#eff6ff;color:#1d4ed8;}
+
+/* BOTTOM GRID */
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:20px;}
+.mini-stat{background:#fff;border-radius:10px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,0.06);text-align:center;}
+.mini-stat .num{font-size:22px;font-weight:800;color:#6c63ff;margin-bottom:4px;}
+.mini-stat .lbl{font-size:11px;color:#64748b;line-height:1.4;}
+
+/* FOOTER */
+.footer{background:#1a2744;color:#fff;padding:14px 24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-top:8px;}
+.footer p{font-size:11px;opacity:0.5;}
+</style>
+</head>
+<body>
+
+<!-- GOV BAR -->
+<div class="gov-bar">
+  <div class="gov-bar-left">
+    <div class="gov-emblem">🏛️</div>
+    <div class="gov-title">
+      <h1>Ministry of Education — Skill Development Wing</h1>
+      <p>Government of India · National Placement Intelligence System</p>
+    </div>
+  </div>
+  <div class="gov-bar-right">
+    <div class="live-dot">LIVE</div>
+    <div class="gov-time" id="govTime"></div>
+  </div>
+</div>
+
+<!-- SCHEME HEADER -->
+<div class="scheme-header">
+  <div class="scheme-inner">
+    <div class="scheme-left">
+      <h2>NPIS — National Placement Intelligence System</h2>
+      <p>Powered by Vertical AI · Persistent Agentic Intelligence for Engineering Placement · FY 2025–26</p>
+    </div>
+    <div class="scheme-badges">
+      <span class="sbadge sbadge-orange">Phase 1 — Active</span>
+      <span class="sbadge sbadge-green">Prototype Deployed</span>
+      <span class="sbadge sbadge-blue">NLPC 2026</span>
+    </div>
+  </div>
+</div>
+
+<!-- NAV -->
+<div class="nav-tabs">
+  <div class="nav-tab active">National Overview</div>
+  <div class="nav-tab">State Dashboard</div>
+  <div class="nav-tab">College Enrollment</div>
+  <div class="nav-tab">Student Impact</div>
+  <div class="nav-tab">Research & IP</div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- KPIs -->
+  <div class="kpi-row">
+    <div class="kpi" style="border-color:#6c63ff;">
+      <div class="kpi-num" style="color:#6c63ff;">2,34,891</div>
+      <div class="kpi-label">Students on Platform<br>Nationwide</div>
+      <div class="kpi-change kpi-up">↑ 18% this month</div>
+    </div>
+    <div class="kpi" style="border-color:#22c55e;">
+      <div class="kpi-num" style="color:#22c55e;">847</div>
+      <div class="kpi-label">Colleges<br>Enrolled</div>
+      <div class="kpi-change kpi-up">↑ 43 new this week</div>
+    </div>
+    <div class="kpi" style="border-color:#f59e0b;">
+      <div class="kpi-num" style="color:#f59e0b;">61%</div>
+      <div class="kpi-label">Avg Placement<br>Readiness Score</div>
+      <div class="kpi-change kpi-up">↑ 9pts from baseline</div>
+    </div>
+    <div class="kpi" style="border-color:#ef4444;">
+      <div class="kpi-num" style="color:#ef4444;">38,000</div>
+      <div class="kpi-label">Target Colleges<br>Remaining</div>
+      <div class="kpi-change kpi-down">↓ 2.2% penetration</div>
+    </div>
+  </div>
+
+  <!-- STATE + ALERTS -->
+  <div class="grid2">
+    <div class="card">
+      <div class="card-title">State-wise Readiness Score <span>Avg placement readiness %</span></div>
+      <div class="state-row"><span class="state-name">Maharashtra</span><div class="state-bar-wrap"><div class="state-bar" style="width:74%"></div></div><span class="state-pct">74%</span></div>
+      <div class="state-row"><span class="state-name">Karnataka</span><div class="state-bar-wrap"><div class="state-bar" style="width:70%"></div></div><span class="state-pct">70%</span></div>
+      <div class="state-row"><span class="state-name">Tamil Nadu</span><div class="state-bar-wrap"><div class="state-bar" style="width:68%"></div></div><span class="state-pct">68%</span></div>
+      <div class="state-row"><span class="state-name">Telangana</span><div class="state-bar-wrap"><div class="state-bar" style="width:65%"></div></div><span class="state-pct">65%</span></div>
+      <div class="state-row"><span class="state-name">Uttar Pradesh</span><div class="state-bar-wrap"><div class="state-bar" style="width:48%"></div></div><span class="state-pct">48%</span></div>
+      <div class="state-row"><span class="state-name">Bihar</span><div class="state-bar-wrap"><div class="state-bar" style="width:38%"></div></div><span class="state-pct">38%</span></div>
+      <div class="state-row"><span class="state-name">Rajasthan</span><div class="state-bar-wrap"><div class="state-bar" style="width:42%"></div></div><span class="state-pct">42%</span></div>
+    </div>
+    <div class="card">
+      <div class="card-title">National Alerts <span>Requires attention</span></div>
+      <div class="alerts">
+        <div class="alert-item alert-red">
+          <div class="alert-icon">🔴</div>
+          <div class="alert-text"><strong>12,400 students below 30% readiness</strong>UP, Bihar, Jharkhand — immediate intervention needed</div>
+        </div>
+        <div class="alert-item alert-yellow">
+          <div class="alert-icon">🟡</div>
+          <div class="alert-text"><strong>DSA gap in 68% of students</strong>Most critical skill gap nationwide — platform flagged</div>
+        </div>
+        <div class="alert-item alert-yellow">
+          <div class="alert-icon">🟡</div>
+          <div class="alert-text"><strong>847 colleges enrolled, 37,153 pending</strong>Phase 2 expansion required for national coverage</div>
+        </div>
+        <div class="alert-item alert-green">
+          <div class="alert-icon">🟢</div>
+          <div class="alert-text"><strong>Maharashtra — 74% avg readiness</strong>Highest performing state · Model for replication</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- COLLEGE TABLE -->
+  <div class="card" style="margin-bottom:20px;">
+    <div class="card-title">Top Enrolled Colleges — Live Data <span>Updated real-time</span></div>
+    <table class="college-table">
+      <thead>
+        <tr><th>College</th><th>State</th><th>Students</th><th>Avg Readiness</th><th>Top Gap</th><th>Status</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>GH Raisoni College of Engineering</strong></td><td>Maharashtra</td><td>1,247</td><td>71%</td><td>DSA</td><td><span class="status-pill pill-green">Active</span></td></tr>
+        <tr><td>VJTI Mumbai</td><td>Maharashtra</td><td>2,108</td><td>78%</td><td>System Design</td><td><span class="status-pill pill-green">Active</span></td></tr>
+        <tr><td>NIT Warangal</td><td>Telangana</td><td>1,893</td><td>74%</td><td>Communication</td><td><span class="status-pill pill-green">Active</span></td></tr>
+        <tr><td>Anna University</td><td>Tamil Nadu</td><td>3,241</td><td>68%</td><td>DSA</td><td><span class="status-pill pill-blue">Onboarding</span></td></tr>
+        <tr><td>AKTU Lucknow</td><td>Uttar Pradesh</td><td>987</td><td>44%</td><td>Core CS</td><td><span class="status-pill pill-yellow">At Risk</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- BOTTOM STATS -->
+  <div class="grid3">
+    <div class="mini-stat">
+      <div class="num">4.2M</div>
+      <div class="lbl">AI Analysis Sessions<br>Run This Year</div>
+    </div>
+    <div class="mini-stat">
+      <div class="num">< 30s</div>
+      <div class="lbl">Avg Analysis Time<br>Per Student</div>
+    </div>
+    <div class="mini-stat">
+      <div class="num">₹0</div>
+      <div class="lbl">Cost to Student<br>Free Access</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+  <p>NPIS · Ministry of Education · Government of India · Data updated in real-time · FY 2025–26</p>
+  <p>Powered by Vertical AI · ninelab.in · NLPC 2026 · Team RCM-G2-091</p>
+</div>
+
+<script>
+  function updateTime() {
+    var now = new Date();
+    document.getElementById('govTime').textContent = now.toLocaleTimeString('en-IN', {hour:'2-digit',minute:'2-digit',second:'2-digit'}) + ' IST';
+  }
+  updateTime();
+  setInterval(updateTime, 1000);
+</script>
+</body></html>""")
+
+
 @app.get("/ninelab/govt", response_class=HTMLResponse)
 async def govt_page():
     """Government initiative style page for Vertical AI."""
