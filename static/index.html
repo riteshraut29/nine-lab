@@ -1491,6 +1491,47 @@
       .auth-divider { text-align: center; font-size: 12px; color: var(--text-subtle); margin: 16px 0; }
       .auth-pw-toggle { font-size: 12px; color: var(--purple); cursor: pointer; text-align: center; margin-top: 12px; }
 
+      /* ─── PlaceAI: Discover Screen ──────────────────────────────────────── */
+      .disc-tabs { display:flex; gap:6px; margin-bottom:14px; overflow-x:auto; padding-bottom:2px; }
+      .disc-tab { flex:1; min-width:72px; padding:8px 6px; border:1.5px solid var(--border); border-radius:10px;
+                  background:#fff; font-size:12px; font-weight:600; cursor:pointer; color:var(--text-muted);
+                  transition:all 0.15s; white-space:nowrap; font-family:inherit; }
+      .disc-tab.active { background:var(--purple-light); border-color:var(--purple); color:var(--purple); }
+      .disc-count { background:var(--purple); color:#fff; font-size:10px; font-weight:700;
+                    padding:1px 5px; border-radius:10px; margin-left:3px; }
+      .disc-tab:not(.active) .disc-count { background:var(--border); color:var(--text-muted); }
+      .disc-panel { display:flex; flex-direction:column; gap:12px; }
+
+      .disc-card { background:#fff; border-radius:14px; border:1px solid var(--border);
+                   padding:16px; transition:box-shadow 0.15s; }
+      .disc-card:hover { box-shadow:0 4px 16px rgba(108,99,255,0.10); }
+      .disc-card-top { display:flex; justify-content:space-between; align-items:flex-start; gap:8px; }
+      .disc-card-title { font-size:14px; font-weight:600; color:var(--text); line-height:1.3; flex:1; }
+      .disc-card-company { font-size:12px; color:var(--text-muted); margin-top:3px; }
+      .disc-match-badge { flex-shrink:0; display:flex; flex-direction:column; align-items:center;
+                          background:var(--purple-light); border-radius:10px; padding:6px 10px; }
+      .disc-match-pct { font-size:16px; font-weight:700; color:var(--purple); line-height:1; }
+      .disc-match-label { font-size:9px; color:var(--purple); font-weight:600; margin-top:1px; }
+      .disc-gap-hint { display:inline-flex; align-items:center; gap:5px; margin-top:10px;
+                       background:#fff8e6; border:1px solid #fcd34d; border-radius:8px;
+                       padding:5px 10px; font-size:11px; font-weight:500; color:#92400e; }
+      .disc-card-footer { display:flex; justify-content:space-between; align-items:center; margin-top:12px; }
+      .disc-source-badge { font-size:10px; font-weight:600; padding:3px 8px; border-radius:6px;
+                           background:var(--bg-subtle); color:var(--text-muted); border:1px solid var(--border); }
+      .disc-apply-btn { padding:7px 16px; background:var(--purple); color:#fff; border:none;
+                        border-radius:8px; font-size:12px; font-weight:600; cursor:pointer;
+                        font-family:inherit; text-decoration:none; display:inline-block; transition:background 0.15s; }
+      .disc-apply-btn:hover { background:var(--purple-dark); }
+      .disc-snippet { font-size:12px; color:var(--text-muted); margin-top:8px; line-height:1.5;
+                      display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+
+      .disc-agent-row { display:flex; align-items:center; justify-content:space-between;
+                        font-size:13px; font-weight:500; color:var(--text); }
+      .disc-agent-badge { font-size:10px; font-weight:600; padding:2px 8px; border-radius:6px; }
+      .disc-agent-badge.searching { background:#fff8e6; color:#92400e; border:1px solid #fcd34d; }
+      .disc-agent-badge.done { background:#dcfce7; color:#15803d; border:1px solid #86efac; }
+      .disc-agent-badge.error { background:#fee2e2; color:#dc2626; border:1px solid #fca5a5; }
+
       /* ─── 2.0: Dashboard (stepDash) ─────────────────────────────────────── */
       #stepDash { display: none; }
       .dash-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
@@ -1703,7 +1744,8 @@
           <div class="lp-hero-headline" id="heroHeadline"></div>
           <div class="lp-hero-sub">Nine Lab reads your profile, finds jobs that match you, builds your complete prep kit — then connects you to real listings on LinkedIn and Indeed. All free.</div>
 
-          <button class="lp-cta-btn" onclick="showStartOptions()">Start My Journey →</button>
+          <button class="lp-cta-btn" onclick="showDiscover()">🧠 Analyze My Placement Readiness →</button>
+          <button class="lp-cta-btn outline" onclick="showStartOptions()">Start My Journey →</button>
           <div class="lp-trust-line">AI job match · 4 PDFs · Real apply links · No login</div>
           <div class="lp-kits-counter">🚀 <strong id="kitsCountEl">3,200+</strong> kits generated</div>
           <div class="lp-sample-link" onclick="showKitPreview('scorecard')">or see a sample kit first →</div>
@@ -4868,6 +4910,166 @@
       showToast('Signed out.');
     }
 
+    // ── PlaceAI Discover ────────────────────────────────────────────────────
+    var _discoverData = {};
+
+    function showDiscover() {
+      var allSteps = document.querySelectorAll('#app > div[id^="step"]');
+      allSteps.forEach(function(s) { s.style.display = 'none'; });
+      document.getElementById('stepDash').style.display    = 'none';
+      document.getElementById('stepTracker').style.display = 'none';
+      document.getElementById('stepDiscover').style.display = 'block';
+      // Pre-fill skills from profile if available
+      if (profileData && profileData.skills) {
+        var sk = Array.isArray(profileData.skills)
+          ? profileData.skills.join(', ')
+          : (profileData.skills || '');
+        if (sk) document.getElementById('discSkills').value = sk;
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function hideDiscover() {
+      document.getElementById('stepDiscover').style.display = 'none';
+      goToStep(0);
+    }
+
+    function switchDiscTab(tab) {
+      ['jobs','internships','freelancing','scholarships'].forEach(function(t) {
+        document.getElementById('dtab-' + t).classList.toggle('active', t === tab);
+        document.getElementById('disc-' + t + '-panel').style.display = t === tab ? 'flex' : 'none';
+      });
+    }
+
+    function _agentDone(name, count) {
+      var badge = document.querySelector('#dagent-' + name + ' .disc-agent-badge');
+      if (!badge) return;
+      badge.className = 'disc-agent-badge ' + (count > 0 ? 'done' : 'error');
+      badge.textContent = count > 0 ? count + ' found' : 'none found';
+    }
+
+    function _renderDiscCard(item) {
+      var gapHtml = item.gap
+        ? '<div class="disc-gap-hint">⚡ Gap: <strong>' + item.gap + '</strong></div>'
+        : '';
+      var snippetHtml = item.snippet
+        ? '<div class="disc-snippet">' + item.snippet.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</div>'
+        : '';
+      return '<div class="disc-card">' +
+        '<div class="disc-card-top">' +
+          '<div>' +
+            '<div class="disc-card-title">' + (item.title||'').replace(/</g,'&lt;') + '</div>' +
+            '<div class="disc-card-company">' + (item.company||'').replace(/</g,'&lt;') + '</div>' +
+          '</div>' +
+          '<div class="disc-match-badge">' +
+            '<div class="disc-match-pct">' + (item.match||0) + '%</div>' +
+            '<div class="disc-match-label">match</div>' +
+          '</div>' +
+        '</div>' +
+        gapHtml +
+        snippetHtml +
+        '<div class="disc-card-footer">' +
+          '<span class="disc-source-badge">' + (item.source||'') + '</span>' +
+          '<a href="' + (item.url||'#') + '" target="_blank" rel="noopener" class="disc-apply-btn">Apply →</a>' +
+        '</div>' +
+      '</div>';
+    }
+
+    function _populatePanel(name, items) {
+      var panel = document.getElementById('disc-' + name + '-panel');
+      var countEl = document.getElementById('d' + name + '-count');
+      if (countEl) countEl.textContent = items.length;
+      if (!items.length) {
+        panel.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text-muted);font-size:13px;">No ' + name + ' found for your profile.</div>';
+      } else {
+        panel.innerHTML = items.map(_renderDiscCard).join('');
+      }
+    }
+
+    async function runDiscover() {
+      var skillsRaw = (document.getElementById('discSkills').value || '').trim();
+      if (!skillsRaw) {
+        document.getElementById('discSkills').focus();
+        document.getElementById('discSkills').style.borderColor = 'var(--error)';
+        setTimeout(function(){ document.getElementById('discSkills').style.borderColor='var(--border)'; }, 2000);
+        return;
+      }
+      var skills = skillsRaw.split(',').map(function(s){ return s.trim(); }).filter(Boolean);
+      var year    = document.getElementById('discYear').value;
+      var degree  = document.getElementById('discDegree').value;
+      var title   = (document.getElementById('discTitle').value || '').trim();
+
+      // Show agent status, hide results
+      document.getElementById('discSearchBtn').disabled = true;
+      document.getElementById('discSearchBtn').textContent = '⏳ AI Agents Running...';
+      document.getElementById('discAgentStatus').style.display = 'block';
+      document.getElementById('discResults').style.display = 'none';
+      document.getElementById('discEmpty').style.display = 'none';
+      document.getElementById('discIntelReport').style.display = 'none';
+      // Reset badges
+      ['jobs','internships','freelancing','scholarships'].forEach(function(n){
+        var b = document.querySelector('#dagent-' + n + ' .disc-agent-badge');
+        if (b) { b.className = 'disc-agent-badge searching'; b.textContent = 'searching'; }
+      });
+
+      try {
+        var resp = await fetch(BASE + '/discover', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ skills: skills, year: year, degree: degree, title: title })
+        });
+        if (!resp.ok) throw new Error('API error');
+        var data = await resp.json();
+        _discoverData = data;
+
+        // Update agent badges + populate panels
+        ['jobs','internships','freelancing','scholarships'].forEach(function(n){
+          var items = data[n] || [];
+          _agentDone(n, items.length);
+          _populatePanel(n, items);
+        });
+
+        var total = (data.jobs||[]).length + (data.internships||[]).length +
+                    (data.freelancing||[]).length + (data.scholarships||[]).length;
+
+        // Build Intelligence Report
+        var allItems = (data.jobs||[]).concat(data.internships||[]).concat(data.freelancing||[]).concat(data.scholarships||[]);
+        if (allItems.length) {
+          var avgMatch = Math.round(allItems.reduce(function(s,i){ return s+(i.match||0); },0) / allItems.length);
+          // Collect unique gaps
+          var gapMap = {};
+          allItems.forEach(function(i){ if(i.gap){ i.gap.split(',').forEach(function(g){ var t=g.trim(); if(t) gapMap[t]=(gapMap[t]||0)+1; }); } });
+          var topGaps = Object.keys(gapMap).sort(function(a,b){return gapMap[b]-gapMap[a];}).slice(0,4);
+          // Next action
+          var nextAction = avgMatch >= 70
+            ? 'Strong profile! Focus on ' + (topGaps[0]||'interview practice') + ' to reach top-tier companies.'
+            : avgMatch >= 45
+            ? 'Build ' + (topGaps[0]||'core skills') + ' and ' + (topGaps[1]||'projects') + ' — these are your highest-leverage gaps right now.'
+            : 'Start with fundamentals: ' + (topGaps.slice(0,2).join(' and ')||'DSA and core CS subjects') + '. Consistent daily practice for 4 weeks will move your score significantly.';
+
+          document.getElementById('discReadinessPct').textContent = avgMatch + '%';
+          document.getElementById('discReadinessBar').style.width = avgMatch + '%';
+          document.getElementById('discNextAction').textContent = nextAction;
+          var gapsList = document.getElementById('discGapsList');
+          if (topGaps.length) {
+            gapsList.innerHTML = topGaps.map(function(g){ return '<span style="background:rgba(255,255,255,0.2);border-radius:20px;padding:3px 10px;font-size:11px;font-weight:600;">⚡ '+g+'</span>'; }).join('');
+          } else {
+            document.getElementById('discGapsSection').style.display = 'none';
+          }
+          document.getElementById('discIntelReport').style.display = 'block';
+        }
+
+        document.getElementById('discResults').style.display = total ? 'block' : 'none';
+        document.getElementById('discEmpty').style.display   = total ? 'none'  : 'block';
+        switchDiscTab('jobs');
+      } catch(e) {
+        document.getElementById('discEmpty').style.display = 'block';
+      } finally {
+        document.getElementById('discSearchBtn').disabled = false;
+        document.getElementById('discSearchBtn').textContent = '🔍 Re-Analyze My Profile';
+      }
+    }
+
     // ── Dashboard ───────────────────────────────────────────────────────────
     function showDashboard() {
       if (!currentUser2) { openAuthModal(); return; }
@@ -5305,6 +5507,121 @@
       <div style="text-align:center; margin-top:20px; padding-bottom:32px;">
         <button class="btn-outline" onclick="showDashboard()">← Back to Dashboard</button>
       </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       PLACEAI: DISCOVER SCREEN (stepDiscover)
+  ════════════════════════════════════════════════════════════════════ -->
+  <div id="stepDiscover" style="display:none;">
+    <div class="app">
+      <!-- Header -->
+      <div style="display:flex;align-items:center;gap:12px;padding:16px 0 8px;">
+        <button class="back-btn" onclick="hideDiscover()" title="Back">←</button>
+        <div>
+          <div class="step-title" style="margin:0;">Vertical AI — Intelligence Report</div>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">4 AI agents analyze in parallel · Profile saved after every session</div>
+        </div>
+      </div>
+
+      <!-- Profile quick-input -->
+      <div id="discoverForm" style="background:#fff;border-radius:16px;border:1px solid var(--border);padding:20px;margin-bottom:16px;">
+        <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px;">Build Your AI Placement Profile</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:14px;">AI will analyze your skills, find gaps, and tell you exactly what to do next</div>
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <div>
+            <label style="font-size:12px;color:var(--text-muted);font-weight:500;">Skills (comma separated)</label>
+            <input id="discSkills" type="text" placeholder="Python, Machine Learning, SQL, React..."
+              style="width:100%;margin-top:4px;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-family:inherit;outline:none;"
+              onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border)'"/>
+          </div>
+          <div style="display:flex;gap:10px;">
+            <div style="flex:1;">
+              <label style="font-size:12px;color:var(--text-muted);font-weight:500;">Year</label>
+              <select id="discYear"
+                style="width:100%;margin-top:4px;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-family:inherit;outline:none;background:#fff;">
+                <option>1st Year</option><option>2nd Year</option>
+                <option selected>3rd Year</option><option>4th Year</option><option>Fresher</option>
+              </select>
+            </div>
+            <div style="flex:1;">
+              <label style="font-size:12px;color:var(--text-muted);font-weight:500;">Degree</label>
+              <select id="discDegree"
+                style="width:100%;margin-top:4px;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-family:inherit;outline:none;background:#fff;">
+                <option selected>B.Tech</option><option>B.E.</option>
+                <option>M.Tech</option><option>MCA</option><option>Diploma</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label style="font-size:12px;color:var(--text-muted);font-weight:500;">Job title interest <span style="font-weight:400;">(optional)</span></label>
+            <input id="discTitle" type="text" placeholder="e.g. Data Analyst, Backend Developer..."
+              style="width:100%;margin-top:4px;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-family:inherit;outline:none;"
+              onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border)'"/>
+          </div>
+        </div>
+        <button onclick="runDiscover()" id="discSearchBtn"
+          style="width:100%;margin-top:16px;padding:13px;background:var(--purple);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;">
+          🔍 Find Opportunities
+        </button>
+      </div>
+
+      <!-- Agent status bar (shown during search) -->
+      <div id="discAgentStatus" style="display:none;background:#fff;border-radius:12px;border:1px solid var(--border);padding:14px 16px;margin-bottom:14px;">
+        <div style="font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:10px;">AI Agents running in parallel...</div>
+        <div style="display:flex;flex-direction:column;gap:6px;" id="discAgentRows">
+          <div class="disc-agent-row" id="dagent-jobs">💼 Scanning market opportunities for your skills <span class="disc-agent-badge searching">analyzing</span></div>
+          <div class="disc-agent-row" id="dagent-internships">🎓 Finding internship matches across platforms <span class="disc-agent-badge searching">analyzing</span></div>
+          <div class="disc-agent-row" id="dagent-freelancing">💻 Mapping skill gaps to industry needs <span class="disc-agent-badge searching">analyzing</span></div>
+          <div class="disc-agent-row" id="dagent-scholarships">🏅 Building your readiness profile <span class="disc-agent-badge searching">analyzing</span></div>
+        </div>
+      </div>
+
+      <!-- Intelligence Report Card -->
+      <div id="discIntelReport" style="display:none;background:linear-gradient(135deg,#6c63ff 0%,#5a52d5 100%);border-radius:16px;padding:20px;margin-bottom:14px;color:#fff;">
+        <div style="font-size:11px;font-weight:700;letter-spacing:1px;opacity:0.8;margin-bottom:12px;">AI PLACEMENT INTELLIGENCE REPORT</div>
+        <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px;">
+          <div style="text-align:center;">
+            <div id="discReadinessPct" style="font-size:42px;font-weight:800;line-height:1;">0%</div>
+            <div style="font-size:11px;opacity:0.8;margin-top:2px;">Readiness Score</div>
+          </div>
+          <div style="flex:1;background:rgba(255,255,255,0.15);border-radius:8px;height:8px;">
+            <div id="discReadinessBar" style="height:8px;border-radius:8px;background:#fff;width:0%;transition:width 0.8s ease;"></div>
+          </div>
+        </div>
+        <div id="discGapsSection" style="margin-bottom:14px;">
+          <div style="font-size:11px;font-weight:600;opacity:0.8;margin-bottom:6px;">TOP SKILL GAPS TO FILL</div>
+          <div id="discGapsList" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
+        </div>
+        <div style="background:rgba(255,255,255,0.15);border-radius:10px;padding:12px;">
+          <div style="font-size:11px;font-weight:600;opacity:0.8;margin-bottom:4px;">AI RECOMMENDATION</div>
+          <div id="discNextAction" style="font-size:13px;font-weight:500;line-height:1.5;">Analyzing your profile...</div>
+        </div>
+        <div style="margin-top:10px;font-size:10px;opacity:0.6;text-align:right;">Profile saved · Updates after every session</div>
+      </div>
+
+      <!-- Results tabs + cards -->
+      <div id="discResults" style="display:none;">
+        <div class="disc-tabs" id="discTabs">
+          <button class="disc-tab active" onclick="switchDiscTab('jobs')" id="dtab-jobs">💼 Jobs <span id="djobs-count" class="disc-count">0</span></button>
+          <button class="disc-tab" onclick="switchDiscTab('internships')" id="dtab-internships">🎓 Intern <span id="dinternships-count" class="disc-count">0</span></button>
+          <button class="disc-tab" onclick="switchDiscTab('freelancing')" id="dtab-freelancing">💻 Freelance <span id="dfreelancing-count" class="disc-count">0</span></button>
+          <button class="disc-tab" onclick="switchDiscTab('scholarships')" id="dtab-scholarships">🏅 Scholar <span id="dscholarships-count" class="disc-count">0</span></button>
+        </div>
+        <div id="disc-jobs-panel" class="disc-panel"></div>
+        <div id="disc-internships-panel" class="disc-panel" style="display:none;"></div>
+        <div id="disc-freelancing-panel" class="disc-panel" style="display:none;"></div>
+        <div id="disc-scholarships-panel" class="disc-panel" style="display:none;"></div>
+      </div>
+
+      <!-- Empty state -->
+      <div id="discEmpty" style="display:none;text-align:center;padding:40px 20px;color:var(--text-muted);">
+        <div style="font-size:32px;margin-bottom:12px;">🔍</div>
+        <div style="font-size:15px;font-weight:600;color:var(--text);margin-bottom:6px;">No results found</div>
+        <div style="font-size:13px;">Try different skills or check your internet connection.</div>
+      </div>
+
+      <div style="padding-bottom:40px;"></div>
     </div>
   </div>
 

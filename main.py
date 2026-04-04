@@ -27,6 +27,8 @@ SUPABASE_URL = os.getenv("SUPABASE_URL", "")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY", "")
 SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SERVICE_KEY", "")
 JSEARCH_API_KEY = os.getenv("JSEARCH_API_KEY", "d478886deemshee1d5a113b51de6p1d199ajsnee586dc31325")
+ADZUNA_APP_ID   = os.getenv("ADZUNA_APP_ID", "")
+ADZUNA_APP_KEY  = os.getenv("ADZUNA_APP_KEY", "")
 
 jobs: dict[str, dict] = {}
 executor = ThreadPoolExecutor(max_workers=8)
@@ -1890,6 +1892,223 @@ Return exactly 4 objects."""
         ]})
 
 
+# ── PlaceAI: Multi-Agent Discovery System ────────────────────────────────────
+
+async def _safe_agent(coro, name: str, timeout: float = 9.0) -> dict:
+    """Wrap any agent coroutine with timeout + exception safety."""
+    try:
+        return await asyncio.wait_for(coro, timeout=timeout)
+    except asyncio.TimeoutError:
+        return {"source": name, "data": [], "status": "timeout"}
+    except Exception as e:
+        return {"source": name, "data": [], "status": "error", "err": str(e)}
+
+
+def _skill_match(text: str, skills: list) -> tuple:
+    """Returns (match_pct: int, missing: list[str])"""
+    if not skills:
+        return 50, []
+    tl = text.lower()
+    matched = [s for s in skills if s.lower() in tl]
+    missing = [s for s in skills if s.lower() not in tl]
+    pct = int(len(matched) / len(skills) * 100)
+    return max(pct, 15), missing[:2]
+
+
+async def _agent_jobs(profile: dict) -> dict:
+    import httpx
+    skills = profile.get("skills", [])
+    title  = profile.get("title") or (skills[0] if skills else "Software Developer")
+    out = []
+    try:
+        async with httpx.AsyncClient() as c:
+            r = await c.get(
+                "https://jsearch.p.rapidapi.com/search",
+                headers={"x-rapidapi-key": JSEARCH_API_KEY,
+                         "x-rapidapi-host": "jsearch.p.rapidapi.com"},
+                params={"query": f"{title} India", "page": "1",
+                        "num_pages": "1", "date_posted": "month"},
+                timeout=8,
+            )
+        if r.status_code == 200:
+            for job in r.json().get("data", [])[:8]:
+                url = job.get("job_apply_link") or job.get("job_google_link", "")
+                if not url:
+                    continue
+                t = job.get("job_title") or title
+                if "intern" in t.lower():
+                    continue
+                desc = job.get("job_description") or ""
+                pct, miss = _skill_match(desc + " " + t, skills)
+                pub = (job.get("job_publisher") or "").lower()
+                src = "LinkedIn" if "linkedin" in pub else \
+                      "Indeed"   if "indeed"   in pub else \
+                      "Glassdoor"if "glassdoor"in pub else "Job Board"
+                out.append({"title": t[:80], "company": (job.get("employer_name") or "")[:50],
+                            "url": url, "source": src, "match": pct,
+                            "gap": miss[0] if miss else "",
+                            "snippet": desc[:160].strip()})
+                if len(out) >= 5: break
+    except Exception:
+        pass
+    return {"source": "jobs", "data": out}
+
+
+async def _agent_internships(profile: dict) -> dict:
+    import httpx
+    skills = profile.get("skills", [])
+    title  = profile.get("title") or (skills[0] if skills else "Developer")
+    out = []
+    # JSearch internship search
+    try:
+        async with httpx.AsyncClient() as c:
+            r = await c.get(
+                "https://jsearch.p.rapidapi.com/search",
+                headers={"x-rapidapi-key": JSEARCH_API_KEY,
+                         "x-rapidapi-host": "jsearch.p.rapidapi.com"},
+                params={"query": f"{title} internship India", "page": "1",
+                        "num_pages": "1", "date_posted": "month"},
+                timeout=8,
+            )
+        if r.status_code == 200:
+            for job in r.json().get("data", [])[:6]:
+                url = job.get("job_apply_link") or job.get("job_google_link", "")
+                if not url: continue
+                t = job.get("job_title") or f"{title} Intern"
+                desc = job.get("job_description") or ""
+                pct, miss = _skill_match(desc + " " + t, skills)
+                pub = (job.get("job_publisher") or "").lower()
+                src = "LinkedIn" if "linkedin" in pub else \
+                      "Indeed"   if "indeed"   in pub else "JSearch"
+                out.append({"title": t[:80], "company": (job.get("employer_name") or "")[:50],
+                            "url": url, "source": src, "match": pct,
+                            "gap": miss[0] if miss else "",
+                            "snippet": desc[:160].strip()})
+                if len(out) >= 5: break
+    except Exception:
+        pass
+    # Adzuna fallback if < 3 results
+    if ADZUNA_APP_ID and ADZUNA_APP_KEY and len(out) < 3:
+        try:
+            async with httpx.AsyncClient() as c:
+                r = await c.get(
+                    "https://api.adzuna.com/v1/api/jobs/in/search/1",
+                    params={"app_id": ADZUNA_APP_ID, "app_key": ADZUNA_APP_KEY,
+                            "results_per_page": 5, "what": f"{title} internship"},
+                    timeout=8,
+                )
+            if r.status_code == 200:
+                for job in r.json().get("results", [])[:5]:
+                    url = job.get("redirect_url", "")
+                    if not url: continue
+                    t = job.get("title", "Internship")
+                    desc = job.get("description") or ""
+                    pct, miss = _skill_match(desc + " " + t, skills)
+                    out.append({"title": t[:80],
+                                "company": job.get("company", {}).get("display_name", "")[:50],
+                                "url": url, "source": "Adzuna", "match": pct,
+                                "gap": miss[0] if miss else "",
+                                "snippet": desc[:160].strip()})
+        except Exception:
+            pass
+    return {"source": "internships", "data": out[:5]}
+
+
+async def _agent_freelancing(profile: dict) -> dict:
+    import httpx
+    skills = profile.get("skills", [])
+    out = []
+    try:
+        async with httpx.AsyncClient() as c:
+            r = await c.get("https://remoteok.com/api",
+                            headers={"User-Agent": "PlaceAI/1.0"}, timeout=8)
+        if r.status_code == 200:
+            for job in r.json()[1:]:          # index 0 is metadata
+                if not isinstance(job, dict): continue
+                url = job.get("url", "")
+                if not url: continue
+                tags = " ".join(job.get("tags") or [])
+                desc = tags + " " + (job.get("description") or "")
+                pct, miss = _skill_match(desc, skills)
+                if pct < 20: continue
+                full_url = url if url.startswith("http") else f"https://remoteok.com{url}"
+                out.append({"title": (job.get("position") or "Remote Role")[:80],
+                            "company": (job.get("company") or "")[:50],
+                            "url": full_url, "source": "RemoteOK", "match": pct,
+                            "gap": miss[0] if miss else "",
+                            "snippet": (job.get("description") or "")[:160].strip()})
+                if len(out) >= 5: break
+    except Exception:
+        pass
+    return {"source": "freelancing", "data": out}
+
+
+async def _agent_scholarships(profile: dict) -> dict:
+    if not TAVILY_API_KEY:
+        return {"source": "scholarships", "data": []}
+    skills = profile.get("skills", [])
+    degree = profile.get("degree", "engineering")
+    out = []
+    try:
+        results = tavily_search(
+            f"engineering student scholarship grant fellowship India 2025 2026 {degree}", retries=0)
+        for r in results[:8]:
+            url = r.get("url", "")
+            t   = r.get("title", "")
+            content = r.get("content") or ""
+            if not url: continue
+            kws = ["scholarship", "grant", "fellowship", "award", "stipend", "prize"]
+            if not any(k in (t + content).lower() for k in kws): continue
+            pct, miss = _skill_match(content + " " + t, skills)
+            out.append({"title": t[:80], "company": "Scholarship Program",
+                        "url": url, "source": "Web", "match": pct,
+                        "gap": "", "snippet": content[:160].strip()})
+            if len(out) >= 4: break
+    except Exception:
+        pass
+    return {"source": "scholarships", "data": out}
+
+
+class DiscoverRequest(BaseModel):
+    name:   str = ""
+    degree: str = "B.Tech"
+    year:   str = "3rd Year"
+    skills: list = []
+    title:  str = ""
+
+
+@app.post("/ninelab/discover")
+async def discover_opportunities(req: DiscoverRequest):
+    """Run 4 agents in parallel and return ranked results per category."""
+    profile = {
+        "name":   req.name.strip()[:60],
+        "degree": req.degree.strip()[:40],
+        "year":   req.year.strip()[:20],
+        "skills": [s.strip() for s in req.skills if s.strip()][:12],
+        "title":  req.title.strip()[:60] or
+                  (req.skills[0].strip() if req.skills else "Software Developer"),
+    }
+    results = await asyncio.gather(
+        _safe_agent(_agent_jobs(profile),         "jobs"),
+        _safe_agent(_agent_internships(profile),  "internships"),
+        _safe_agent(_agent_freelancing(profile),  "freelancing"),
+        _safe_agent(_agent_scholarships(profile), "scholarships"),
+    )
+    out = {}
+    for r in results:
+        if isinstance(r, dict) and "source" in r:
+            out[r["source"]] = sorted(r.get("data", []),
+                                      key=lambda x: x.get("match", 0), reverse=True)
+    return JSONResponse({
+        "jobs":         out.get("jobs", []),
+        "internships":  out.get("internships", []),
+        "freelancing":  out.get("freelancing", []),
+        "scholarships": out.get("scholarships", []),
+    })
+
+
+# ── (existing) JSearch sync helper ───────────────────────────────────────────
+
 def _fetch_jsearch_jobs(title: str, company: str) -> list[dict]:
     """Fetch real job/internship listings from JSearch (LinkedIn/Indeed/Glassdoor)."""
     if not JSEARCH_API_KEY:
@@ -1985,9 +2204,14 @@ async def root_redirect():
 @app.get("/ninelab/", response_class=HTMLResponse)
 async def index():
     html_path = STATIC_DIR / "index.html"
+    headers = {
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+        "Pragma": "no-cache",
+        "Expires": "0"
+    }
     if html_path.exists():
-        return HTMLResponse(content=html_path.read_text(), status_code=200)
-    return HTMLResponse(content="<h1>Nine Lab loading...</h1>", status_code=200)
+        return HTMLResponse(content=html_path.read_text(encoding="utf-8"), status_code=200, headers=headers)
+    return HTMLResponse(content="<h1>Nine Lab loading...</h1>", status_code=200, headers=headers)
 
 
 @app.post("/ninelab/generate")
