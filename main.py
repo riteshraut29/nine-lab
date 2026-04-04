@@ -2107,6 +2107,44 @@ async def discover_opportunities(req: DiscoverRequest):
     })
 
 
+# ── AI Placement Chat ─────────────────────────────────────────────────────────
+
+class ChatRequest(BaseModel):
+    message: str
+    profile: Optional[dict] = None
+
+@app.post("/ninelab/chat")
+async def placement_chat(req: ChatRequest):
+    message = req.message.strip()[:500]
+    profile = req.profile or {}
+    skills   = profile.get("skills", "Not specified")
+    year     = profile.get("year", "Not specified")
+    degree   = profile.get("degree", "Not specified")
+    title    = profile.get("title", "Software Developer")
+    readiness = profile.get("readiness", None)
+    gaps     = profile.get("gaps", [])
+
+    system_prompt = (
+        "You are an AI Placement Advisor for engineering students in India. "
+        f"You know this student's profile:\n"
+        f"- Skills: {skills}\n"
+        f"- Year: {year}, Degree: {degree}\n"
+        f"- Target role: {title}\n"
+        + (f"- Placement readiness score: {readiness}%\n" if readiness else "")
+        + (f"- Key skill gaps: {', '.join(gaps)}\n" if gaps else "")
+        + "Give concise, actionable advice specific to their profile. "
+        "Be encouraging but realistic. Keep responses under 120 words. "
+        "Focus on practical next steps the student can take this week."
+    )
+
+    loop = asyncio.get_event_loop()
+    reply = await loop.run_in_executor(
+        executor,
+        lambda: gemini_call(message, retries=2, temperature=0.7, system_prompt=system_prompt)
+    )
+    return JSONResponse({"reply": reply or "Sorry, could not get a response. Please try again."})
+
+
 # ── (existing) JSearch sync helper ───────────────────────────────────────────
 
 def _fetch_jsearch_jobs(title: str, company: str) -> list[dict]:
