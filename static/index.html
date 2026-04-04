@@ -1691,6 +1691,7 @@
     ════════════════════════════════════════════════ -->
     <div id="step0">
       <div class="lp-inner">
+
         <!-- Welcome back banner -->
         <div class="welcome-back-banner" id="welcomeBackBanner">
           <div class="wb-title" id="wbTitle">Welcome back!</div>
@@ -1701,253 +1702,113 @@
           </div>
         </div>
 
-        <!-- SECTION 1: HERO -->
-        <div class="lp-section">
-          <div class="lp-nav">
-            <div class="brand">
-              <div class="brand-icon">⚡</div>
-              <span class="brand-name">Vertical AI</span>
-            </div>
-            <div id="authNavArea">
-              <!-- Signed-out state -->
-              <div class="auth-nav-signed-out" id="authNavOut">
-                <button class="auth-nav-btn ghost" onclick="openAuthModal()">Sign in</button>
-              </div>
-              <!-- Signed-in state (hidden initially) -->
-              <div class="auth-nav-signed-in" id="authNavIn" style="display:none;">
-                <div class="auth-nav-avatar" id="authNavAvatar" onclick="showDashboard()">?</div>
-                <span class="auth-nav-dashboard" onclick="showDashboard()">Dashboard</span>
-                <span class="auth-nav-logout" onclick="handleLogout()" title="Sign out">✕</span>
-              </div>
-            </div>
+        <!-- NAV -->
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:20px 0 0;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div style="width:32px;height:32px;background:#1a1a2e;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:800;">V</div>
+            <span style="font-size:15px;font-weight:700;color:#1a1a2e;letter-spacing:-0.3px;">Vertical AI</span>
           </div>
-
-          <!-- Award strip — moved to top for instant trust -->
-          <div class="lp-award-strip" style="justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
-            <div style="display:flex;gap:8px;align-items:flex-start;flex:1;min-width:0;">
-              <span class="lp-award-strip-icon">🏆</span>
-              <span class="lp-award-strip-text"><b>Best Research Paper 2026</b> — Kaveri ThinkFest · IEEE-adjacent · GHRCE Pune</span>
+          <div id="authNavArea">
+            <div class="auth-nav-signed-out" id="authNavOut">
+              <button class="auth-nav-btn ghost" onclick="openAuthModal()" style="font-size:12px;color:#64748b;background:none;border:none;cursor:pointer;">Sign in</button>
             </div>
-            <a href="/ninelab/static/research-paper.pdf" target="_blank" style="flex-shrink:0;background:rgba(251,191,36,0.15);border:1px solid rgba(251,191,36,0.4);color:#fbbf24;font-size:11px;font-weight:700;padding:5px 12px;border-radius:20px;text-decoration:none;white-space:nowrap;letter-spacing:0.3px;">Read Paper →</a>
-          </div>
-
-          <!-- Logos / recognition strip -->
-          <div class="lp-logos-strip-section">
-            <div class="lp-logos-label">Recognized at</div>
-            <div class="lp-logos-row">
-              <span class="lp-logo-badge">🏛️ IEEE</span>
-              <span class="lp-logo-badge">🎓 GHRCE Pune</span>
-              <span class="lp-logo-badge">🏆 Kaveri ThinkFest</span>
-            </div>
-          </div>
-
-          <div class="lp-hero-headline" id="heroHeadline">Your AI Agent for<br>Placement Prep</div>
-          <div class="lp-hero-sub">Tell it what you need — it analyzes, navigates, and acts. Persistent AI that remembers you every session and works <em>for</em> you, not just <em>with</em> you.</div>
-
-          <button class="lp-cta-btn" onclick="showDiscover()">⚡ Analyze My Placement Readiness →</button>
-          <button class="lp-cta-btn outline" onclick="showStartOptions()">Start My Journey →</button>
-          <div class="lp-trust-line">Agentic AI · Persistent Profile · 4 parallel agents · Free</div>
-          <div class="lp-kits-counter">🚀 <strong id="kitsCountEl">3,200+</strong> kits generated</div>
-          <div class="lp-sample-link" onclick="showKitPreview('scorecard')">or see a sample kit first →</div>
-        </div>
-
-        <!-- SECTION 2: PROBLEM — floating stats, no boxes -->
-        <div class="lp-section reveal-section">
-          <div class="lp-section-label">Why most resumes never get read</div>
-          <div class="lp-stat-grid">
-            <div class="lp-stat-card">
-              <div class="lp-stat-icon-circle" style="background:#fef2f2;">🤖</div>
-              <div class="lp-stat-big" style="color:#ef4444;">75%</div>
-              <div class="lp-stat-small">filtered by ATS<br>before any human</div>
-            </div>
-            <div class="lp-stat-card">
-              <div class="lp-stat-icon-circle" style="background:#fffbeb;">⏱️</div>
-              <div class="lp-stat-big" style="color:#f59e0b;">6 sec</div>
-              <div class="lp-stat-small">a recruiter spends<br>on your resume</div>
-            </div>
-            <div class="lp-stat-card">
-              <div class="lp-stat-icon-circle" style="background:#f0fdf4;">✅</div>
-              <div class="lp-stat-big" style="color:#22c55e;">82%</div>
-              <div class="lp-stat-small">avg ATS score<br>after Nine Lab</div>
-            </div>
-          </div>
-          <div class="lp-link-cta" onclick="showStartOptions()">Fix my resume free →</div>
-        </div>
-
-        <!-- SECTION 3: WHAT YOU GET — clickable kit cards -->
-        <div class="lp-section reveal-section">
-          <div class="lp-section-label">What you download — tap to preview</div>
-          <div class="lp-kit-grid">
-            <div class="lp-kit-card" onclick="showKitPreview('resume')">
-              <div class="lp-kit-icon-wrap" style="background:#f0efff;">📄</div>
-              <div class="lp-kit-name">Job-Ready Resume</div>
-              <div class="lp-kit-sub">ATS keywords injected, format fixed</div>
-              <div class="lp-kit-peek">Tap to preview →</div>
-            </div>
-            <div class="lp-kit-card" onclick="showKitPreview('scorecard')">
-              <div class="lp-kit-icon-wrap" style="background:#f0fdf4;">📊</div>
-              <div class="lp-kit-name">Resume Scorecard</div>
-              <div class="lp-kit-sub">Your match % vs the JD</div>
-              <div class="lp-kit-peek">Tap to preview →</div>
-            </div>
-            <div class="lp-kit-card" onclick="showKitPreview('prep')">
-              <div class="lp-kit-icon-wrap" style="background:#eff6ff;">🗺️</div>
-              <div class="lp-kit-name">Interview Prep Guide</div>
-              <div class="lp-kit-sub">Study plan + likely questions</div>
-              <div class="lp-kit-peek">Tap to preview →</div>
-            </div>
-            <div class="lp-kit-card" onclick="showKitPreview('company')">
-              <div class="lp-kit-icon-wrap" style="background:#fffbeb;">🏢</div>
-              <div class="lp-kit-name">Company Cheat Sheet</div>
-              <div class="lp-kit-sub">Culture, salary, interview tips</div>
-              <div class="lp-kit-peek">Tap to preview →</div>
-            </div>
-          </div>
-          <div class="lp-link-cta" onclick="showStartOptions()">Try it free — no login needed →</div>
-        </div>
-
-        <!-- SECTION 4: HOW IT WORKS -->
-        <div class="lp-section reveal-section">
-          <div class="lp-section-label">How it works</div>
-          <div class="lp-steps-v">
-            <div class="lp-step-v">
-              <div class="lp-step-v-icon">📋</div>
-              <div class="lp-step-v-content">
-                <div class="lp-step-v-num">Step 1</div>
-                <div class="lp-step-v-label">Add your profile</div>
-                <div class="lp-step-v-sub">Upload resume PDF, fill manually, or import from LinkedIn</div>
-              </div>
-            </div>
-            <div class="lp-step-v">
-              <div class="lp-step-v-icon active">🤖</div>
-              <div class="lp-step-v-content">
-                <div class="lp-step-v-num">Step 2 <span class="lp-step-v-badge">New</span></div>
-                <div class="lp-step-v-label">AI finds your best-fit jobs</div>
-                <div class="lp-step-v-sub">Nine Lab analyzes your profile and surfaces 4 matching roles — no searching required</div>
-              </div>
-            </div>
-            <div class="lp-step-v">
-              <div class="lp-step-v-icon">🎯</div>
-              <div class="lp-step-v-content">
-                <div class="lp-step-v-num">Step 3</div>
-                <div class="lp-step-v-label">Pick a role, paste the JD</div>
-                <div class="lp-step-v-sub">Select an AI-matched job or paste any JD you already have</div>
-              </div>
-            </div>
-            <div class="lp-step-v">
-              <div class="lp-step-v-icon">📥</div>
-              <div class="lp-step-v-content">
-                <div class="lp-step-v-num">Step 4</div>
-                <div class="lp-step-v-label">Get your complete prep kit</div>
-                <div class="lp-step-v-sub">ATS resume, scorecard, interview guide, and company cheat sheet — in 60 seconds</div>
-              </div>
-            </div>
-            <div class="lp-step-v">
-              <div class="lp-step-v-icon active">🚀</div>
-              <div class="lp-step-v-content">
-                <div class="lp-step-v-num">Step 5 <span class="lp-step-v-badge green">Real listings</span></div>
-                <div class="lp-step-v-label">Apply to real jobs</div>
-                <div class="lp-step-v-sub">One-tap apply to verified listings on LinkedIn, Indeed &amp; Glassdoor — with an application tracker</div>
-              </div>
+            <div class="auth-nav-signed-in" id="authNavIn" style="display:none;">
+              <div class="auth-nav-avatar" id="authNavAvatar" onclick="showDashboard()">?</div>
+              <span class="auth-nav-dashboard" onclick="showDashboard()">Dashboard</span>
+              <span class="auth-nav-logout" onclick="handleLogout()" title="Sign out">✕</span>
             </div>
           </div>
         </div>
 
-        <!-- SECTION 4b: AI JOB MATCHING DEMO -->
-        <div class="lp-section reveal-section">
-          <div class="lp-section-label">AI finds jobs that match you — not the other way around</div>
-          <div class="ai-match-demo">
-            <div class="ai-match-demo-header">
-              <span class="ai-match-demo-icon">🤖</span>
-              <span class="ai-match-demo-title">Your AI job matches</span>
-              <span class="ai-match-demo-sub">Based on your profile</span>
-            </div>
-            <div class="ai-match-item">
-              <div class="ai-match-dot"></div>
-              <div class="ai-match-role">Software Developer Trainee</div>
-              <div class="ai-match-pct">94% match</div>
-            </div>
-            <div class="ai-match-item">
-              <div class="ai-match-dot"></div>
-              <div class="ai-match-role">Associate Engineer — TCS</div>
-              <div class="ai-match-pct">89% match</div>
-            </div>
-            <div class="ai-match-item">
-              <div class="ai-match-dot"></div>
-              <div class="ai-match-role">Junior Backend Developer</div>
-              <div class="ai-match-pct">81% match</div>
-            </div>
-            <div class="ai-match-item">
-              <div class="ai-match-dot"></div>
-              <div class="ai-match-role">Python Intern — Infosys</div>
-              <div class="ai-match-pct">78% match</div>
-            </div>
-            <div class="ai-match-note">Pick any match → Nine Lab generates your full kit for that exact role</div>
-          </div>
-          <div class="lp-link-cta" onclick="showStartOptions()">Get my AI job matches →</div>
+        <!-- RESEARCH BADGE -->
+        <div style="margin-top:28px;display:inline-flex;align-items:center;gap:6px;background:#f0efff;border:1px solid #d4d0ff;border-radius:20px;padding:5px 12px;">
+          <div style="width:6px;height:6px;border-radius:50%;background:#6c63ff;"></div>
+          <span style="font-size:11px;font-weight:600;color:#5a52d5;letter-spacing:0.3px;">RESEARCH INITIATIVE · NLPC 2026 · GHRCE</span>
         </div>
 
-        <!-- SECTION 5: BEFORE/AFTER — clean card -->
-        <div class="lp-section reveal-section">
-          <div class="lp-section-label">Real result — MCA student applying to TCS</div>
-          <div class="lp-demo-card">
-            <div class="lp-bar-wrap">
-              <div class="lp-bar-row"><span>Original resume</span><span style="color:#ef4444;font-weight:700;">38%</span></div>
-              <div class="lp-bar-track"><div class="lp-bar-fill bad" id="atsBarBad"></div></div>
-            </div>
-            <div class="lp-demo-arrow">↓ &nbsp;Nine Lab applied 15-step framework</div>
-            <div class="lp-bar-wrap">
-              <div class="lp-bar-row"><span>After Nine Lab</span><span id="atsScoreGood" style="color:#22c55e;font-weight:700;">82%</span></div>
-              <div class="lp-bar-track"><div class="lp-bar-fill good" id="atsBarGood"></div></div>
-            </div>
-            <div class="lp-demo-note">Nine Lab user · Pune, 2024</div>
-          </div>
-          <div class="lp-link-cta" onclick="showStartOptions()">See my score →</div>
+        <!-- HERO -->
+        <div style="margin-top:20px;">
+          <h1 style="font-size:36px;font-weight:800;color:#1a1a2e;line-height:1.15;letter-spacing:-1px;margin:0;">AI Agent for<br>Placement Prep.</h1>
+          <p style="font-size:14px;color:#64748b;line-height:1.6;margin:14px 0 0;max-width:320px;">Tell it what you need — it remembers you, analyzes your readiness, and acts on your behalf. Every session.</p>
         </div>
 
-        <!-- SECTION 6: TESTIMONIALS -->
-        <div class="lp-section reveal-section">
-          <div class="lp-section-label">Students who got shortlisted</div>
-          <div class="lp-testimonials">
-            <div class="t-card">
-              <div class="t-avatar" style="background:linear-gradient(135deg,#6c63ff,#a78bfa);">🎓</div>
+        <!-- STATS ROW -->
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);margin-top:28px;border-top:1px solid #e5e7eb;border-bottom:1px solid #e5e7eb;padding:18px 0;">
+          <div style="text-align:center;border-right:1px solid #e5e7eb;">
+            <div style="font-size:26px;font-weight:800;color:#1a1a2e;">15L+</div>
+            <div style="font-size:10px;color:#9ca3af;margin-top:3px;line-height:1.4;">engineers<br>graduate yearly</div>
+          </div>
+          <div style="text-align:center;border-right:1px solid #e5e7eb;">
+            <div style="font-size:26px;font-weight:800;color:#ef4444;">70%</div>
+            <div style="font-size:10px;color:#9ca3af;margin-top:3px;line-height:1.4;">not job-ready<br>(NASSCOM 2024)</div>
+          </div>
+          <div style="text-align:center;">
+            <div style="font-size:26px;font-weight:800;color:#6c63ff;">0</div>
+            <div style="font-size:10px;color:#9ca3af;margin-top:3px;line-height:1.4;">tools with<br>persistent AI</div>
+          </div>
+        </div>
+
+        <!-- AGENT CAPABILITIES -->
+        <div style="margin-top:24px;">
+          <div style="font-size:10px;font-weight:600;color:#9ca3af;letter-spacing:1px;margin-bottom:12px;">AGENT CAPABILITIES</div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:#f9fafb;border-radius:10px;border:1px solid #f0f0f0;">
+              <span style="font-size:15px;">🧠</span>
               <div>
-                <div class="t-stars">★★★★★</div>
-                <div class="t-quote">"My resume was getting rejected everywhere. Nine Lab rewrote it — TCS called within a week. ATS went from 31% to 79%."</div>
-                <div class="t-name">MCA Student, Pune</div>
-                <div class="t-college">Placed at TCS · 2024</div>
+                <div style="font-size:12px;font-weight:600;color:#1a1a2e;">Readiness Analysis</div>
+                <div style="font-size:11px;color:#9ca3af;">4 agents run in parallel · scores your profile</div>
               </div>
             </div>
-            <div class="t-card">
-              <div class="t-avatar" style="background:linear-gradient(135deg,#0ea5e9,#38bdf8);">💼</div>
+            <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:#f9fafb;border-radius:10px;border:1px solid #f0f0f0;">
+              <span style="font-size:15px;">💾</span>
               <div>
-                <div class="t-stars">★★★★★</div>
-                <div class="t-quote">"The Company Cheat Sheet was insane — I knew exactly what Infosys tests in each round before I walked in."</div>
-                <div class="t-name">B.Tech CSE Student, Pune</div>
-                <div class="t-college">Placed at Infosys · 2024</div>
+                <div style="font-size:12px;font-weight:600;color:#1a1a2e;">Persistent Memory</div>
+                <div style="font-size:11px;color:#9ca3af;">remembers your profile across every session</div>
               </div>
             </div>
-            <div class="t-card">
-              <div class="t-avatar" style="background:linear-gradient(135deg,#10b981,#34d399);">🚀</div>
+            <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:#f9fafb;border-radius:10px;border:1px solid #f0f0f0;">
+              <span style="font-size:15px;">⚡</span>
               <div>
-                <div class="t-stars">★★★★★</div>
-                <div class="t-quote">"Never knew my resume was being rejected by bots before a human even saw it. Nine Lab fixed that in 60 seconds."</div>
-                <div class="t-name">MCA Student, Nagpur</div>
-                <div class="t-college">Placed at Wipro · 2024</div>
+                <div style="font-size:12px;font-weight:600;color:#1a1a2e;">Natural Commands</div>
+                <div style="font-size:11px;color:#9ca3af;">say "find internship" — agent does it for you</div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:#f9fafb;border-radius:10px;border:1px solid #f0f0f0;">
+              <span style="font-size:15px;">📄</span>
+              <div>
+                <div style="font-size:12px;font-weight:600;color:#1a1a2e;">Resume Intelligence</div>
+                <div style="font-size:11px;color:#9ca3af;">ATS scoring, gap detection, skill matching</div>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- SECTION 7: FINAL CTA -->
-        <div class="lp-final-cta">
-          <div class="lp-final-title">Your AI placement journey starts here.</div>
-          <div class="lp-final-sub">Profile → AI job match → prep kit → real apply. Free, no login.</div>
-          <button class="lp-cta-btn" onclick="showStartOptions()">📄 &nbsp;Upload My Resume</button>
-          <button class="lp-cta-btn outline" onclick="showStartOptions()">✏️ &nbsp;Start in 2 mins</button>
+        <!-- CTAs -->
+        <div style="margin-top:28px;display:flex;flex-direction:column;gap:10px;">
+          <button onclick="showDiscover()" style="width:100%;padding:15px;background:#1a1a2e;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:-0.2px;">⚡ Analyze My Placement Readiness</button>
+          <button onclick="showStartOptions()" style="width:100%;padding:15px;background:#fff;color:#1a1a2e;border:1.5px solid #e5e7eb;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;">Build My Resume →</button>
         </div>
 
-        <div class="lp-footer">Nine Lab · Built for Indian students · ninelab.in</div>
+        <!-- RECOGNITION -->
+        <div style="margin-top:28px;padding:14px;background:#f9fafb;border-radius:12px;border:1px solid #e5e7eb;">
+          <div style="font-size:10px;font-weight:600;color:#9ca3af;letter-spacing:1px;margin-bottom:10px;">RECOGNITION</div>
+          <div style="display:flex;flex-direction:column;gap:6px;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span style="font-size:13px;">🏆</span>
+              <span style="font-size:12px;color:#1a1a2e;font-weight:500;">Best Research Paper — Kaveri ThinkFest 2026</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span style="font-size:13px;">🏛️</span>
+              <span style="font-size:12px;color:#1a1a2e;font-weight:500;">IEEE-adjacent · GHRCE Pune</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span style="font-size:13px;">📑</span>
+              <span style="font-size:12px;color:#1a1a2e;font-weight:500;">Based on Bloom's Two Sigma Problem (1984)</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top:20px;padding-bottom:40px;text-align:center;font-size:11px;color:#c4c4c4;letter-spacing:0.5px;">VERTICAL AI · PLACEMENT INTELLIGENCE · 2026</div>
 
         <!-- Hidden file input for JS compatibility -->
         <input type="file" id="pdfUploadInput" accept=".pdf" style="display:none" onchange="handlePdfUpload(this.files[0])" />
