@@ -1725,93 +1725,245 @@
 
         <!-- RESEARCH BADGE -->
         <div style="margin-top:28px;display:inline-flex;align-items:center;gap:6px;background:#f0efff;border:1px solid #d4d0ff;border-radius:20px;padding:5px 12px;">
-          <div style="width:6px;height:6px;border-radius:50%;background:#6c63ff;"></div>
+          <div style="width:6px;height:6px;border-radius:50%;background:#6c63ff;animation:lpPulse 1.5s infinite;"></div>
           <span style="font-size:11px;font-weight:600;color:#5a52d5;letter-spacing:0.3px;">RESEARCH INITIATIVE · NLPC 2026 · GHRCE</span>
         </div>
 
         <!-- HERO -->
         <div style="margin-top:20px;">
-          <h1 style="font-size:36px;font-weight:800;color:#1a1a2e;line-height:1.15;letter-spacing:-1px;margin:0;">AI Agent for<br>Placement Prep.</h1>
+          <h1 id="lpHeadline" style="font-size:36px;font-weight:800;color:#1a1a2e;line-height:1.15;letter-spacing:-1px;margin:0;min-height:88px;"></h1>
           <p style="font-size:14px;color:#64748b;line-height:1.6;margin:14px 0 0;max-width:320px;">Tell it what you need — it remembers you, analyzes your readiness, and acts on your behalf. Every session.</p>
         </div>
 
-        <!-- STATS ROW -->
+        <!-- STATS ROW — animated counters -->
         <div style="display:grid;grid-template-columns:repeat(3,1fr);margin-top:28px;border-top:1px solid #e5e7eb;border-bottom:1px solid #e5e7eb;padding:18px 0;">
           <div style="text-align:center;border-right:1px solid #e5e7eb;">
-            <div style="font-size:26px;font-weight:800;color:#1a1a2e;">15L+</div>
+            <div id="stat1" style="font-size:26px;font-weight:800;color:#1a1a2e;">0</div>
             <div style="font-size:10px;color:#9ca3af;margin-top:3px;line-height:1.4;">engineers<br>graduate yearly</div>
           </div>
           <div style="text-align:center;border-right:1px solid #e5e7eb;">
-            <div style="font-size:26px;font-weight:800;color:#ef4444;">70%</div>
+            <div id="stat2" style="font-size:26px;font-weight:800;color:#ef4444;">0%</div>
             <div style="font-size:10px;color:#9ca3af;margin-top:3px;line-height:1.4;">not job-ready<br>(NASSCOM 2024)</div>
           </div>
           <div style="text-align:center;">
-            <div style="font-size:26px;font-weight:800;color:#6c63ff;">0</div>
+            <div id="stat3" style="font-size:26px;font-weight:800;color:#6c63ff;">0</div>
             <div style="font-size:10px;color:#9ca3af;margin-top:3px;line-height:1.4;">tools with<br>persistent AI</div>
           </div>
         </div>
 
-        <!-- AGENT CAPABILITIES -->
-        <div style="margin-top:24px;">
-          <div style="font-size:10px;font-weight:600;color:#9ca3af;letter-spacing:1px;margin-bottom:12px;">AGENT CAPABILITIES</div>
+        <!-- LIVE AGENT DEMO WIDGET -->
+        <div style="margin-top:24px;background:#1a1a2e;border-radius:14px;padding:16px;overflow:hidden;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+            <div style="font-size:11px;font-weight:700;color:#a5b4fc;letter-spacing:1px;">LIVE AGENT DEMO</div>
+            <div style="display:flex;align-items:center;gap:5px;">
+              <div style="width:6px;height:6px;border-radius:50%;background:#4ade80;animation:lpPulse 1s infinite;"></div>
+              <span style="font-size:10px;color:#4ade80;font-weight:600;">RUNNING</span>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:7px;" id="lpAgentRows">
+            <div class="lp-agent-row" id="lpa1">💼 <span style="color:#e2e8f0;font-size:12px;">Job opportunities agent</span> <span class="lp-agent-status" style="color:#f59e0b;">analyzing...</span></div>
+            <div class="lp-agent-row" id="lpa2">🎓 <span style="color:#e2e8f0;font-size:12px;">Internship matcher agent</span> <span class="lp-agent-status" style="color:#f59e0b;">analyzing...</span></div>
+            <div class="lp-agent-row" id="lpa3">⚡ <span style="color:#e2e8f0;font-size:12px;">Skill gap detector agent</span> <span class="lp-agent-status" style="color:#f59e0b;">analyzing...</span></div>
+            <div class="lp-agent-row" id="lpa4">📊 <span style="color:#e2e8f0;font-size:12px;">Readiness scorer agent</span> <span class="lp-agent-status" style="color:#f59e0b;">analyzing...</span></div>
+          </div>
+          <div id="lpScoreReveal" style="display:none;margin-top:14px;padding:12px;background:rgba(108,99,255,0.2);border-radius:10px;border:1px solid rgba(108,99,255,0.3);">
+            <div style="font-size:10px;color:#a5b4fc;font-weight:600;margin-bottom:4px;">PLACEMENT READINESS SCORE</div>
+            <div style="display:flex;align-items:center;gap:12px;">
+              <div id="lpScoreNum" style="font-size:36px;font-weight:800;color:#fff;">0%</div>
+              <div style="flex:1;">
+                <div style="background:rgba(255,255,255,0.1);border-radius:6px;height:8px;">
+                  <div id="lpScoreBar" style="height:8px;border-radius:6px;background:#6c63ff;width:0%;transition:width 1s ease;"></div>
+                </div>
+                <div style="font-size:11px;color:#94a3b8;margin-top:4px;">Profile saved · AI remembers you</div>
+              </div>
+            </div>
+          </div>
+          <button onclick="showDiscover()" style="width:100%;margin-top:12px;padding:10px;background:#6c63ff;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">Run on your real profile →</button>
+        </div>
+
+        <!-- CAPABILITY CARDS -->
+        <div style="margin-top:20px;">
+          <div style="font-size:10px;font-weight:600;color:#9ca3af;letter-spacing:1px;margin-bottom:12px;">WHAT THE AGENT DOES</div>
           <div style="display:flex;flex-direction:column;gap:8px;">
-            <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:#f9fafb;border-radius:10px;border:1px solid #f0f0f0;">
-              <span style="font-size:15px;">🧠</span>
-              <div>
-                <div style="font-size:12px;font-weight:600;color:#1a1a2e;">Readiness Analysis</div>
-                <div style="font-size:11px;color:#9ca3af;">4 agents run in parallel · scores your profile</div>
+            <div class="lp-cap-card" onclick="showDiscover()">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <div style="width:36px;height:36px;background:#f0efff;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">🧠</div>
+                <div style="flex:1;">
+                  <div style="font-size:12px;font-weight:700;color:#1a1a2e;">Readiness Analysis</div>
+                  <div style="font-size:11px;color:#9ca3af;">4 agents run in parallel · scores your profile</div>
+                </div>
+                <div style="font-size:11px;color:#6c63ff;font-weight:600;">Try →</div>
               </div>
             </div>
-            <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:#f9fafb;border-radius:10px;border:1px solid #f0f0f0;">
-              <span style="font-size:15px;">💾</span>
-              <div>
-                <div style="font-size:12px;font-weight:600;color:#1a1a2e;">Persistent Memory</div>
-                <div style="font-size:11px;color:#9ca3af;">remembers your profile across every session</div>
+            <div class="lp-cap-card">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <div style="width:36px;height:36px;background:#f0fdf4;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">💾</div>
+                <div style="flex:1;">
+                  <div style="font-size:12px;font-weight:700;color:#1a1a2e;">Persistent Memory</div>
+                  <div style="font-size:11px;color:#9ca3af;">remembers your profile across every session</div>
+                </div>
+                <div id="lpMemTag" style="font-size:10px;color:#22c55e;font-weight:600;background:#f0fdf4;padding:3px 8px;border-radius:10px;">ACTIVE</div>
               </div>
             </div>
-            <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:#f9fafb;border-radius:10px;border:1px solid #f0f0f0;">
-              <span style="font-size:15px;">⚡</span>
-              <div>
-                <div style="font-size:12px;font-weight:600;color:#1a1a2e;">Natural Commands</div>
-                <div style="font-size:11px;color:#9ca3af;">say "find internship" — agent does it for you</div>
+            <div class="lp-cap-card" onclick="toggleFloatChat()">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <div style="width:36px;height:36px;background:#fff8f0;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">⚡</div>
+                <div style="flex:1;">
+                  <div style="font-size:12px;font-weight:700;color:#1a1a2e;">Natural Commands</div>
+                  <div style="font-size:11px;color:#9ca3af;">say "find internship" — agent acts</div>
+                </div>
+                <div style="font-size:11px;color:#f97316;font-weight:600;">Ask →</div>
               </div>
             </div>
-            <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:#f9fafb;border-radius:10px;border:1px solid #f0f0f0;">
-              <span style="font-size:15px;">📄</span>
-              <div>
-                <div style="font-size:12px;font-weight:600;color:#1a1a2e;">Resume Intelligence</div>
-                <div style="font-size:11px;color:#9ca3af;">ATS scoring, gap detection, skill matching</div>
+            <div class="lp-cap-card" onclick="showStartOptions()">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <div style="width:36px;height:36px;background:#eff6ff;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">📄</div>
+                <div style="flex:1;">
+                  <div style="font-size:12px;font-weight:700;color:#1a1a2e;">Resume Intelligence</div>
+                  <div style="font-size:11px;color:#9ca3af;">ATS scoring, gap detection, skill matching</div>
+                </div>
+                <div style="font-size:11px;color:#3b82f6;font-weight:600;">Build →</div>
               </div>
             </div>
           </div>
         </div>
 
         <!-- CTAs -->
-        <div style="margin-top:28px;display:flex;flex-direction:column;gap:10px;">
-          <button onclick="showDiscover()" style="width:100%;padding:15px;background:#1a1a2e;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:-0.2px;">⚡ Analyze My Placement Readiness</button>
+        <div style="margin-top:24px;display:flex;flex-direction:column;gap:10px;">
+          <button onclick="showDiscover()" id="lpMainCta" style="width:100%;padding:15px;background:#1a1a2e;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:-0.2px;transition:transform 0.1s,box-shadow 0.1s;box-shadow:0 4px 14px rgba(26,26,46,0.25);">⚡ Analyze My Placement Readiness</button>
           <button onclick="showStartOptions()" style="width:100%;padding:15px;background:#fff;color:#1a1a2e;border:1.5px solid #e5e7eb;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;">Build My Resume →</button>
         </div>
 
         <!-- RECOGNITION -->
-        <div style="margin-top:28px;padding:14px;background:#f9fafb;border-radius:12px;border:1px solid #e5e7eb;">
+        <div style="margin-top:24px;padding:14px;background:#f9fafb;border-radius:12px;border:1px solid #e5e7eb;">
           <div style="font-size:10px;font-weight:600;color:#9ca3af;letter-spacing:1px;margin-bottom:10px;">RECOGNITION</div>
           <div style="display:flex;flex-direction:column;gap:6px;">
-            <div style="display:flex;align-items:center;gap:8px;">
-              <span style="font-size:13px;">🏆</span>
-              <span style="font-size:12px;color:#1a1a2e;font-weight:500;">Best Research Paper — Kaveri ThinkFest 2026</span>
-            </div>
-            <div style="display:flex;align-items:center;gap:8px;">
-              <span style="font-size:13px;">🏛️</span>
-              <span style="font-size:12px;color:#1a1a2e;font-weight:500;">IEEE-adjacent · GHRCE Pune</span>
-            </div>
-            <div style="display:flex;align-items:center;gap:8px;">
-              <span style="font-size:13px;">📑</span>
-              <span style="font-size:12px;color:#1a1a2e;font-weight:500;">Based on Bloom's Two Sigma Problem (1984)</span>
-            </div>
+            <div style="display:flex;align-items:center;gap:8px;"><span style="font-size:13px;">🏆</span><span style="font-size:12px;color:#1a1a2e;font-weight:500;">Best Research Paper — Kaveri ThinkFest 2026</span></div>
+            <div style="display:flex;align-items:center;gap:8px;"><span style="font-size:13px;">🏛️</span><span style="font-size:12px;color:#1a1a2e;font-weight:500;">IEEE-adjacent · GHRCE Pune</span></div>
+            <div style="display:flex;align-items:center;gap:8px;"><span style="font-size:13px;">📑</span><span style="font-size:12px;color:#1a1a2e;font-weight:500;">Based on Bloom's Two Sigma Problem (1984)</span></div>
           </div>
         </div>
 
         <div style="margin-top:20px;padding-bottom:40px;text-align:center;font-size:11px;color:#c4c4c4;letter-spacing:0.5px;">VERTICAL AI · PLACEMENT INTELLIGENCE · 2026</div>
+
+        <style>
+          @keyframes lpPulse{0%,100%{opacity:1}50%{opacity:0.3}}
+          .lp-agent-row{display:flex;align-items:center;gap:6px;font-size:12px;padding:4px 0;}
+          .lp-agent-status{margin-left:auto;font-size:10px;font-weight:600;}
+          .lp-cap-card{padding:12px 14px;background:#f9fafb;border-radius:12px;border:1px solid #f0f0f0;cursor:pointer;transition:all 0.15s;}
+          .lp-cap-card:hover{background:#f0efff;border-color:#d4d0ff;transform:translateX(3px);}
+          #lpMainCta:active{transform:scale(0.98);}
+          #lpMainCta:hover{box-shadow:0 6px 20px rgba(26,26,46,0.35);}
+        </style>
+        <script>
+          // Typing headline
+          (function(){
+            var lines = ['AI Agent for', 'Placement Prep.'];
+            var el = document.getElementById('lpHeadline');
+            if(!el) return;
+            var full = lines[0] + '\n' + lines[1];
+            var i = 0;
+            function type(){
+              if(i <= full.length){
+                el.innerHTML = full.slice(0,i).replace('\n','<br>') + '<span style="border-right:2px solid #6c63ff;animation:lpPulse 0.8s infinite;">&nbsp;</span>';
+                i++;
+                setTimeout(type, i < lines[0].length ? 60 : 40);
+              } else {
+                el.innerHTML = lines[0] + '<br>' + lines[1];
+              }
+            }
+            setTimeout(type, 400);
+          })();
+
+          // Animated counters
+          (function(){
+            function animCount(id, target, suffix, duration){
+              var el = document.getElementById(id);
+              if(!el) return;
+              var start = 0, step = target / (duration / 16);
+              var t = setInterval(function(){
+                start = Math.min(start + step, target);
+                el.textContent = Math.round(start) + suffix;
+                if(start >= target) clearInterval(t);
+              }, 16);
+            }
+            setTimeout(function(){
+              animCount('stat1','15','L+', 1200);
+              animCount('stat2','70','%', 1000);
+              animCount('stat3','0','', 200);
+            }, 800);
+          })();
+
+          // Agent demo loop
+          (function(){
+            var agents = ['lpa1','lpa2','lpa3','lpa4'];
+            var done = 0;
+            function finishAgent(id, delay){
+              setTimeout(function(){
+                var el = document.getElementById(id);
+                if(!el) return;
+                var s = el.querySelector('.lp-agent-status');
+                if(s){ s.style.color='#4ade80'; s.textContent='✓ done'; }
+                done++;
+                if(done === 4){
+                  setTimeout(function(){
+                    var rev = document.getElementById('lpScoreReveal');
+                    if(rev) rev.style.display='block';
+                    var score = 67;
+                    var num = document.getElementById('lpScoreNum');
+                    var bar = document.getElementById('lpScoreBar');
+                    var n = 0;
+                    var t = setInterval(function(){
+                      n = Math.min(n+2, score);
+                      if(num) num.textContent = n+'%';
+                      if(bar) bar.style.width = n+'%';
+                      if(n>=score) clearInterval(t);
+                    }, 30);
+                  }, 400);
+                }
+              }, delay);
+            }
+            setTimeout(function(){
+              finishAgent('lpa1', 800);
+              finishAgent('lpa2', 1400);
+              finishAgent('lpa3', 1900);
+              finishAgent('lpa4', 2400);
+            }, 1200);
+
+            // Check persistent memory
+            var saved = null;
+            try{ saved = JSON.parse(localStorage.getItem('verticalai_profile')); }catch(e){}
+            var memTag = document.getElementById('lpMemTag');
+            if(memTag){
+              if(saved && saved.readiness){
+                memTag.textContent = saved.readiness+'% saved';
+                memTag.style.background='#f0efff';
+                memTag.style.color='#6c63ff';
+              } else {
+                memTag.textContent = 'No profile yet';
+                memTag.style.color='#9ca3af';
+                memTag.style.background='#f0f0f0';
+              }
+            }
+
+            // Restart demo loop every 8s
+            setInterval(function(){
+              done = 0;
+              agents.forEach(function(id){
+                var el = document.getElementById(id);
+                if(!el) return;
+                var s = el.querySelector('.lp-agent-status');
+                if(s){ s.style.color='#f59e0b'; s.textContent='analyzing...'; }
+              });
+              var rev = document.getElementById('lpScoreReveal');
+              if(rev) rev.style.display='none';
+              finishAgent('lpa1', 800);
+              finishAgent('lpa2', 1400);
+              finishAgent('lpa3', 1900);
+              finishAgent('lpa4', 2400);
+            }, 8000);
+          })();
+        </script>
 
         <!-- Hidden file input for JS compatibility -->
         <input type="file" id="pdfUploadInput" accept=".pdf" style="display:none" onchange="handlePdfUpload(this.files[0])" />
