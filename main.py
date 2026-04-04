@@ -2117,30 +2117,64 @@ class ChatRequest(BaseModel):
 async def placement_chat(req: ChatRequest):
     message = req.message.strip()[:500]
     profile = req.profile or {}
-    skills   = profile.get("skills", "Not specified")
-    year     = profile.get("year", "Not specified")
-    degree   = profile.get("degree", "Not specified")
-    title    = profile.get("title", "Software Developer")
+    skills   = profile.get("skills", "") or "Not mentioned"
+    year     = profile.get("year", "Not mentioned")
+    degree   = profile.get("degree", "B.Tech")
+    title    = profile.get("title", "") or "Software Developer"
     readiness = profile.get("readiness", None)
-    gaps     = profile.get("gaps", [])
+    gaps     = [g for g in profile.get("gaps", []) if g and len(g.strip()) > 1]
 
-    system_prompt = (
-        "You are an AI Placement Advisor for engineering students in India. "
-        f"You know this student's profile:\n"
-        f"- Skills: {skills}\n"
-        f"- Year: {year}, Degree: {degree}\n"
-        f"- Target role: {title}\n"
-        + (f"- Placement readiness score: {readiness}%\n" if readiness else "")
-        + (f"- Key skill gaps: {', '.join(gaps)}\n" if gaps else "")
-        + "Give concise, actionable advice specific to their profile. "
-        "Be encouraging but realistic. Keep responses under 120 words. "
-        "Focus on practical next steps the student can take this week."
-    )
+    # Derive tech-relevant gaps if AI-generated gaps look wrong
+    VALID_TECH_GAPS = {
+        "dsa","data structures","algorithms","system design","sql","database",
+        "os","operating systems","networking","computer networks","oops","object oriented",
+        "dbms","cn","web development","react","node","javascript","python","java","c++",
+        "machine learning","deep learning","nlp","cloud","aws","azure","docker","kubernetes",
+        "communication","aptitude","verbal","logical reasoning","resume","git","linux",
+        "rest api","api","microservices","problem solving","competitive programming","leetcode"
+    }
+    clean_gaps = []
+    for g in gaps:
+        g_lower = g.lower().strip()
+        if any(v in g_lower for v in VALID_TECH_GAPS):
+            clean_gaps.append(g)
+    if not clean_gaps and gaps:
+        clean_gaps = []  # discard irrelevant gaps, let AI figure out from skills+role
+
+    # Build smart gap hint from skills vs target role
+    skill_hint = f"Student has these skills: {skills}." if skills != "Not mentioned" else ""
+    gap_hint = f"Identified skill gaps: {', '.join(clean_gaps)}." if clean_gaps else ""
+    readiness_hint = f"Current placement readiness score: {readiness}%." if readiness else ""
+
+    system_prompt = f"""You are Vertical AI — an intelligent placement advisor for Indian engineering students.
+
+STUDENT PROFILE:
+- Degree: {degree}, Year: {year}
+- Target Role: {title}
+- {skill_hint}
+- {readiness_hint}
+- {gap_hint}
+
+YOUR JOB:
+Answer the student's question about placement preparation only.
+All skill gaps and advice must be 100% relevant to engineering/IT placements in India.
+Only suggest gaps like: DSA, System Design, SQL, DBMS, OS, CN, OOPs, Communication, Aptitude, specific languages/frameworks related to their target role.
+NEVER suggest non-technical gaps like video editing, design, marketing unless explicitly asked.
+Cross-check any gap against the student's target role ({title}) before mentioning it.
+
+RULES:
+- Max 3-4 sentences per reply. Be direct and specific.
+- Always refer to the student's actual skills and target role.
+- If student asks to do something (find job, build resume), tell them the agent can do it — suggest they use the button or command.
+- If no profile is saved yet, ask them to run the analysis first.
+- Tone: like a smart senior student — helpful, honest, not corporate.
+- Never make up certifications, course names, or companies unless well-known (Coursera, LeetCode, GFG, HackerRank).
+- Language: English only. Short sentences."""
 
     loop = asyncio.get_event_loop()
     reply = await loop.run_in_executor(
         executor,
-        lambda: gemini_call(message, retries=2, temperature=0.7, system_prompt=system_prompt)
+        lambda: gemini_call(message, retries=2, temperature=0.4, system_prompt=system_prompt)
     )
     return JSONResponse({"reply": reply or "Sorry, could not get a response. Please try again."})
 
