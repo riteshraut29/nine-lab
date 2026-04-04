@@ -3359,6 +3359,423 @@ body{font-family:'Inter',sans-serif;background:#fff;color:#1a1a2e;}
 </body></html>""")
 
 
+@app.get("/ninelab/maharashtra", response_class=HTMLResponse)
+async def maharashtra_dashboard():
+    """Maharashtra Government Placement Intelligence Dashboard."""
+    return HTMLResponse("""<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Maharashtra Rojgar Buddhi Yojana — Placement Intelligence</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Inter',sans-serif;background:#f0f2f5;color:#1a1a2e;}
+
+/* MAHARASHTRA GOV HEADER */
+.mh-topbar{background:#fff;border-bottom:1px solid #e5e7eb;padding:8px 20px;display:flex;align-items:center;justify-content:space-between;}
+.mh-topbar-left{display:flex;align-items:center;gap:12px;}
+.mh-emblem{font-size:32px;}
+.mh-brand h1{font-size:14px;font-weight:800;color:#1a2744;line-height:1.2;}
+.mh-brand p{font-size:10px;color:#64748b;margin-top:1px;}
+.mh-topbar-right{display:flex;align-items:center;gap:10px;}
+.mh-flag{display:flex;gap:0;border-radius:3px;overflow:hidden;height:22px;}
+.mh-flag-s{width:14px;}
+
+/* SAFFRON BANNER */
+.mh-banner{background:linear-gradient(135deg,#ff6b00,#e85d00);color:#fff;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;}
+.mh-banner-left h2{font-size:17px;font-weight:800;line-height:1.2;}
+.mh-banner-left p{font-size:11px;opacity:0.85;margin-top:3px;}
+.mh-banner-right{display:flex;gap:8px;flex-wrap:wrap;}
+.mbadge{font-size:10px;font-weight:700;padding:4px 10px;border-radius:4px;background:rgba(255,255,255,0.2);color:#fff;border:1px solid rgba(255,255,255,0.3);}
+
+/* TABS */
+.tabs{background:#fff;border-bottom:2px solid #ff6b00;padding:0 20px;display:flex;gap:0;overflow-x:auto;}
+.tab{padding:11px 16px;font-size:12px;font-weight:600;color:#64748b;cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap;margin-bottom:-2px;}
+.tab.active{color:#e85d00;border-bottom-color:#e85d00;}
+.tab-panel{display:none;}
+.tab-panel.active{display:block;}
+
+/* MAIN */
+.main{max-width:1100px;margin:0 auto;padding:18px 16px;}
+
+/* KPI */
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px;}
+.kpi{background:#fff;border-radius:10px;padding:14px 16px;border-top:4px solid;box-shadow:0 1px 4px rgba(0,0,0,0.06);}
+.kpi-num{font-size:26px;font-weight:800;line-height:1;}
+.kpi-label{font-size:10px;color:#64748b;margin-top:3px;line-height:1.4;}
+.kpi-tag{font-size:10px;font-weight:600;margin-top:6px;}
+.green{color:#16a34a;} .orange{color:#e85d00;} .blue{color:#1d4ed8;} .red{color:#ef4444;}
+
+/* GRID */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px;}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:18px;}
+.card{background:#fff;border-radius:10px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,0.06);}
+.card-hd{font-size:12px;font-weight:700;color:#1a1a2e;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between;}
+.card-hd span{font-size:10px;font-weight:500;color:#94a3b8;}
+
+/* SCHEME CARDS */
+.scheme-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px;}
+.scheme-card{background:#fff;border-radius:10px;padding:14px;border-left:4px solid;box-shadow:0 1px 4px rgba(0,0,0,0.05);cursor:pointer;transition:box-shadow 0.2s;}
+.scheme-card:hover{box-shadow:0 4px 12px rgba(0,0,0,0.1);}
+.scheme-tag{font-size:9px;font-weight:700;letter-spacing:0.8px;margin-bottom:6px;text-transform:uppercase;}
+.scheme-name{font-size:13px;font-weight:700;color:#1a1a2e;margin-bottom:4px;line-height:1.3;}
+.scheme-desc{font-size:11px;color:#64748b;line-height:1.4;margin-bottom:8px;}
+.scheme-stats{display:flex;gap:12px;}
+.scheme-stat{font-size:10px;color:#64748b;}<br>.scheme-stat strong{color:#1a1a2e;font-weight:700;}
+
+/* EXAM TABLE */
+.exam-table{width:100%;border-collapse:collapse;font-size:12px;}
+.exam-table th{background:#fff8f0;padding:9px 12px;text-align:left;font-size:10px;font-weight:700;color:#92400e;letter-spacing:0.5px;border-bottom:2px solid #fed7aa;}
+.exam-table td{padding:9px 12px;border-bottom:1px solid #f5f5f5;color:#1a1a2e;}
+.exam-table tr:hover td{background:#fafafa;}
+.epill{display:inline-block;padding:2px 7px;border-radius:10px;font-size:10px;font-weight:600;}
+.epill-green{background:#dcfce7;color:#16a34a;}
+.epill-orange{background:#ffedd5;color:#c2410c;}
+.epill-blue{background:#dbeafe;color:#1d4ed8;}
+.epill-red{background:#fee2e2;color:#dc2626;}
+
+/* BAR CHART ROW */
+.bar-row{display:flex;align-items:center;gap:10px;padding:7px 0;font-size:12px;}
+.bar-name{width:130px;font-weight:500;color:#374151;flex-shrink:0;}
+.bar-track{flex:1;background:#f0f0f0;border-radius:4px;height:8px;}
+.bar-fill{height:8px;border-radius:4px;}
+.bar-val{width:36px;text-align:right;font-weight:700;font-size:11px;flex-shrink:0;}
+
+/* DISTRICT MAP TABLE */
+.dist-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.dist-card{background:#f8fafc;border-radius:8px;padding:10px 12px;border:1px solid #e5e7eb;}
+.dist-name{font-size:11px;font-weight:600;color:#1a2744;margin-bottom:4px;}
+.dist-bar{height:4px;border-radius:4px;background:#e5e7eb;margin-bottom:4px;}
+.dist-bar-fill{height:4px;border-radius:4px;background:linear-gradient(90deg,#ff6b00,#fbbf24);}
+.dist-stats{display:flex;justify-content:space-between;font-size:10px;color:#64748b;}
+
+/* SCHOLARSHIP TABLE */
+.sch-table{width:100%;border-collapse:collapse;font-size:12px;}
+.sch-table th{background:#fafafa;padding:9px 12px;text-align:left;font-size:10px;font-weight:700;color:#64748b;letter-spacing:0.5px;border-bottom:1px solid #e5e7eb;}
+.sch-table td{padding:9px 12px;border-bottom:1px solid #f5f5f5;vertical-align:top;}
+.sch-amt{font-size:13px;font-weight:700;color:#e85d00;}
+
+/* ALERT */
+.alert{display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border-radius:8px;font-size:12px;margin-bottom:8px;}
+.alert-r{background:#fef2f2;border-left:3px solid #ef4444;}
+.alert-y{background:#fffbeb;border-left:3px solid #f59e0b;}
+.alert-g{background:#f0fdf4;border-left:3px solid #22c55e;}
+.alert strong{display:block;font-weight:600;margin-bottom:2px;}
+
+/* FOOTER */
+.mh-footer{background:#1a2744;color:#fff;padding:14px 20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-top:8px;}
+.mh-footer p{font-size:10px;opacity:0.5;}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="mh-topbar">
+  <div class="mh-topbar-left">
+    <div class="mh-emblem">🦁</div>
+    <div class="mh-brand">
+      <h1>महाराष्ट्र शासन — कौशल्य विकास विभाग</h1>
+      <p>Government of Maharashtra · Skill Development & Entrepreneurship Dept · Placement Intelligence Wing</p>
+    </div>
+  </div>
+  <div class="mh-topbar-right">
+    <div style="font-size:11px;color:#64748b;" id="mhTime"></div>
+    <div style="width:6px;height:6px;border-radius:50%;background:#22c55e;animation:blink 1.5s infinite;"></div>
+    <span style="font-size:11px;color:#22c55e;font-weight:600;">LIVE</span>
+  </div>
+</div>
+<style>@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}</style>
+
+<!-- BANNER -->
+<div class="mh-banner">
+  <div class="mh-banner-left">
+    <h2>Maharashtra Rojgar Buddhi Yojana (MRBY)</h2>
+    <p>Powered by Vertical AI · Persistent Agentic Intelligence · FY 2025–26 · Phase 1 Active</p>
+  </div>
+  <div class="mh-banner-right">
+    <span class="mbadge">MahaDBT Integrated</span>
+    <span class="mbadge">DTE Maharashtra</span>
+    <span class="mbadge">MSBTE Linked</span>
+    <span class="mbadge">NLPC 2026</span>
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('overview')">📊 Overview</div>
+  <div class="tab" onclick="switchTab('schemes')">📋 Schemes & Scholarships</div>
+  <div class="tab" onclick="switchTab('exams')">📝 Competitive Exams</div>
+  <div class="tab" onclick="switchTab('districts')">🗺️ District Dashboard</div>
+  <div class="tab" onclick="switchTab('colleges')">🏛️ Colleges</div>
+  <div class="tab" onclick="switchTab('alerts')">🔔 Alerts</div>
+</div>
+
+<!-- ═══ TAB: OVERVIEW ═══ -->
+<div id="tab-overview" class="tab-panel active">
+<div class="main">
+
+  <div class="kpi-row">
+    <div class="kpi" style="border-color:#ff6b00;">
+      <div class="kpi-num orange">4,18,234</div>
+      <div class="kpi-label">Engineering Students<br>Maharashtra 2025–26</div>
+      <div class="kpi-tag green">↑ 6.2% YoY</div>
+    </div>
+    <div class="kpi" style="border-color:#22c55e;">
+      <div class="kpi-num green">1,127</div>
+      <div class="kpi-label">Colleges on<br>MRBY Platform</div>
+      <div class="kpi-tag green">↑ 214 new this year</div>
+    </div>
+    <div class="kpi" style="border-color:#1d4ed8;">
+      <div class="kpi-num blue">63%</div>
+      <div class="kpi-label">Avg Placement<br>Readiness Score</div>
+      <div class="kpi-tag green">↑ 11pts from baseline</div>
+    </div>
+    <div class="kpi" style="border-color:#ef4444;">
+      <div class="kpi-num red">1,47,882</div>
+      <div class="kpi-label">Students Below<br>50% Readiness</div>
+      <div class="kpi-tag red">↓ Needs intervention</div>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <div class="card">
+      <div class="card-hd">Division-wise Readiness <span>Avg score %</span></div>
+      <div class="bar-row"><span class="bar-name">Pune</span><div class="bar-track"><div class="bar-fill" style="width:78%;background:#22c55e;"></div></div><span class="bar-val green">78%</span></div>
+      <div class="bar-row"><span class="bar-name">Mumbai</span><div class="bar-track"><div class="bar-fill" style="width:74%;background:#22c55e;"></div></div><span class="bar-val green">74%</span></div>
+      <div class="bar-row"><span class="bar-name">Nagpur</span><div class="bar-track"><div class="bar-fill" style="width:68%;background:#ff6b00;"></div></div><span class="bar-val orange">68%</span></div>
+      <div class="bar-row"><span class="bar-name">Nashik</span><div class="bar-track"><div class="bar-fill" style="width:61%;background:#ff6b00;"></div></div><span class="bar-val orange">61%</span></div>
+      <div class="bar-row"><span class="bar-name">Aurangabad</span><div class="bar-track"><div class="bar-fill" style="width:54%;background:#f59e0b;"></div></div><span class="bar-val" style="color:#f59e0b;">54%</span></div>
+      <div class="bar-row"><span class="bar-name">Amravati</span><div class="bar-track"><div class="bar-fill" style="width:48%;background:#ef4444;"></div></div><span class="bar-val red">48%</span></div>
+      <div class="bar-row"><span class="bar-name">Kolhapur</span><div class="bar-track"><div class="bar-fill" style="width:57%;background:#f59e0b;"></div></div><span class="bar-val" style="color:#f59e0b;">57%</span></div>
+    </div>
+    <div class="card">
+      <div class="card-hd">Top Skill Gaps — Maharashtra <span>% students affected</span></div>
+      <div class="bar-row"><span class="bar-name">DSA</span><div class="bar-track"><div class="bar-fill" style="width:72%;background:#ef4444;"></div></div><span class="bar-val red">72%</span></div>
+      <div class="bar-row"><span class="bar-name">Communication</span><div class="bar-track"><div class="bar-fill" style="width:68%;background:#ef4444;"></div></div><span class="bar-val red">68%</span></div>
+      <div class="bar-row"><span class="bar-name">System Design</span><div class="bar-track"><div class="bar-fill" style="width:61%;background:#f59e0b;"></div></div><span class="bar-val" style="color:#f59e0b;">61%</span></div>
+      <div class="bar-row"><span class="bar-name">SQL / Database</span><div class="bar-track"><div class="bar-fill" style="width:54%;background:#f59e0b;"></div></div><span class="bar-val" style="color:#f59e0b;">54%</span></div>
+      <div class="bar-row"><span class="bar-name">Resume Writing</span><div class="bar-track"><div class="bar-fill" style="width:48%;background:#ff6b00;"></div></div><span class="bar-val orange">48%</span></div>
+      <div class="bar-row"><span class="bar-name">Core CS</span><div class="bar-track"><div class="bar-fill" style="width:44%;background:#ff6b00;"></div></div><span class="bar-val orange">44%</span></div>
+      <canvas id="gapChart" height="100" style="margin-top:10px;"></canvas>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-hd">Company-wise Hiring from Maharashtra <span>Top recruiters FY 2025–26</span></div>
+    <canvas id="companyChart" height="80"></canvas>
+  </div>
+
+</div>
+</div>
+
+<!-- ═══ TAB: SCHEMES ═══ -->
+<div id="tab-schemes" class="tab-panel">
+<div class="main">
+  <div style="font-size:12px;color:#64748b;margin-bottom:14px;">Maharashtra government schemes & scholarships tracked on MRBY platform · Students can apply directly via MahaDBT</div>
+
+  <div class="scheme-grid">
+    <div class="scheme-card" style="border-color:#ff6b00;">
+      <div class="scheme-tag" style="color:#ff6b00;">SCHOLARSHIP · OBC / SBC / VJNT</div>
+      <div class="scheme-name">Dr. Panjabrao Deshmukh Vasatigruha Nirvah Bhatta Yojana</div>
+      <div class="scheme-desc">Hostel + maintenance allowance for OBC/SBC/VJNT engineering students studying outside home district.</div>
+      <div class="scheme-stats">
+        <div class="scheme-stat">Amount: <strong>₹30,000/yr</strong></div>
+        <div class="scheme-stat">Students: <strong>2,14,000+</strong></div>
+        <div class="scheme-stat">Portal: <strong>MahaDBT</strong></div>
+      </div>
+    </div>
+    <div class="scheme-card" style="border-color:#1d4ed8;">
+      <div class="scheme-tag" style="color:#1d4ed8;">SCHOLARSHIP · SC / ST</div>
+      <div class="scheme-name">Swadhar Gruh Yojana — Dr. Babasaheb Ambedkar</div>
+      <div class="scheme-desc">Scholarship for SC/ST students living outside government hostels — covers boarding, lodging & other expenses.</div>
+      <div class="scheme-stats">
+        <div class="scheme-stat">Amount: <strong>₹51,000/yr</strong></div>
+        <div class="scheme-stat">Students: <strong>1,08,000+</strong></div>
+        <div class="scheme-stat">Portal: <strong>MahaDBT</strong></div>
+      </div>
+    </div>
+    <div class="scheme-card" style="border-color:#22c55e;">
+      <div class="scheme-tag" style="color:#22c55e;">SCHOLARSHIP · EBC / OPEN</div>
+      <div class="scheme-name">Rajarshi Chhatrapati Shahu Maharaj Shikshan Shulkh Shishyavrutti</div>
+      <div class="scheme-desc">Fee reimbursement for EBC (Economically Backward Class) engineering students with family income below ₹8 lakh.</div>
+      <div class="scheme-stats">
+        <div class="scheme-stat">Amount: <strong>Full tuition</strong></div>
+        <div class="scheme-stat">Students: <strong>3,42,000+</strong></div>
+        <div class="scheme-stat">Portal: <strong>MahaDBT</strong></div>
+      </div>
+    </div>
+    <div class="scheme-card" style="border-color:#a855f7;">
+      <div class="scheme-tag" style="color:#a855f7;">SKILL DEVELOPMENT</div>
+      <div class="scheme-name">Mahaswayam — Maharashtra Employment & Skill Portal</div>
+      <div class="scheme-desc">Unified portal for job seekers, skill training, placement — covers all districts. Vertical AI can integrate directly.</div>
+      <div class="scheme-stats">
+        <div class="scheme-stat">Registered: <strong>62 lakh+</strong></div>
+        <div class="scheme-stat">Jobs posted: <strong>1.2 lakh+</strong></div>
+        <div class="scheme-stat">Districts: <strong>36</strong></div>
+      </div>
+    </div>
+    <div class="scheme-card" style="border-color:#f59e0b;">
+      <div class="scheme-tag" style="color:#f59e0b;">ENTREPRENEURSHIP</div>
+      <div class="scheme-name">Annasaheb Patil Economic Development Corporation</div>
+      <div class="scheme-desc">Loan guarantee scheme for Maratha community entrepreneurs — startup funding up to ₹10 lakh at subsidized rate.</div>
+      <div class="scheme-stats">
+        <div class="scheme-stat">Loan: <strong>Up to ₹10L</strong></div>
+        <div class="scheme-stat">Interest: <strong>Subsidized</strong></div>
+        <div class="scheme-stat">Category: <strong>Maratha</strong></div>
+      </div>
+    </div>
+    <div class="scheme-card" style="border-color:#ef4444;">
+      <div class="scheme-tag" style="color:#ef4444;">SKILL · ITI / DIPLOMA</div>
+      <div class="scheme-name">MSBTE Skill Development Initiative (SDI)</div>
+      <div class="scheme-desc">Modular employable skills for diploma & engineering students. Certification recognized by industry for placement.</div>
+      <div class="scheme-stats">
+        <div class="scheme-stat">Institutes: <strong>450+</strong></div>
+        <div class="scheme-stat">Courses: <strong>120+</strong></div>
+        <div class="scheme-stat">Board: <strong>MSBTE</strong></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-hd">Scholarship Utilization via MRBY Platform</div>
+    <table class="sch-table">
+      <thead><tr><th>Scheme</th><th>Eligible Students</th><th>Applied via MRBY</th><th>Amount/yr</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td>Swadhar Gruh Yojana</td><td>1,08,420</td><td>84,310 (77%)</td><td class="sch-amt">₹51,000</td><td><span class="epill epill-green">Active</span></td></tr>
+        <tr><td>Panjabrao Deshmukh Yojana</td><td>2,14,880</td><td>1,92,440 (89%)</td><td class="sch-amt">₹30,000</td><td><span class="epill epill-green">Active</span></td></tr>
+        <tr><td>Shahu Maharaj Shishyavrutti</td><td>3,42,100</td><td>2,18,900 (63%)</td><td class="sch-amt">Full fees</td><td><span class="epill epill-orange">Partial</span></td></tr>
+        <tr><td>Central Sector Scholarship</td><td>48,200</td><td>31,400 (65%)</td><td class="sch-amt">₹20,000</td><td><span class="epill epill-green">Active</span></td></tr>
+        <tr><td>HDFC Badhte Kadam</td><td>12,000</td><td>8,900 (74%)</td><td class="sch-amt">₹75,000</td><td><span class="epill epill-green">Active</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+</div>
+
+<!-- ═══ TAB: EXAMS ═══ -->
+<div id="tab-exams" class="tab-panel">
+<div class="main">
+  <div class="card" style="margin-bottom:16px;">
+    <div class="card-hd">Competitive Exams Tracked on MRBY Platform <span>Readiness mapped to exam syllabus</span></div>
+    <table class="exam-table">
+      <thead><tr><th>Exam</th><th>Conducting Body</th><th>Next Date</th><th>MH Students</th><th>Avg Readiness</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td><strong>MHT-CET</strong><br><span style="font-size:10px;color:#64748b;">Maharashtra Common Entrance Test</span></td><td>State CET Cell, MH</td><td>Apr–May 2026</td><td>4,12,000+</td><td><span style="color:#22c55e;font-weight:700;">72%</span></td><td><span class="epill epill-orange">Upcoming</span></td></tr>
+        <tr><td><strong>GATE 2026</strong><br><span style="font-size:10px;color:#64748b;">Graduate Aptitude Test in Engineering</span></td><td>IIT Roorkee</td><td>Feb 2026</td><td>48,200</td><td><span style="color:#f59e0b;font-weight:700;">54%</span></td><td><span class="epill epill-green">Completed</span></td></tr>
+        <tr><td><strong>MPSC Engineering Services</strong><br><span style="font-size:10px;color:#64748b;">Maharashtra Public Service Commission</span></td><td>MPSC, Pune</td><td>Jun 2026</td><td>28,400</td><td><span style="color:#ef4444;font-weight:700;">41%</span></td><td><span class="epill epill-blue">Prep Phase</span></td></tr>
+        <tr><td><strong>TCS NQT</strong><br><span style="font-size:10px;color:#64748b;">National Qualifier Test — TCS</span></td><td>Tata Consultancy Services</td><td>Rolling</td><td>1,24,000+</td><td><span style="color:#ff6b00;font-weight:700;">61%</span></td><td><span class="epill epill-orange">Open</span></td></tr>
+        <tr><td><strong>Infosys Springboard</strong><br><span style="font-size:10px;color:#64748b;">Campus recruitment test</span></td><td>Infosys Ltd.</td><td>Rolling</td><td>89,000+</td><td><span style="color:#ff6b00;font-weight:700;">58%</span></td><td><span class="epill epill-orange">Open</span></td></tr>
+        <tr><td><strong>Wipro NLTH</strong><br><span style="font-size:10px;color:#64748b;">National Level Talent Hunt</span></td><td>Wipro Technologies</td><td>Rolling</td><td>72,000+</td><td><span style="color:#f59e0b;font-weight:700;">55%</span></td><td><span class="epill epill-orange">Open</span></td></tr>
+        <tr><td><strong>Cognizant GenC</strong><br><span style="font-size:10px;color:#64748b;">Campus hiring program</span></td><td>Cognizant Technology</td><td>Rolling</td><td>64,000+</td><td><span style="color:#f59e0b;font-weight:700;">57%</span></td><td><span class="epill epill-orange">Open</span></td></tr>
+        <tr><td><strong>UPSC ESE</strong><br><span style="font-size:10px;color:#64748b;">Engineering Services Exam</span></td><td>UPSC, New Delhi</td><td>Jan 2027</td><td>8,200</td><td><span style="color:#ef4444;font-weight:700;">38%</span></td><td><span class="epill epill-blue">Prep Phase</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="grid3">
+    <div class="kpi" style="border-top:4px solid #22c55e;background:#fff;border-radius:10px;padding:14px;">
+      <div class="kpi-num green">61%</div>
+      <div class="kpi-label">Students exam-ready<br>for campus drives</div>
+    </div>
+    <div class="kpi" style="border-top:4px solid #f59e0b;background:#fff;border-radius:10px;padding:14px;">
+      <div class="kpi-num" style="color:#f59e0b;">4.2L+</div>
+      <div class="kpi-label">Students appearing<br>MHT-CET 2026</div>
+    </div>
+    <div class="kpi" style="border-top:4px solid #ef4444;background:#fff;border-radius:10px;padding:14px;">
+      <div class="kpi-num red">39%</div>
+      <div class="kpi-label">Students NOT ready<br>for any exam yet</div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══ TAB: DISTRICTS ═══ -->
+<div id="tab-districts" class="tab-panel">
+<div class="main">
+  <div class="card" style="margin-bottom:16px;">
+    <div class="card-hd">All 36 Districts — Placement Readiness Score</div>
+    <div class="dist-grid">
+      <div class="dist-card"><div class="dist-name">Pune</div><div class="dist-bar"><div class="dist-bar-fill" style="width:78%;"></div></div><div class="dist-stats"><span>78% ready</span><span>48,200 students</span></div></div>
+      <div class="dist-card"><div class="dist-name">Mumbai City</div><div class="dist-bar"><div class="dist-bar-fill" style="width:76%;"></div></div><div class="dist-stats"><span>76% ready</span><span>62,100 students</span></div></div>
+      <div class="dist-card"><div class="dist-name">Thane</div><div class="dist-bar"><div class="dist-bar-fill" style="width:72%;"></div></div><div class="dist-stats"><span>72% ready</span><span>38,400 students</span></div></div>
+      <div class="dist-card"><div class="dist-name">Nagpur</div><div class="dist-bar"><div class="dist-bar-fill" style="width:68%;"></div></div><div class="dist-stats"><span>68% ready</span><span>29,800 students</span></div></div>
+      <div class="dist-card"><div class="dist-name">Nashik</div><div class="dist-bar"><div class="dist-bar-fill" style="width:61%;"></div></div><div class="dist-stats"><span>61% ready</span><span>21,400 students</span></div></div>
+      <div class="dist-card"><div class="dist-name">Aurangabad</div><div class="dist-bar"><div class="dist-bar-fill" style="width:54%;"></div></div><div class="dist-stats"><span>54% ready</span><span>18,200 students</span></div></div>
+      <div class="dist-card"><div class="dist-name">Solapur</div><div class="dist-bar"><div class="dist-bar-fill" style="width:52%;"></div></div><div class="dist-stats"><span>52% ready</span><span>12,800 students</span></div></div>
+      <div class="dist-card"><div class="dist-name">Kolhapur</div><div class="dist-bar"><div class="dist-bar-fill" style="width:57%;"></div></div><div class="dist-stats"><span>57% ready</span><span>14,600 students</span></div></div>
+      <div class="dist-card"><div class="dist-name">Amravati</div><div class="dist-bar"><div class="dist-bar-fill" style="width:48%;"></div></div><div class="dist-stats"><span>48% ready</span><span>11,200 students</span></div></div>
+      <div class="dist-card"><div class="dist-name">Nanded</div><div class="dist-bar"><div class="dist-bar-fill" style="width:44%;"></div></div><div class="dist-stats"><span>44% ready</span><span>9,800 students</span></div></div>
+      <div class="dist-card"><div class="dist-name">Latur</div><div class="dist-bar"><div class="dist-bar-fill" style="width:42%;"></div></div><div class="dist-stats"><span>42% ready</span><span>8,400 students</span></div></div>
+      <div class="dist-card"><div class="dist-name">Osmanabad</div><div class="dist-bar"><div class="dist-bar-fill" style="width:38%;"></div></div><div class="dist-stats"><span>38% ready</span><span>6,200 students</span></div></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══ TAB: COLLEGES ═══ -->
+<div id="tab-colleges" class="tab-panel">
+<div class="main">
+  <div class="card">
+    <div class="card-hd">Top Enrolled Colleges — MRBY Platform <span>Live data · DTE Maharashtra registered</span></div>
+    <table class="exam-table">
+      <thead><tr><th>College</th><th>District</th><th>Affiliation</th><th>Students</th><th>Avg Readiness</th><th>Critical Gap</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td><strong>GH Raisoni College of Engg, Nagpur</strong></td><td>Nagpur</td><td>RTM Nagpur Univ</td><td>1,247</td><td><span class="green" style="font-weight:700;">71%</span></td><td>DSA</td><td><span class="epill epill-green">Active</span></td></tr>
+        <tr><td><strong>COEP Technological University</strong></td><td>Pune</td><td>Autonomous</td><td>2,841</td><td><span class="green" style="font-weight:700;">82%</span></td><td>System Design</td><td><span class="epill epill-green">Active</span></td></tr>
+        <tr><td><strong>VJTI Mumbai</strong></td><td>Mumbai</td><td>Mumbai Univ</td><td>3,108</td><td><span class="green" style="font-weight:700;">79%</span></td><td>Communication</td><td><span class="epill epill-green">Active</span></td></tr>
+        <tr><td><strong>Symbiosis Institute of Tech</strong></td><td>Pune</td><td>SIU</td><td>1,892</td><td><span class="green" style="font-weight:700;">76%</span></td><td>DSA</td><td><span class="epill epill-green">Active</span></td></tr>
+        <tr><td><strong>PICT Pune</strong></td><td>Pune</td><td>Savitribai Phule</td><td>2,214</td><td><span class="green" style="font-weight:700;">74%</span></td><td>SQL</td><td><span class="epill epill-green">Active</span></td></tr>
+        <tr><td><strong>SGSITS Indore</strong></td><td>Nashik</td><td>SPPU</td><td>1,108</td><td><span style="color:#f59e0b;font-weight:700;">58%</span></td><td>Core CS</td><td><span class="epill epill-orange">Needs Attention</span></td></tr>
+        <tr><td><strong>MGM College of Engg, Aurangabad</strong></td><td>Aurangabad</td><td>DR. BAMU</td><td>984</td><td><span style="color:#ef4444;font-weight:700;">47%</span></td><td>DSA, SQL</td><td><span class="epill epill-red">At Risk</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+</div>
+
+<!-- ═══ TAB: ALERTS ═══ -->
+<div id="tab-alerts" class="tab-panel">
+<div class="main">
+  <div class="alert alert-r"><div style="font-size:18px;">🔴</div><div><strong>1,47,882 students below 50% readiness — immediate action needed</strong>Concentrated in Aurangabad, Amravati, Nanded divisions. T&P offices alerted. Vertical AI recommending personalized 30-day plans.</div></div>
+  <div class="alert alert-r"><div style="font-size:18px;">🔴</div><div><strong>DSA gap in 72% of Maharashtra engineering students</strong>Most critical skill gap statewide. Platform recommending targeted DSA bootcamps via government ITI network.</div></div>
+  <div class="alert alert-y"><div style="font-size:18px;">🟡</div><div><strong>MHT-CET 2026 in 3 weeks — 38% students not prepared</strong>1,56,000+ students flagged as underprepared. Immediate coaching push required via Mahaswayam portal.</div></div>
+  <div class="alert alert-y"><div style="font-size:18px;">🟡</div><div><strong>Scholarship uptake below target — Shahu Maharaj Yojana at 63%</strong>1,23,200 eligible students haven't applied. MRBY platform sending automated reminders via Vertical AI agent.</div></div>
+  <div class="alert alert-y"><div style="font-size:18px;">🟡</div><div><strong>873 colleges yet to integrate with MRBY platform</strong>Phase 2 enrollment drive required. DTE Maharashtra coordination pending.</div></div>
+  <div class="alert alert-g"><div style="font-size:18px;">🟢</div><div><strong>Pune Division leading — 78% avg readiness, model for replication</strong>COEP, PICT, Symbiosis showing best outcomes. Vertical AI methodology being documented for state-wide rollout.</div></div>
+  <div class="alert alert-g"><div style="font-size:18px;">🟢</div><div><strong>4.2M+ AI analysis sessions completed this year</strong>Average analysis time under 30 seconds. Student engagement up 34% since persistent profile feature launched.</div></div>
+</div>
+</div>
+
+<!-- FOOTER -->
+<div class="mh-footer">
+  <p>Maharashtra Rojgar Buddhi Yojana (MRBY) · Powered by Vertical AI · DTE Maharashtra · MSBTE · Mahaswayam · FY 2025–26</p>
+  <p>ninelab.in/ninelab · NLPC 2026 · Team RCM-G2-091 · GHRCE Nagpur</p>
+</div>
+
+<script>
+// Clock
+function updateTime(){document.getElementById('mhTime').textContent=new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',second:'2-digit'})+' IST';}
+updateTime();setInterval(updateTime,1000);
+
+// Tab switching
+function switchTab(name){
+  document.querySelectorAll('.tab-panel').forEach(function(p){p.classList.remove('active');});
+  document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active');});
+  document.getElementById('tab-'+name).classList.add('active');
+  event.target.classList.add('active');
+}
+
+// Skill gap donut chart
+var gapCtx=document.getElementById('gapChart').getContext('2d');
+new Chart(gapCtx,{type:'doughnut',data:{labels:['DSA','Communication','System Design','SQL','Resume','Core CS'],datasets:[{data:[72,68,61,54,48,44],backgroundColor:['#ef4444','#f97316','#f59e0b','#6c63ff','#22c55e','#3b82f6'],borderWidth:0}]},options:{plugins:{legend:{position:'right',labels:{font:{size:10},boxWidth:10}}},cutout:'65%'}});
+
+// Company bar chart
+var compCtx=document.getElementById('companyChart').getContext('2d');
+new Chart(compCtx,{type:'bar',data:{labels:['TCS','Infosys','Wipro','Cognizant','Accenture','L&T Tech','Persistent','KPIT'],datasets:[{label:'Students Hired',data:[18400,14200,11800,9400,8200,6100,4800,3900],backgroundColor:'#ff6b00',borderRadius:4}]},options:{plugins:{legend:{display:false}},scales:{y:{grid:{color:'#f0f0f0'},ticks:{font:{size:10}}},x:{grid:{display:false},ticks:{font:{size:10}}}}}});
+</script>
+</body></html>""")
+
+
 @app.get("/ninelab/live", response_class=HTMLResponse)
 async def live_dashboard():
     """Live projector dashboard — shows real-time pitch day stats."""
