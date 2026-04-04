@@ -2204,9 +2204,14 @@ async def root_redirect():
 @app.get("/ninelab/", response_class=HTMLResponse)
 async def index():
     html_path = STATIC_DIR / "index.html"
+    headers = {
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+        "Pragma": "no-cache",
+        "Expires": "0"
+    }
     if html_path.exists():
-        return HTMLResponse(content=html_path.read_text(encoding="utf-8"), status_code=200)
-    return HTMLResponse(content="<h1>Nine Lab loading...</h1>", status_code=200)
+        return HTMLResponse(content=html_path.read_text(encoding="utf-8"), status_code=200, headers=headers)
+    return HTMLResponse(content="<h1>Nine Lab loading...</h1>", status_code=200, headers=headers)
 
 
 @app.post("/ninelab/generate")
