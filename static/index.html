@@ -4919,8 +4919,28 @@
       document.getElementById('stepDash').style.display    = 'none';
       document.getElementById('stepTracker').style.display = 'none';
       document.getElementById('stepDiscover').style.display = 'block';
-      // Pre-fill skills from profile if available
-      if (profileData && profileData.skills) {
+      // Load saved profile from localStorage
+      var saved = null;
+      try { saved = JSON.parse(localStorage.getItem('verticalai_profile')); } catch(e){}
+      if (saved) {
+        if (saved.skills) document.getElementById('discSkills').value = saved.skills;
+        if (saved.year)   document.getElementById('discYear').value   = saved.year;
+        if (saved.degree) document.getElementById('discDegree').value = saved.degree;
+        if (saved.title)  document.getElementById('discTitle').value  = saved.title;
+        // Show welcome back banner
+        var wb = document.getElementById('discWelcomeBack');
+        if (wb) {
+          var prevScore = saved.readiness ? ' · Last readiness: <strong>' + saved.readiness + '%</strong>' : '';
+          var prevDate  = saved.date ? ' on ' + saved.date : '';
+          wb.innerHTML = '👋 Welcome back! Profile loaded from your last session' + prevDate + prevScore;
+          wb.style.display = 'block';
+        }
+      } else {
+        var wb = document.getElementById('discWelcomeBack');
+        if (wb) wb.style.display = 'none';
+      }
+      // Pre-fill skills from profile if available (fallback)
+      if (!saved && profileData && profileData.skills) {
         var sk = Array.isArray(profileData.skills)
           ? profileData.skills.join(', ')
           : (profileData.skills || '');
@@ -5050,6 +5070,20 @@
           document.getElementById('discReadinessPct').textContent = avgMatch + '%';
           document.getElementById('discReadinessBar').style.width = avgMatch + '%';
           document.getElementById('discNextAction').textContent = nextAction;
+          // Save profile to localStorage
+          try {
+            var now = new Date();
+            var dateStr = now.toLocaleDateString('en-IN', {day:'numeric',month:'short',year:'numeric'}) + ' ' + now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+            localStorage.setItem('verticalai_profile', JSON.stringify({
+              skills: document.getElementById('discSkills').value,
+              year:   document.getElementById('discYear').value,
+              degree: document.getElementById('discDegree').value,
+              title:  document.getElementById('discTitle').value,
+              readiness: avgMatch,
+              gaps: topGaps,
+              date: dateStr
+            }));
+          } catch(e){}
           var gapsList = document.getElementById('discGapsList');
           if (topGaps.length) {
             gapsList.innerHTML = topGaps.map(function(g){ return '<span style="background:rgba(255,255,255,0.2);border-radius:20px;padding:3px 10px;font-size:11px;font-weight:600;">⚡ '+g+'</span>'; }).join('');
@@ -5527,7 +5561,8 @@
       <!-- Profile quick-input -->
       <div id="discoverForm" style="background:#fff;border-radius:16px;border:1px solid var(--border);padding:20px;margin-bottom:16px;">
         <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px;">Build Your AI Placement Profile</div>
-        <div style="font-size:12px;color:var(--text-muted);margin-bottom:14px;">AI will analyze your skills, find gaps, and tell you exactly what to do next</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:10px;">AI will analyze your skills, find gaps, and tell you exactly what to do next</div>
+        <div id="discWelcomeBack" style="display:none;background:#f0efff;border:1px solid #d4d0ff;border-radius:8px;padding:8px 12px;font-size:12px;color:#5a52d5;font-weight:500;margin-bottom:12px;"></div>
         <div style="display:flex;flex-direction:column;gap:12px;">
           <div>
             <label style="font-size:12px;color:var(--text-muted);font-weight:500;">Skills (comma separated)</label>
