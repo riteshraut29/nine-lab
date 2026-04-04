@@ -5810,12 +5810,93 @@
       return div;
     }
 
+    // ── Intent detection → direct app actions ──────────────────────────────
+    function _detectIntent(msg) {
+      var m = msg.toLowerCase();
+      if (/resume|cv|build.*resume|resume.*bana|banana.*resume/.test(m))
+        return 'resume';
+      if (/internship|intern|training/.test(m))
+        return 'internship';
+      if (/freelanc|gig|project.*find/.test(m))
+        return 'freelance';
+      if (/scholarship|fellowship/.test(m))
+        return 'scholarship';
+      if (/job|placement|opportunit|naukri|work/.test(m))
+        return 'jobs';
+      if (/readiness|analyz|analysis|check.*ready|kitna.*ready|ready.*kitna|score/.test(m))
+        return 'analysis';
+      if (/track|applied|application|dashboard/.test(m))
+        return 'tracker';
+      if (/ats|ats.*score|resume.*score/.test(m))
+        return 'ats';
+      return null;
+    }
+
+    function _executeIntent(intent) {
+      var saved = null;
+      try { saved = JSON.parse(localStorage.getItem('verticalai_profile')); } catch(e){}
+      toggleFloatChat(); // close chat panel
+      switch(intent) {
+        case 'resume':
+          setTimeout(function(){ goToStep1(); }, 200);
+          return '✅ Resume builder kholna de raha hoon — abhi app mein open ho raha hai!';
+        case 'internship':
+          setTimeout(function(){
+            showDiscover();
+            if (saved) setTimeout(function(){ runDiscover(); switchDiscTab('internships'); }, 400);
+            else setTimeout(function(){ switchDiscTab('internships'); }, 300);
+          }, 200);
+          return '✅ Internship finder open kar raha hoon' + (saved ? ' — profile se auto-analyze bhi kar raha hoon!' : '!');
+        case 'jobs':
+          setTimeout(function(){
+            showDiscover();
+            if (saved) setTimeout(function(){ runDiscover(); }, 400);
+          }, 200);
+          return '✅ Job opportunities dhundh raha hoon tere liye!';
+        case 'freelance':
+          setTimeout(function(){
+            showDiscover();
+            if (saved) setTimeout(function(){ runDiscover(); switchDiscTab('freelancing'); }, 400);
+            else setTimeout(function(){ switchDiscTab('freelancing'); }, 300);
+          }, 200);
+          return '✅ Freelance projects section open kar raha hoon!';
+        case 'scholarship':
+          setTimeout(function(){
+            showDiscover();
+            if (saved) setTimeout(function(){ runDiscover(); switchDiscTab('scholarships'); }, 400);
+            else setTimeout(function(){ switchDiscTab('scholarships'); }, 300);
+          }, 200);
+          return '✅ Scholarship finder open kar raha hoon!';
+        case 'analysis':
+          setTimeout(function(){
+            showDiscover();
+            if (saved) setTimeout(function(){ runDiscover(); }, 400);
+          }, 200);
+          return '✅ Placement readiness analysis shuru kar raha hoon!';
+        case 'tracker':
+          setTimeout(function(){ showDashboard(); }, 200);
+          return '✅ Application tracker open kar raha hoon!';
+        case 'ats':
+          setTimeout(function(){ goToStep1(); }, 200);
+          return '✅ Resume ATS scorer ke liye resume builder open kar raha hoon!';
+      }
+    }
+
     async function sendFloatChat() {
       var input = document.getElementById('floatChatInput');
       var msg = input.value.trim();
       if (!msg) return;
       input.value = '';
       _appendFloatMsg('user', msg.replace(/</g,'&lt;'));
+
+      // Check for direct action intent first
+      var intent = _detectIntent(msg);
+      if (intent) {
+        var actionMsg = _executeIntent(intent);
+        _appendFloatMsg('ai', actionMsg);
+        return;
+      }
+
       var saved = null;
       try { saved = JSON.parse(localStorage.getItem('verticalai_profile')); } catch(e){}
       var btn = document.getElementById('floatChatSend');
