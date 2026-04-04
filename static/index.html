@@ -5742,5 +5742,100 @@
   <!-- Toast notification -->
   <div class="nl-toast" id="nlToast"></div>
 
+  <!-- ── Floating AI Partner ───────────────────────────────────────────── -->
+  <!-- Chat panel -->
+  <div id="floatChatPanel" style="display:none;position:fixed;bottom:80px;right:16px;width:320px;max-width:calc(100vw - 32px);background:#fff;border-radius:20px;box-shadow:0 8px 40px rgba(108,99,255,0.22),0 2px 12px rgba(0,0,0,0.10);z-index:9999;overflow:hidden;flex-direction:column;">
+    <!-- Header -->
+    <div style="background:linear-gradient(135deg,#6c63ff,#5a52d5);padding:13px 16px;display:flex;align-items:center;justify-content:space-between;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="width:30px;height:30px;background:rgba(255,255,255,0.2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;">🤖</div>
+        <div>
+          <div style="color:#fff;font-size:13px;font-weight:700;">AI Partner</div>
+          <div style="color:rgba(255,255,255,0.7);font-size:10px;" id="floatChatStatus">Knows your profile</div>
+        </div>
+      </div>
+      <button onclick="toggleFloatChat()" style="background:rgba(255,255,255,0.15);border:none;color:#fff;font-size:16px;width:28px;height:28px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;">✕</button>
+    </div>
+    <!-- Messages -->
+    <div id="floatChatMessages" style="padding:12px;display:flex;flex-direction:column;gap:8px;height:260px;overflow-y:auto;background:#fafafa;"></div>
+    <!-- Input -->
+    <div style="padding:10px 12px 12px;display:flex;gap:8px;background:#fff;border-top:1px solid #f0f0f0;">
+      <input id="floatChatInput" type="text" placeholder="Ask anything..."
+        style="flex:1;padding:9px 12px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;font-family:inherit;outline:none;"
+        onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border)'"
+        onkeypress="if(event.key==='Enter') sendFloatChat()"/>
+      <button onclick="sendFloatChat()" id="floatChatSend" style="padding:9px 14px;background:var(--purple);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;">↑</button>
+    </div>
+  </div>
+  <!-- FAB button -->
+  <button onclick="toggleFloatChat()" id="floatChatFab" title="Ask AI Partner"
+    style="position:fixed;bottom:18px;right:16px;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#6c63ff,#5a52d5);color:#fff;font-size:22px;border:none;cursor:pointer;box-shadow:0 4px 20px rgba(108,99,255,0.45);z-index:9999;display:flex;align-items:center;justify-content:center;transition:transform 0.15s;">🤖</button>
+
+  <script>
+    var _floatOpen = false;
+    var _floatInited = false;
+
+    function toggleFloatChat() {
+      _floatOpen = !_floatOpen;
+      var panel = document.getElementById('floatChatPanel');
+      panel.style.display = _floatOpen ? 'flex' : 'none';
+      if (_floatOpen) {
+        panel.style.flexDirection = 'column';
+        if (!_floatInited) {
+          _floatInited = true;
+          var saved = null;
+          try { saved = JSON.parse(localStorage.getItem('verticalai_profile')); } catch(e){}
+          if (saved && saved.readiness) {
+            document.getElementById('floatChatStatus').textContent = 'Readiness: ' + saved.readiness + '%';
+            _appendFloatMsg('ai', '👋 Hi! I know your profile — targeting <strong>' + (saved.title||'Software Developer') + '</strong>, readiness <strong>' + saved.readiness + '%</strong>, gaps: <strong>' + (saved.gaps||[]).join(', ') + '</strong>.<br>What do you want to work on?');
+          } else {
+            _appendFloatMsg('ai', '👋 Hi! I\'m your AI Partner. Run your <strong>Placement Analysis</strong> first — then I\'ll know your profile and give personalized guidance!');
+          }
+        }
+        setTimeout(function(){ document.getElementById('floatChatInput').focus(); }, 100);
+      }
+    }
+
+    function _appendFloatMsg(role, text) {
+      var msgs = document.getElementById('floatChatMessages');
+      var div = document.createElement('div');
+      if (role === 'ai') {
+        div.style.cssText = 'background:#f0efff;border-radius:12px 12px 12px 3px;padding:9px 12px;font-size:12.5px;color:#1a1a2e;line-height:1.5;max-width:90%;';
+      } else {
+        div.style.cssText = 'background:var(--purple);border-radius:12px 12px 3px 12px;padding:9px 12px;font-size:12.5px;color:#fff;line-height:1.5;max-width:82%;align-self:flex-end;margin-left:auto;';
+      }
+      div.innerHTML = text;
+      msgs.appendChild(div);
+      msgs.scrollTop = msgs.scrollHeight;
+      return div;
+    }
+
+    async function sendFloatChat() {
+      var input = document.getElementById('floatChatInput');
+      var msg = input.value.trim();
+      if (!msg) return;
+      input.value = '';
+      _appendFloatMsg('user', msg.replace(/</g,'&lt;'));
+      var saved = null;
+      try { saved = JSON.parse(localStorage.getItem('verticalai_profile')); } catch(e){}
+      var btn = document.getElementById('floatChatSend');
+      btn.disabled = true; btn.textContent = '…';
+      var typing = _appendFloatMsg('ai', '<em style="opacity:0.5;">Thinking...</em>');
+      try {
+        var res = await fetch('/ninelab/chat', {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({message: msg, profile: saved || {}})
+        });
+        var data = await res.json();
+        typing.innerHTML = data.reply || 'Sorry, try again.';
+      } catch(e) {
+        typing.innerHTML = 'Connection error. Try again.';
+      } finally {
+        btn.disabled = false; btn.textContent = '↑';
+        document.getElementById('floatChatMessages').scrollTop = 9999;
+      }
+    }
+  </script>
+
   </body>
 </html>
