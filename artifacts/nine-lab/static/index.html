@@ -1691,6 +1691,7 @@
     ════════════════════════════════════════════════ -->
     <div id="step0">
       <div class="lp-inner">
+
         <!-- Welcome back banner -->
         <div class="welcome-back-banner" id="welcomeBackBanner">
           <div class="wb-title" id="wbTitle">Welcome back!</div>
@@ -1701,253 +1702,268 @@
           </div>
         </div>
 
-        <!-- SECTION 1: HERO -->
-        <div class="lp-section">
-          <div class="lp-nav">
-            <div class="brand">
-              <div class="brand-icon">9L</div>
-              <span class="brand-name">Nine Lab</span>
+        <!-- NAV -->
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:20px 0 0;">
+          <div style="display:flex;align-items:center;gap:0;">
+            <svg width="105" height="36" viewBox="0 0 105 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <text x="2" y="27" font-family="Arial Black, Arial" font-weight="900" font-size="26" fill="#1a2744">9</text>
+              <text x="22" y="27" font-family="Arial Black, Arial" font-weight="900" font-size="26" fill="#1a6fd4">LAB</text>
+              <circle cx="101" cy="7" r="4.5" fill="#ff6b2b"/>
+            </svg>
+          </div>
+          <div id="authNavArea">
+            <div class="auth-nav-signed-out" id="authNavOut">
+              <button class="auth-nav-btn ghost" onclick="openAuthModal()" style="font-size:12px;color:#64748b;background:none;border:none;cursor:pointer;">Sign in</button>
             </div>
-            <div id="authNavArea">
-              <!-- Signed-out state -->
-              <div class="auth-nav-signed-out" id="authNavOut">
-                <button class="auth-nav-btn ghost" onclick="openAuthModal()">Sign in</button>
-              </div>
-              <!-- Signed-in state (hidden initially) -->
-              <div class="auth-nav-signed-in" id="authNavIn" style="display:none;">
-                <div class="auth-nav-avatar" id="authNavAvatar" onclick="showDashboard()">?</div>
-                <span class="auth-nav-dashboard" onclick="showDashboard()">Dashboard</span>
-                <span class="auth-nav-logout" onclick="handleLogout()" title="Sign out">✕</span>
-              </div>
+            <div class="auth-nav-signed-in" id="authNavIn" style="display:none;">
+              <div class="auth-nav-avatar" id="authNavAvatar" onclick="showDashboard()">?</div>
+              <span class="auth-nav-dashboard" onclick="showDashboard()">Dashboard</span>
+              <span class="auth-nav-logout" onclick="handleLogout()" title="Sign out">✕</span>
             </div>
           </div>
-
-          <!-- Award strip — moved to top for instant trust -->
-          <div class="lp-award-strip" style="justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
-            <div style="display:flex;gap:8px;align-items:flex-start;flex:1;min-width:0;">
-              <span class="lp-award-strip-icon">🏆</span>
-              <span class="lp-award-strip-text"><b>Best Research Paper 2026</b> — Kaveri ThinkFest · IEEE-adjacent · GHRCE Pune</span>
-            </div>
-            <a href="/ninelab/static/research-paper.pdf" target="_blank" style="flex-shrink:0;background:rgba(251,191,36,0.15);border:1px solid rgba(251,191,36,0.4);color:#fbbf24;font-size:11px;font-weight:700;padding:5px 12px;border-radius:20px;text-decoration:none;white-space:nowrap;letter-spacing:0.3px;">Read Paper →</a>
-          </div>
-
-          <!-- Logos / recognition strip -->
-          <div class="lp-logos-strip-section">
-            <div class="lp-logos-label">Recognized at</div>
-            <div class="lp-logos-row">
-              <span class="lp-logo-badge">🏛️ IEEE</span>
-              <span class="lp-logo-badge">🎓 GHRCE Pune</span>
-              <span class="lp-logo-badge">🏆 Kaveri ThinkFest</span>
-            </div>
-          </div>
-
-          <div class="lp-hero-headline" id="heroHeadline"></div>
-          <div class="lp-hero-sub">Nine Lab reads your profile, finds jobs that match you, builds your complete prep kit — then connects you to real listings on LinkedIn and Indeed. All free.</div>
-
-          <button class="lp-cta-btn" onclick="showDiscover()">🧠 Analyze My Placement Readiness →</button>
-          <button class="lp-cta-btn outline" onclick="showStartOptions()">Start My Journey →</button>
-          <div class="lp-trust-line">AI job match · 4 PDFs · Real apply links · No login</div>
-          <div class="lp-kits-counter">🚀 <strong id="kitsCountEl">3,200+</strong> kits generated</div>
-          <div class="lp-sample-link" onclick="showKitPreview('scorecard')">or see a sample kit first →</div>
         </div>
 
-        <!-- SECTION 2: PROBLEM — floating stats, no boxes -->
-        <div class="lp-section reveal-section">
-          <div class="lp-section-label">Why most resumes never get read</div>
-          <div class="lp-stat-grid">
-            <div class="lp-stat-card">
-              <div class="lp-stat-icon-circle" style="background:#fef2f2;">🤖</div>
-              <div class="lp-stat-big" style="color:#ef4444;">75%</div>
-              <div class="lp-stat-small">filtered by ATS<br>before any human</div>
-            </div>
-            <div class="lp-stat-card">
-              <div class="lp-stat-icon-circle" style="background:#fffbeb;">⏱️</div>
-              <div class="lp-stat-big" style="color:#f59e0b;">6 sec</div>
-              <div class="lp-stat-small">a recruiter spends<br>on your resume</div>
-            </div>
-            <div class="lp-stat-card">
-              <div class="lp-stat-icon-circle" style="background:#f0fdf4;">✅</div>
-              <div class="lp-stat-big" style="color:#22c55e;">82%</div>
-              <div class="lp-stat-small">avg ATS score<br>after Nine Lab</div>
-            </div>
-          </div>
-          <div class="lp-link-cta" onclick="showStartOptions()">Fix my resume free →</div>
+        <!-- RESEARCH BADGE -->
+        <div style="margin-top:28px;display:inline-flex;align-items:center;gap:6px;background:#f0efff;border:1px solid #d4d0ff;border-radius:20px;padding:5px 12px;">
+          <div style="width:6px;height:6px;border-radius:50%;background:#6c63ff;animation:lpPulse 1.5s infinite;"></div>
+          <span style="font-size:11px;font-weight:600;color:#5a52d5;letter-spacing:0.3px;">RESEARCH INITIATIVE · NLPC 2026 · GHRCE</span>
         </div>
 
-        <!-- SECTION 3: WHAT YOU GET — clickable kit cards -->
-        <div class="lp-section reveal-section">
-          <div class="lp-section-label">What you download — tap to preview</div>
-          <div class="lp-kit-grid">
-            <div class="lp-kit-card" onclick="showKitPreview('resume')">
-              <div class="lp-kit-icon-wrap" style="background:#f0efff;">📄</div>
-              <div class="lp-kit-name">Job-Ready Resume</div>
-              <div class="lp-kit-sub">ATS keywords injected, format fixed</div>
-              <div class="lp-kit-peek">Tap to preview →</div>
-            </div>
-            <div class="lp-kit-card" onclick="showKitPreview('scorecard')">
-              <div class="lp-kit-icon-wrap" style="background:#f0fdf4;">📊</div>
-              <div class="lp-kit-name">Resume Scorecard</div>
-              <div class="lp-kit-sub">Your match % vs the JD</div>
-              <div class="lp-kit-peek">Tap to preview →</div>
-            </div>
-            <div class="lp-kit-card" onclick="showKitPreview('prep')">
-              <div class="lp-kit-icon-wrap" style="background:#eff6ff;">🗺️</div>
-              <div class="lp-kit-name">Interview Prep Guide</div>
-              <div class="lp-kit-sub">Study plan + likely questions</div>
-              <div class="lp-kit-peek">Tap to preview →</div>
-            </div>
-            <div class="lp-kit-card" onclick="showKitPreview('company')">
-              <div class="lp-kit-icon-wrap" style="background:#fffbeb;">🏢</div>
-              <div class="lp-kit-name">Company Cheat Sheet</div>
-              <div class="lp-kit-sub">Culture, salary, interview tips</div>
-              <div class="lp-kit-peek">Tap to preview →</div>
-            </div>
-          </div>
-          <div class="lp-link-cta" onclick="showStartOptions()">Try it free — no login needed →</div>
+        <!-- HERO -->
+        <div style="margin-top:20px;">
+          <h1 id="lpHeadline" style="font-size:36px;font-weight:800;color:#1a1a2e;line-height:1.15;letter-spacing:-1px;margin:0;min-height:88px;"></h1>
+          <p style="font-size:14px;color:#64748b;line-height:1.6;margin:14px 0 0;max-width:320px;">Tell it what you need — it remembers you, analyzes your readiness, and acts on your behalf. Every session.</p>
         </div>
 
-        <!-- SECTION 4: HOW IT WORKS -->
-        <div class="lp-section reveal-section">
-          <div class="lp-section-label">How it works</div>
-          <div class="lp-steps-v">
-            <div class="lp-step-v">
-              <div class="lp-step-v-icon">📋</div>
-              <div class="lp-step-v-content">
-                <div class="lp-step-v-num">Step 1</div>
-                <div class="lp-step-v-label">Add your profile</div>
-                <div class="lp-step-v-sub">Upload resume PDF, fill manually, or import from LinkedIn</div>
+        <!-- STATS ROW — animated counters -->
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);margin-top:28px;border-top:1px solid #e5e7eb;border-bottom:1px solid #e5e7eb;padding:18px 0;">
+          <div style="text-align:center;border-right:1px solid #e5e7eb;">
+            <div id="stat1" style="font-size:26px;font-weight:800;color:#1a1a2e;">0</div>
+            <div style="font-size:10px;color:#9ca3af;margin-top:3px;line-height:1.4;">engineers<br>graduate yearly</div>
+          </div>
+          <div style="text-align:center;border-right:1px solid #e5e7eb;">
+            <div id="stat2" style="font-size:26px;font-weight:800;color:#ef4444;">0%</div>
+            <div style="font-size:10px;color:#9ca3af;margin-top:3px;line-height:1.4;">not job-ready<br>(NASSCOM 2024)</div>
+          </div>
+          <div style="text-align:center;">
+            <div id="stat3" style="font-size:26px;font-weight:800;color:#6c63ff;">0</div>
+            <div style="font-size:10px;color:#9ca3af;margin-top:3px;line-height:1.4;">tools with<br>persistent AI</div>
+          </div>
+        </div>
+
+        <!-- LIVE AGENT DEMO WIDGET -->
+        <div style="margin-top:24px;background:#1a1a2e;border-radius:14px;padding:16px;overflow:hidden;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+            <div style="font-size:11px;font-weight:700;color:#a5b4fc;letter-spacing:1px;">LIVE AGENT DEMO</div>
+            <div style="display:flex;align-items:center;gap:5px;">
+              <div style="width:6px;height:6px;border-radius:50%;background:#4ade80;animation:lpPulse 1s infinite;"></div>
+              <span style="font-size:10px;color:#4ade80;font-weight:600;">RUNNING</span>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:7px;" id="lpAgentRows">
+            <div class="lp-agent-row" id="lpa1">💼 <span style="color:#e2e8f0;font-size:12px;">Job opportunities agent</span> <span class="lp-agent-status" style="color:#f59e0b;">analyzing...</span></div>
+            <div class="lp-agent-row" id="lpa2">🎓 <span style="color:#e2e8f0;font-size:12px;">Internship matcher agent</span> <span class="lp-agent-status" style="color:#f59e0b;">analyzing...</span></div>
+            <div class="lp-agent-row" id="lpa3">⚡ <span style="color:#e2e8f0;font-size:12px;">Skill gap detector agent</span> <span class="lp-agent-status" style="color:#f59e0b;">analyzing...</span></div>
+            <div class="lp-agent-row" id="lpa4">📊 <span style="color:#e2e8f0;font-size:12px;">Readiness scorer agent</span> <span class="lp-agent-status" style="color:#f59e0b;">analyzing...</span></div>
+          </div>
+          <div id="lpScoreReveal" style="display:none;margin-top:14px;padding:12px;background:rgba(108,99,255,0.2);border-radius:10px;border:1px solid rgba(108,99,255,0.3);">
+            <div style="font-size:10px;color:#a5b4fc;font-weight:600;margin-bottom:4px;">PLACEMENT READINESS SCORE</div>
+            <div style="display:flex;align-items:center;gap:12px;">
+              <div id="lpScoreNum" style="font-size:36px;font-weight:800;color:#fff;">0%</div>
+              <div style="flex:1;">
+                <div style="background:rgba(255,255,255,0.1);border-radius:6px;height:8px;">
+                  <div id="lpScoreBar" style="height:8px;border-radius:6px;background:#6c63ff;width:0%;transition:width 1s ease;"></div>
+                </div>
+                <div style="font-size:11px;color:#94a3b8;margin-top:4px;">Profile saved · AI remembers you</div>
               </div>
             </div>
-            <div class="lp-step-v">
-              <div class="lp-step-v-icon active">🤖</div>
-              <div class="lp-step-v-content">
-                <div class="lp-step-v-num">Step 2 <span class="lp-step-v-badge">New</span></div>
-                <div class="lp-step-v-label">AI finds your best-fit jobs</div>
-                <div class="lp-step-v-sub">Nine Lab analyzes your profile and surfaces 4 matching roles — no searching required</div>
+          </div>
+          <button onclick="showDiscover()" style="width:100%;margin-top:12px;padding:10px;background:#6c63ff;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">Run on your real profile →</button>
+        </div>
+
+        <!-- CAPABILITY CARDS -->
+        <div style="margin-top:20px;">
+          <div style="font-size:10px;font-weight:600;color:#9ca3af;letter-spacing:1px;margin-bottom:12px;">WHAT THE AGENT DOES</div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <div class="lp-cap-card" onclick="showDiscover()">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <div style="width:36px;height:36px;background:#f0efff;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">🧠</div>
+                <div style="flex:1;">
+                  <div style="font-size:12px;font-weight:700;color:#1a1a2e;">Readiness Analysis</div>
+                  <div style="font-size:11px;color:#9ca3af;">4 agents run in parallel · scores your profile</div>
+                </div>
+                <div style="font-size:11px;color:#6c63ff;font-weight:600;">Try →</div>
               </div>
             </div>
-            <div class="lp-step-v">
-              <div class="lp-step-v-icon">🎯</div>
-              <div class="lp-step-v-content">
-                <div class="lp-step-v-num">Step 3</div>
-                <div class="lp-step-v-label">Pick a role, paste the JD</div>
-                <div class="lp-step-v-sub">Select an AI-matched job or paste any JD you already have</div>
+            <div class="lp-cap-card">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <div style="width:36px;height:36px;background:#f0fdf4;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">💾</div>
+                <div style="flex:1;">
+                  <div style="font-size:12px;font-weight:700;color:#1a1a2e;">Persistent Memory</div>
+                  <div style="font-size:11px;color:#9ca3af;">remembers your profile across every session</div>
+                </div>
+                <div id="lpMemTag" style="font-size:10px;color:#22c55e;font-weight:600;background:#f0fdf4;padding:3px 8px;border-radius:10px;">ACTIVE</div>
               </div>
             </div>
-            <div class="lp-step-v">
-              <div class="lp-step-v-icon">📥</div>
-              <div class="lp-step-v-content">
-                <div class="lp-step-v-num">Step 4</div>
-                <div class="lp-step-v-label">Get your complete prep kit</div>
-                <div class="lp-step-v-sub">ATS resume, scorecard, interview guide, and company cheat sheet — in 60 seconds</div>
+            <div class="lp-cap-card" onclick="toggleFloatChat()">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <div style="width:36px;height:36px;background:#fff8f0;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">⚡</div>
+                <div style="flex:1;">
+                  <div style="font-size:12px;font-weight:700;color:#1a1a2e;">Natural Commands</div>
+                  <div style="font-size:11px;color:#9ca3af;">say "find internship" — agent acts</div>
+                </div>
+                <div style="font-size:11px;color:#f97316;font-weight:600;">Ask →</div>
               </div>
             </div>
-            <div class="lp-step-v">
-              <div class="lp-step-v-icon active">🚀</div>
-              <div class="lp-step-v-content">
-                <div class="lp-step-v-num">Step 5 <span class="lp-step-v-badge green">Real listings</span></div>
-                <div class="lp-step-v-label">Apply to real jobs</div>
-                <div class="lp-step-v-sub">One-tap apply to verified listings on LinkedIn, Indeed &amp; Glassdoor — with an application tracker</div>
+            <div class="lp-cap-card" onclick="showStartOptions()">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <div style="width:36px;height:36px;background:#eff6ff;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">📄</div>
+                <div style="flex:1;">
+                  <div style="font-size:12px;font-weight:700;color:#1a1a2e;">Resume Intelligence</div>
+                  <div style="font-size:11px;color:#9ca3af;">ATS scoring, gap detection, skill matching</div>
+                </div>
+                <div style="font-size:11px;color:#3b82f6;font-weight:600;">Build →</div>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- SECTION 4b: AI JOB MATCHING DEMO -->
-        <div class="lp-section reveal-section">
-          <div class="lp-section-label">AI finds jobs that match you — not the other way around</div>
-          <div class="ai-match-demo">
-            <div class="ai-match-demo-header">
-              <span class="ai-match-demo-icon">🤖</span>
-              <span class="ai-match-demo-title">Your AI job matches</span>
-              <span class="ai-match-demo-sub">Based on your profile</span>
-            </div>
-            <div class="ai-match-item">
-              <div class="ai-match-dot"></div>
-              <div class="ai-match-role">Software Developer Trainee</div>
-              <div class="ai-match-pct">94% match</div>
-            </div>
-            <div class="ai-match-item">
-              <div class="ai-match-dot"></div>
-              <div class="ai-match-role">Associate Engineer — TCS</div>
-              <div class="ai-match-pct">89% match</div>
-            </div>
-            <div class="ai-match-item">
-              <div class="ai-match-dot"></div>
-              <div class="ai-match-role">Junior Backend Developer</div>
-              <div class="ai-match-pct">81% match</div>
-            </div>
-            <div class="ai-match-item">
-              <div class="ai-match-dot"></div>
-              <div class="ai-match-role">Python Intern — Infosys</div>
-              <div class="ai-match-pct">78% match</div>
-            </div>
-            <div class="ai-match-note">Pick any match → Nine Lab generates your full kit for that exact role</div>
-          </div>
-          <div class="lp-link-cta" onclick="showStartOptions()">Get my AI job matches →</div>
+        <!-- CTAs -->
+        <div style="margin-top:24px;display:flex;flex-direction:column;gap:10px;">
+          <button onclick="showDiscover()" id="lpMainCta" style="width:100%;padding:15px;background:#1a1a2e;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:-0.2px;transition:transform 0.1s,box-shadow 0.1s;box-shadow:0 4px 14px rgba(26,26,46,0.25);">⚡ Analyze My Placement Readiness</button>
+          <button onclick="showStartOptions()" style="width:100%;padding:15px;background:#fff;color:#1a1a2e;border:1.5px solid #e5e7eb;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;">Build My Resume →</button>
         </div>
 
-        <!-- SECTION 5: BEFORE/AFTER — clean card -->
-        <div class="lp-section reveal-section">
-          <div class="lp-section-label">Real result — MCA student applying to TCS</div>
-          <div class="lp-demo-card">
-            <div class="lp-bar-wrap">
-              <div class="lp-bar-row"><span>Original resume</span><span style="color:#ef4444;font-weight:700;">38%</span></div>
-              <div class="lp-bar-track"><div class="lp-bar-fill bad" id="atsBarBad"></div></div>
-            </div>
-            <div class="lp-demo-arrow">↓ &nbsp;Nine Lab applied 15-step framework</div>
-            <div class="lp-bar-wrap">
-              <div class="lp-bar-row"><span>After Nine Lab</span><span id="atsScoreGood" style="color:#22c55e;font-weight:700;">82%</span></div>
-              <div class="lp-bar-track"><div class="lp-bar-fill good" id="atsBarGood"></div></div>
-            </div>
-            <div class="lp-demo-note">Nine Lab user · Pune, 2024</div>
-          </div>
-          <div class="lp-link-cta" onclick="showStartOptions()">See my score →</div>
-        </div>
-
-        <!-- SECTION 6: TESTIMONIALS -->
-        <div class="lp-section reveal-section">
-          <div class="lp-section-label">Students who got shortlisted</div>
-          <div class="lp-testimonials">
-            <div class="t-card">
-              <div class="t-avatar" style="background:linear-gradient(135deg,#6c63ff,#a78bfa);">🎓</div>
-              <div>
-                <div class="t-stars">★★★★★</div>
-                <div class="t-quote">"My resume was getting rejected everywhere. Nine Lab rewrote it — TCS called within a week. ATS went from 31% to 79%."</div>
-                <div class="t-name">MCA Student, Pune</div>
-                <div class="t-college">Placed at TCS · 2024</div>
-              </div>
-            </div>
-            <div class="t-card">
-              <div class="t-avatar" style="background:linear-gradient(135deg,#0ea5e9,#38bdf8);">💼</div>
-              <div>
-                <div class="t-stars">★★★★★</div>
-                <div class="t-quote">"The Company Cheat Sheet was insane — I knew exactly what Infosys tests in each round before I walked in."</div>
-                <div class="t-name">B.Tech CSE Student, Pune</div>
-                <div class="t-college">Placed at Infosys · 2024</div>
-              </div>
-            </div>
-            <div class="t-card">
-              <div class="t-avatar" style="background:linear-gradient(135deg,#10b981,#34d399);">🚀</div>
-              <div>
-                <div class="t-stars">★★★★★</div>
-                <div class="t-quote">"Never knew my resume was being rejected by bots before a human even saw it. Nine Lab fixed that in 60 seconds."</div>
-                <div class="t-name">MCA Student, Nagpur</div>
-                <div class="t-college">Placed at Wipro · 2024</div>
-              </div>
-            </div>
+        <!-- RECOGNITION -->
+        <div style="margin-top:24px;padding:14px;background:#f9fafb;border-radius:12px;border:1px solid #e5e7eb;">
+          <div style="font-size:10px;font-weight:600;color:#9ca3af;letter-spacing:1px;margin-bottom:10px;">RECOGNITION</div>
+          <div style="display:flex;flex-direction:column;gap:6px;">
+            <div style="display:flex;align-items:center;gap:8px;"><span style="font-size:13px;">🏆</span><span style="font-size:12px;color:#1a1a2e;font-weight:500;">Best Research Paper — Kaveri ThinkFest 2026</span></div>
+            <div style="display:flex;align-items:center;gap:8px;"><span style="font-size:13px;">🏛️</span><span style="font-size:12px;color:#1a1a2e;font-weight:500;">IEEE-adjacent · GHRCE Pune</span></div>
+            <div style="display:flex;align-items:center;gap:8px;"><span style="font-size:13px;">📑</span><span style="font-size:12px;color:#1a1a2e;font-weight:500;">Based on Bloom's Two Sigma Problem (1984)</span></div>
           </div>
         </div>
 
-        <!-- SECTION 7: FINAL CTA -->
-        <div class="lp-final-cta">
-          <div class="lp-final-title">Your AI placement journey starts here.</div>
-          <div class="lp-final-sub">Profile → AI job match → prep kit → real apply. Free, no login.</div>
-          <button class="lp-cta-btn" onclick="showStartOptions()">📄 &nbsp;Upload My Resume</button>
-          <button class="lp-cta-btn outline" onclick="showStartOptions()">✏️ &nbsp;Start in 2 mins</button>
-        </div>
+        <div style="margin-top:20px;padding-bottom:40px;text-align:center;font-size:11px;color:#c4c4c4;letter-spacing:0.5px;">VERTICAL AI · PLACEMENT INTELLIGENCE · 2026</div>
 
-        <div class="lp-footer">Nine Lab · Built for Indian students · ninelab.in</div>
+        <style>
+          @keyframes lpPulse{0%,100%{opacity:1}50%{opacity:0.3}}
+          .lp-agent-row{display:flex;align-items:center;gap:6px;font-size:12px;padding:4px 0;}
+          .lp-agent-status{margin-left:auto;font-size:10px;font-weight:600;}
+          .lp-cap-card{padding:12px 14px;background:#f9fafb;border-radius:12px;border:1px solid #f0f0f0;cursor:pointer;transition:all 0.15s;}
+          .lp-cap-card:hover{background:#f0efff;border-color:#d4d0ff;transform:translateX(3px);}
+          #lpMainCta:active{transform:scale(0.98);}
+          #lpMainCta:hover{box-shadow:0 6px 20px rgba(26,26,46,0.35);}
+        </style>
+        <script>
+          // Typing headline
+          (function(){
+            var lines = ['AI Agent for', 'Placement Prep.'];
+            var el = document.getElementById('lpHeadline');
+            if(!el) return;
+            var full = lines[0] + '\n' + lines[1];
+            var i = 0;
+            function type(){
+              if(i <= full.length){
+                el.innerHTML = full.slice(0,i).replace('\n','<br>') + '<span style="border-right:2px solid #6c63ff;animation:lpPulse 0.8s infinite;">&nbsp;</span>';
+                i++;
+                setTimeout(type, i < lines[0].length ? 60 : 40);
+              } else {
+                el.innerHTML = lines[0] + '<br>' + lines[1];
+              }
+            }
+            setTimeout(type, 400);
+          })();
+
+          // Animated counters
+          (function(){
+            function animCount(id, target, suffix, duration){
+              var el = document.getElementById(id);
+              if(!el) return;
+              var start = 0, step = target / (duration / 16);
+              var t = setInterval(function(){
+                start = Math.min(start + step, target);
+                el.textContent = Math.round(start) + suffix;
+                if(start >= target) clearInterval(t);
+              }, 16);
+            }
+            setTimeout(function(){
+              animCount('stat1','15','L+', 1200);
+              animCount('stat2','70','%', 1000);
+              animCount('stat3','0','', 200);
+            }, 800);
+          })();
+
+          // Agent demo loop
+          (function(){
+            var agents = ['lpa1','lpa2','lpa3','lpa4'];
+            var done = 0;
+            function finishAgent(id, delay){
+              setTimeout(function(){
+                var el = document.getElementById(id);
+                if(!el) return;
+                var s = el.querySelector('.lp-agent-status');
+                if(s){ s.style.color='#4ade80'; s.textContent='✓ done'; }
+                done++;
+                if(done === 4){
+                  setTimeout(function(){
+                    var rev = document.getElementById('lpScoreReveal');
+                    if(rev) rev.style.display='block';
+                    var score = 67;
+                    var num = document.getElementById('lpScoreNum');
+                    var bar = document.getElementById('lpScoreBar');
+                    var n = 0;
+                    var t = setInterval(function(){
+                      n = Math.min(n+2, score);
+                      if(num) num.textContent = n+'%';
+                      if(bar) bar.style.width = n+'%';
+                      if(n>=score) clearInterval(t);
+                    }, 30);
+                  }, 400);
+                }
+              }, delay);
+            }
+            setTimeout(function(){
+              finishAgent('lpa1', 800);
+              finishAgent('lpa2', 1400);
+              finishAgent('lpa3', 1900);
+              finishAgent('lpa4', 2400);
+            }, 1200);
+
+            // Check persistent memory
+            var saved = null;
+            try{ saved = JSON.parse(localStorage.getItem('verticalai_profile')); }catch(e){}
+            var memTag = document.getElementById('lpMemTag');
+            if(memTag){
+              if(saved && saved.readiness){
+                memTag.textContent = saved.readiness+'% saved';
+                memTag.style.background='#f0efff';
+                memTag.style.color='#6c63ff';
+              } else {
+                memTag.textContent = 'No profile yet';
+                memTag.style.color='#9ca3af';
+                memTag.style.background='#f0f0f0';
+              }
+            }
+
+            // Restart demo loop every 8s
+            setInterval(function(){
+              done = 0;
+              agents.forEach(function(id){
+                var el = document.getElementById(id);
+                if(!el) return;
+                var s = el.querySelector('.lp-agent-status');
+                if(s){ s.style.color='#f59e0b'; s.textContent='analyzing...'; }
+              });
+              var rev = document.getElementById('lpScoreReveal');
+              if(rev) rev.style.display='none';
+              finishAgent('lpa1', 800);
+              finishAgent('lpa2', 1400);
+              finishAgent('lpa3', 1900);
+              finishAgent('lpa4', 2400);
+            }, 8000);
+          })();
+        </script>
 
         <!-- Hidden file input for JS compatibility -->
         <input type="file" id="pdfUploadInput" accept=".pdf" style="display:none" onchange="handlePdfUpload(this.files[0])" />
@@ -2548,9 +2564,32 @@
        LOCAL STORAGE — Profile persistence
     ───────────────────────────────────────────────────────────────────────── */
     const PROFILE_KEY = 'nl_profile';
+    var NL_TOKEN_KEY = NL_TOKEN_KEY || 'nl_auth_token';
+
+    function _getAuthToken() {
+      return localStorage.getItem(NL_TOKEN_KEY) || '';
+    }
 
     function saveProfile(data) {
+      // Always save to localStorage (instant, offline-safe)
       localStorage.setItem(PROFILE_KEY, JSON.stringify(data));
+      // Also sync to Supabase if logged in (fire-and-forget)
+      const token = _getAuthToken();
+      if (token) {
+        fetch(BASE + '/profile/save', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+          body: JSON.stringify({
+            skills: data.skills || '',
+            year: data.gradYear || data.year || '',
+            degree: data.degree || 'B.Tech',
+            title: data.roles || data.title || '',
+            readiness: data.readiness || 0,
+            gaps: data.gaps || [],
+            resume_text: data.resumeText || '',
+          })
+        }).catch(() => {});
+      }
     }
 
     function loadProfile() {
@@ -2558,6 +2597,34 @@
         const raw = localStorage.getItem(PROFILE_KEY);
         return raw ? JSON.parse(raw) : null;
       } catch(e) { return null; }
+    }
+
+    async function loadProfileFromServer() {
+      const token = _getAuthToken();
+      if (!token) return null;
+      try {
+        const r = await fetch(BASE + '/profile/load', {
+          headers: { 'Authorization': 'Bearer ' + token }
+        });
+        if (!r.ok) return null;
+        const data = await r.json();
+        if (data && Object.keys(data).length > 0) {
+          // Merge server data into localStorage
+          const local = loadProfile() || {};
+          const merged = Object.assign({}, local, {
+            skills: data.skills || local.skills,
+            gradYear: data.year || local.gradYear,
+            degree: data.degree || local.degree,
+            roles: data.title || local.roles,
+            readiness: data.readiness || local.readiness,
+            gaps: data.gaps || local.gaps,
+            resumeText: data.resume_text || local.resumeText,
+          });
+          localStorage.setItem(PROFILE_KEY, JSON.stringify(merged));
+          return merged;
+        }
+      } catch(e) {}
+      return null;
     }
 
     function clearProfile() {
@@ -4883,13 +4950,19 @@
       }
     }
 
-    function onLoginSuccess(data) {
+    async function onLoginSuccess(data) {
       _saveSession(data.access_token, data.refresh_token, data.user || {});
       updateAuthNav();
       closeAuthModal();
       showToast('✓ Signed in as ' + (data.user.email || ''));
-      // Sync local profile to server (if any)
-      syncProfileToServer();
+      // Pull profile from Supabase first (restores cloud data on new device)
+      var serverProfile = await loadProfileFromServer();
+      if (serverProfile && serverProfile.readiness) {
+        showToast('Profile restored — readiness: ' + serverProfile.readiness + '%');
+      } else {
+        // Push local profile to server if nothing on server
+        syncProfileToServer();
+      }
       // Go to dashboard
       setTimeout(showDashboard, 300);
     }
@@ -4952,6 +5025,65 @@
     function hideDiscover() {
       document.getElementById('stepDiscover').style.display = 'none';
       goToStep(0);
+    }
+
+    function openDiscChat() {
+      var chatDiv = document.getElementById('discChat');
+      chatDiv.style.display = 'block';
+      var msgs = document.getElementById('discChatMessages');
+      if (msgs.children.length === 0) {
+        var saved = null;
+        try { saved = JSON.parse(localStorage.getItem('verticalai_profile')); } catch(e){}
+        var intro = saved
+          ? '👋 Hi! I know your profile — <strong>' + (saved.degree||'B.Tech') + '</strong>, ' + (saved.year||'') + ', targeting <strong>' + (saved.title||'Software Developer') + '</strong>.<br>Your readiness is <strong>' + saved.readiness + '%</strong>. Key gaps: <strong>' + (saved.gaps||[]).join(', ') + '</strong>.<br><br>What do you want to work on today?'
+          : '👋 Hi! Run your placement analysis first, then I can give you personalized guidance based on your profile!';
+        _appendDiscMsg('ai', intro);
+      }
+      chatDiv.scrollIntoView({behavior:'smooth', block:'nearest'});
+      document.getElementById('discChatInput').focus();
+    }
+
+    function _appendDiscMsg(role, text) {
+      var msgs = document.getElementById('discChatMessages');
+      var div = document.createElement('div');
+      if (role === 'ai') {
+        div.style.cssText = 'background:#f0efff;border-radius:12px 12px 12px 4px;padding:10px 14px;font-size:13px;color:#1a1a2e;line-height:1.5;max-width:92%;';
+      } else {
+        div.style.cssText = 'background:var(--purple);border-radius:12px 12px 4px 12px;padding:10px 14px;font-size:13px;color:#fff;line-height:1.5;max-width:82%;align-self:flex-end;margin-left:auto;';
+      }
+      div.innerHTML = text;
+      msgs.appendChild(div);
+      msgs.scrollTop = msgs.scrollHeight;
+      return div;
+    }
+
+    async function sendDiscChat() {
+      var input = document.getElementById('discChatInput');
+      var msg = input.value.trim();
+      if (!msg) return;
+      input.value = '';
+      _appendDiscMsg('user', msg.replace(/</g,'&lt;'));
+      var saved = null;
+      try { saved = JSON.parse(localStorage.getItem('verticalai_profile')); } catch(e){}
+      var sendBtn = document.getElementById('discChatSend');
+      sendBtn.disabled = true;
+      sendBtn.textContent = '...';
+      var typing = _appendDiscMsg('ai', '<em style="opacity:0.5;">Thinking...</em>');
+      try {
+        var res = await fetch('/ninelab/chat', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({message: msg, profile: saved || {}})
+        });
+        var data = await res.json();
+        typing.innerHTML = data.reply || 'Sorry, could not get a response.';
+      } catch(e) {
+        typing.innerHTML = 'Connection error. Please try again.';
+      } finally {
+        sendBtn.disabled = false;
+        sendBtn.textContent = 'Send';
+        document.getElementById('discChatMessages').scrollTop = 9999;
+      }
     }
 
     function switchDiscTab(tab) {
@@ -5070,11 +5202,11 @@
           document.getElementById('discReadinessPct').textContent = avgMatch + '%';
           document.getElementById('discReadinessBar').style.width = avgMatch + '%';
           document.getElementById('discNextAction').textContent = nextAction;
-          // Save profile to localStorage
+          // Save profile to localStorage + Supabase
           try {
             var now = new Date();
             var dateStr = now.toLocaleDateString('en-IN', {day:'numeric',month:'short',year:'numeric'}) + ' ' + now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
-            localStorage.setItem('verticalai_profile', JSON.stringify({
+            var discProfileData = {
               skills: document.getElementById('discSkills').value,
               year:   document.getElementById('discYear').value,
               degree: document.getElementById('discDegree').value,
@@ -5082,7 +5214,24 @@
               readiness: avgMatch,
               gaps: topGaps,
               date: dateStr
-            }));
+            };
+            localStorage.setItem('verticalai_profile', JSON.stringify(discProfileData));
+            // Sync to Supabase if logged in
+            var _tok = _getAuthToken();
+            if (_tok) {
+              fetch(BASE + '/profile/save', {
+                method: 'POST',
+                headers: {'Content-Type':'application/json','Authorization':'Bearer '+_tok},
+                body: JSON.stringify({
+                  skills: discProfileData.skills,
+                  year: discProfileData.year,
+                  degree: discProfileData.degree,
+                  title: discProfileData.title,
+                  readiness: discProfileData.readiness,
+                  gaps: discProfileData.gaps,
+                })
+              }).catch(function(){});
+            }
           } catch(e){}
           var gapsList = document.getElementById('discGapsList');
           if (topGaps.length) {
@@ -5633,6 +5782,26 @@
           <div id="discNextAction" style="font-size:13px;font-weight:500;line-height:1.5;">Analyzing your profile...</div>
         </div>
         <div style="margin-top:10px;font-size:10px;opacity:0.6;text-align:right;">Profile saved · Updates after every session</div>
+        <button onclick="openDiscChat()" style="width:100%;margin-top:14px;padding:11px;background:rgba(255,255,255,0.18);color:#fff;border:1.5px solid rgba(255,255,255,0.35);border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;">🤖 Ask AI Placement Advisor →</button>
+      </div>
+
+      <!-- AI Placement Chat -->
+      <div id="discChat" style="display:none;background:#fff;border-radius:16px;border:1px solid var(--border);margin-bottom:14px;overflow:hidden;">
+        <div style="background:linear-gradient(135deg,#6c63ff,#5a52d5);padding:12px 16px;display:flex;align-items:center;gap:10px;">
+          <div style="width:32px;height:32px;background:rgba(255,255,255,0.2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;">🤖</div>
+          <div>
+            <div style="color:#fff;font-size:13px;font-weight:700;">AI Placement Advisor</div>
+            <div style="color:rgba(255,255,255,0.7);font-size:11px;">Knows your full profile · Personalized guidance</div>
+          </div>
+        </div>
+        <div id="discChatMessages" style="padding:14px;display:flex;flex-direction:column;gap:10px;max-height:280px;overflow-y:auto;"></div>
+        <div style="padding:10px 14px 14px;display:flex;gap:8px;">
+          <input id="discChatInput" type="text" placeholder="Ask anything about your placement..."
+            style="flex:1;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;font-family:inherit;outline:none;"
+            onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border)'"
+            onkeypress="if(event.key==='Enter') sendDiscChat()"/>
+          <button onclick="sendDiscChat()" id="discChatSend" style="padding:10px 16px;background:var(--purple);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;">Send</button>
+        </div>
       </div>
 
       <!-- Results tabs + cards -->
@@ -5662,6 +5831,182 @@
 
   <!-- Toast notification -->
   <div class="nl-toast" id="nlToast"></div>
+
+  <!-- ── Floating AI Partner ───────────────────────────────────────────── -->
+  <!-- Chat panel -->
+  <div id="floatChatPanel" style="display:none;position:fixed;bottom:80px;right:16px;width:320px;max-width:calc(100vw - 32px);background:#fff;border-radius:20px;box-shadow:0 8px 40px rgba(108,99,255,0.22),0 2px 12px rgba(0,0,0,0.10);z-index:9999;overflow:hidden;flex-direction:column;">
+    <!-- Header -->
+    <div style="background:linear-gradient(135deg,#6c63ff,#5a52d5);padding:13px 16px;display:flex;align-items:center;justify-content:space-between;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="width:30px;height:30px;background:rgba(255,255,255,0.2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;">🤖</div>
+        <div>
+          <div style="color:#fff;font-size:13px;font-weight:700;">AI Partner</div>
+          <div style="color:rgba(255,255,255,0.7);font-size:10px;" id="floatChatStatus">Knows your profile</div>
+        </div>
+      </div>
+      <button onclick="toggleFloatChat()" style="background:rgba(255,255,255,0.15);border:none;color:#fff;font-size:16px;width:28px;height:28px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;">✕</button>
+    </div>
+    <!-- Messages -->
+    <div id="floatChatMessages" style="padding:12px;display:flex;flex-direction:column;gap:8px;height:260px;overflow-y:auto;background:#fafafa;"></div>
+    <!-- Input -->
+    <div style="padding:10px 12px 12px;display:flex;gap:8px;background:#fff;border-top:1px solid #f0f0f0;">
+      <input id="floatChatInput" type="text" placeholder="Ask anything..."
+        style="flex:1;padding:9px 12px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;font-family:inherit;outline:none;"
+        onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border)'"
+        onkeypress="if(event.key==='Enter') sendFloatChat()"/>
+      <button onclick="sendFloatChat()" id="floatChatSend" style="padding:9px 14px;background:var(--purple);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;">↑</button>
+    </div>
+  </div>
+  <!-- FAB button -->
+  <button onclick="toggleFloatChat()" id="floatChatFab" title="Ask AI Partner"
+    style="position:fixed;bottom:18px;right:16px;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#6c63ff,#5a52d5);color:#fff;font-size:22px;border:none;cursor:pointer;box-shadow:0 4px 20px rgba(108,99,255,0.45);z-index:9999;display:flex;align-items:center;justify-content:center;transition:transform 0.15s;">🤖</button>
+
+  <script>
+    var _floatOpen = false;
+    var _floatInited = false;
+
+    function toggleFloatChat() {
+      _floatOpen = !_floatOpen;
+      var panel = document.getElementById('floatChatPanel');
+      panel.style.display = _floatOpen ? 'flex' : 'none';
+      if (_floatOpen) {
+        panel.style.flexDirection = 'column';
+        if (!_floatInited) {
+          _floatInited = true;
+          var saved = null;
+          try { saved = JSON.parse(localStorage.getItem('verticalai_profile')); } catch(e){}
+          if (saved && saved.readiness) {
+            document.getElementById('floatChatStatus').textContent = 'Readiness: ' + saved.readiness + '%';
+            _appendFloatMsg('ai', '👋 Hi! I know your profile — targeting <strong>' + (saved.title||'Software Developer') + '</strong>, readiness <strong>' + saved.readiness + '%</strong>, gaps: <strong>' + (saved.gaps||[]).join(', ') + '</strong>.<br>What do you want to work on?');
+          } else {
+            _appendFloatMsg('ai', '👋 Hi! I\'m your AI Partner. Run your <strong>Placement Analysis</strong> first — then I\'ll know your profile and give personalized guidance!');
+          }
+        }
+        setTimeout(function(){ document.getElementById('floatChatInput').focus(); }, 100);
+      }
+    }
+
+    function _appendFloatMsg(role, text) {
+      var msgs = document.getElementById('floatChatMessages');
+      var div = document.createElement('div');
+      if (role === 'ai') {
+        div.style.cssText = 'background:#f0efff;border-radius:12px 12px 12px 3px;padding:9px 12px;font-size:12.5px;color:#1a1a2e;line-height:1.5;max-width:90%;';
+      } else {
+        div.style.cssText = 'background:var(--purple);border-radius:12px 12px 3px 12px;padding:9px 12px;font-size:12.5px;color:#fff;line-height:1.5;max-width:82%;align-self:flex-end;margin-left:auto;';
+      }
+      div.innerHTML = text;
+      msgs.appendChild(div);
+      msgs.scrollTop = msgs.scrollHeight;
+      return div;
+    }
+
+    // ── Intent detection → direct app actions ──────────────────────────────
+    function _detectIntent(msg) {
+      var m = msg.toLowerCase();
+      if (/resume|cv|build.*resume|resume.*bana|banana.*resume/.test(m))
+        return 'resume';
+      if (/internship|intern|training/.test(m))
+        return 'internship';
+      if (/freelanc|gig|project.*find/.test(m))
+        return 'freelance';
+      if (/scholarship|fellowship/.test(m))
+        return 'scholarship';
+      if (/job|placement|opportunit|naukri|work/.test(m))
+        return 'jobs';
+      if (/readiness|analyz|analysis|check.*ready|kitna.*ready|ready.*kitna|score/.test(m))
+        return 'analysis';
+      if (/track|applied|application|dashboard/.test(m))
+        return 'tracker';
+      if (/ats|ats.*score|resume.*score/.test(m))
+        return 'ats';
+      return null;
+    }
+
+    function _executeIntent(intent) {
+      var saved = null;
+      try { saved = JSON.parse(localStorage.getItem('verticalai_profile')); } catch(e){}
+      toggleFloatChat(); // close chat panel
+      switch(intent) {
+        case 'resume':
+          setTimeout(function(){ goToStep1(); }, 200);
+          return '✅ Resume builder kholna de raha hoon — abhi app mein open ho raha hai!';
+        case 'internship':
+          setTimeout(function(){
+            showDiscover();
+            if (saved) setTimeout(function(){ runDiscover(); switchDiscTab('internships'); }, 400);
+            else setTimeout(function(){ switchDiscTab('internships'); }, 300);
+          }, 200);
+          return '✅ Internship finder open kar raha hoon' + (saved ? ' — profile se auto-analyze bhi kar raha hoon!' : '!');
+        case 'jobs':
+          setTimeout(function(){
+            showDiscover();
+            if (saved) setTimeout(function(){ runDiscover(); }, 400);
+          }, 200);
+          return '✅ Job opportunities dhundh raha hoon tere liye!';
+        case 'freelance':
+          setTimeout(function(){
+            showDiscover();
+            if (saved) setTimeout(function(){ runDiscover(); switchDiscTab('freelancing'); }, 400);
+            else setTimeout(function(){ switchDiscTab('freelancing'); }, 300);
+          }, 200);
+          return '✅ Freelance projects section open kar raha hoon!';
+        case 'scholarship':
+          setTimeout(function(){
+            showDiscover();
+            if (saved) setTimeout(function(){ runDiscover(); switchDiscTab('scholarships'); }, 400);
+            else setTimeout(function(){ switchDiscTab('scholarships'); }, 300);
+          }, 200);
+          return '✅ Scholarship finder open kar raha hoon!';
+        case 'analysis':
+          setTimeout(function(){
+            showDiscover();
+            if (saved) setTimeout(function(){ runDiscover(); }, 400);
+          }, 200);
+          return '✅ Placement readiness analysis shuru kar raha hoon!';
+        case 'tracker':
+          setTimeout(function(){ showDashboard(); }, 200);
+          return '✅ Application tracker open kar raha hoon!';
+        case 'ats':
+          setTimeout(function(){ goToStep1(); }, 200);
+          return '✅ Resume ATS scorer ke liye resume builder open kar raha hoon!';
+      }
+    }
+
+    async function sendFloatChat() {
+      var input = document.getElementById('floatChatInput');
+      var msg = input.value.trim();
+      if (!msg) return;
+      input.value = '';
+      _appendFloatMsg('user', msg.replace(/</g,'&lt;'));
+
+      // Check for direct action intent first
+      var intent = _detectIntent(msg);
+      if (intent) {
+        var actionMsg = _executeIntent(intent);
+        _appendFloatMsg('ai', actionMsg);
+        return;
+      }
+
+      var saved = null;
+      try { saved = JSON.parse(localStorage.getItem('verticalai_profile')); } catch(e){}
+      var btn = document.getElementById('floatChatSend');
+      btn.disabled = true; btn.textContent = '…';
+      var typing = _appendFloatMsg('ai', '<em style="opacity:0.5;">Thinking...</em>');
+      try {
+        var res = await fetch('/ninelab/chat', {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({message: msg, profile: saved || {}})
+        });
+        var data = await res.json();
+        typing.innerHTML = data.reply || 'Sorry, try again.';
+      } catch(e) {
+        typing.innerHTML = 'Connection error. Try again.';
+      } finally {
+        btn.disabled = false; btn.textContent = '↑';
+        document.getElementById('floatChatMessages').scrollTop = 9999;
+      }
+    }
+  </script>
 
   </body>
 </html>
