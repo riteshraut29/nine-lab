@@ -2549,8 +2549,27 @@
     ───────────────────────────────────────────────────────────────────────── */
     const PROFILE_KEY = 'nl_profile';
 
+    function _getAuthToken() {
+      return localStorage.getItem('nl_auth_token') || '';
+    }
+
     function saveProfile(data) {
       localStorage.setItem(PROFILE_KEY, JSON.stringify(data));
+      var token = _getAuthToken();
+      if (token) {
+        fetch(BASE + '/profile/save', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+          body: JSON.stringify({
+            skills: data.skills || '',
+            year: data.gradYear || data.year || '',
+            degree: data.degree || 'B.Tech',
+            title: data.roles || data.title || '',
+            readiness: data.readiness || 0,
+            gaps: data.gaps || [],
+          })
+        }).catch(function(){});
+      }
     }
 
     function loadProfile() {
@@ -2558,6 +2577,30 @@
         const raw = localStorage.getItem(PROFILE_KEY);
         return raw ? JSON.parse(raw) : null;
       } catch(e) { return null; }
+    }
+
+    async function loadProfileFromServer() {
+      var token = _getAuthToken();
+      if (!token) return null;
+      try {
+        var r = await fetch(BASE + '/profile/load', { headers: { 'Authorization': 'Bearer ' + token } });
+        if (!r.ok) return null;
+        var data = await r.json();
+        if (data && Object.keys(data).length > 0) {
+          var local = loadProfile() || {};
+          var merged = Object.assign({}, local, {
+            skills: data.skills || local.skills,
+            gradYear: data.year || local.gradYear,
+            degree: data.degree || local.degree,
+            roles: data.title || local.roles,
+            readiness: data.readiness || local.readiness,
+            gaps: data.gaps || local.gaps,
+          });
+          localStorage.setItem(PROFILE_KEY, JSON.stringify(merged));
+          return merged;
+        }
+      } catch(e) {}
+      return null;
     }
 
     function clearProfile() {
@@ -4883,14 +4926,17 @@
       }
     }
 
-    function onLoginSuccess(data) {
+    async function onLoginSuccess(data) {
       _saveSession(data.access_token, data.refresh_token, data.user || {});
       updateAuthNav();
       closeAuthModal();
       showToast('✓ Signed in as ' + (data.user.email || ''));
-      // Sync local profile to server (if any)
-      syncProfileToServer();
-      // Go to dashboard
+      var serverProfile = await loadProfileFromServer();
+      if (serverProfile && serverProfile.readiness) {
+        showToast('Profile restored — readiness: ' + serverProfile.readiness + '%');
+      } else {
+        syncProfileToServer();
+      }
       setTimeout(showDashboard, 300);
     }
 

@@ -23,9 +23,12 @@ PORT = int(os.getenv("PORT", "22451"))
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
 TAVILY_API_KEY = os.getenv("TAVILY_API_KEY", "")
-SUPABASE_URL = os.getenv("SUPABASE_URL", "")
-SUPABASE_KEY = os.getenv("SUPABASE_KEY", "")
-SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SERVICE_KEY", "")
+def _clean_env(val: str) -> str:
+    return ''.join(c for c in (val or '').strip() if 32 <= ord(c) <= 126)
+
+SUPABASE_URL = _clean_env(os.getenv("SUPABASE_URL", ""))
+SUPABASE_KEY = _clean_env(os.getenv("SUPABASE_KEY", ""))
+SUPABASE_SERVICE_KEY = _clean_env(os.getenv("SUPABASE_SERVICE_KEY", ""))
 JSEARCH_API_KEY = os.getenv("JSEARCH_API_KEY", "d478886deemshee1d5a113b51de6p1d199ajsnee586dc31325")
 ADZUNA_APP_ID   = os.getenv("ADZUNA_APP_ID", "")
 ADZUNA_APP_KEY  = os.getenv("ADZUNA_APP_KEY", "")
@@ -1731,6 +1734,78 @@ async def auth_refresh(request: Request):
             },
         })
     raise HTTPException(401, detail="Session expired. Please log in again.")
+
+
+def _supabase_rest(method: str, table: str, payload: dict = None, token: str = None, params: dict = None) -> dict:
+    import httpx
+    key = token or SUPABASE_SERVICE_KEY or SUPABASE_KEY
+    headers = {
+        "apikey": SUPABASE_KEY,
+        "Authorization": f"Bearer {key}",
+        "Content-Type": "application/json",
+        "Prefer": "return=representation",
+    }
+    url = f"{SUPABASE_URL}/rest/v1/{table}"
+    try:
+        if method == "GET":
+            r = httpx.get(url, headers=headers, params=params, timeout=10)
+        elif method == "UPSERT":
+            headers["Prefer"] = "return=representation,resolution=merge-duplicates"
+            r = httpx.post(url, headers=headers, json=payload, timeout=10)
+        else:
+            return {"status": 400, "data": {}}
+        return {"status": r.status_code, "data": r.json() if r.text else {}}
+    except Exception as e:
+        return {"status": 500, "data": {"error": str(e)}}
+
+
+class ProfileSaveRequest(BaseModel):
+    skills: Optional[str] = ""
+    year: Optional[str] = ""
+    degree: Optional[str] = "B.Tech"
+    title: Optional[str] = ""
+    readiness: Optional[int] = 0
+    gaps: Optional[list] = []
+    resume_text: Optional[str] = ""
+
+@app.post("/ninelab/profile/save")
+async def profile_save(req: ProfileSaveRequest, authorization: Optional[str] = Header(None)):
+    token = (authorization or "").replace("Bearer ", "").strip()
+    user = get_user_from_token(token)
+    if not user:
+        raise HTTPException(401, detail="Not authenticated.")
+    payload = {
+        "user_id": user["id"],
+        "skills": req.skills or "",
+        "year": req.year or "",
+        "degree": req.degree or "B.Tech",
+        "title": req.title or "",
+        "readiness": req.readiness or 0,
+        "gaps": req.gaps or [],
+        "resume_text": (req.resume_text or "")[:5000],
+        "updated_at": datetime.utcnow().isoformat(),
+    }
+    result = _supabase_rest("UPSERT", "profiles", payload=payload, token=SUPABASE_SERVICE_KEY)
+    if result["status"] in (200, 201):
+        return JSONResponse({"ok": True})
+    raise HTTPException(500, detail="Failed to save profile.")
+
+
+@app.get("/ninelab/profile/load")
+async def profile_load(authorization: Optional[str] = Header(None)):
+    token = (authorization or "").replace("Bearer ", "").strip()
+    user = get_user_from_token(token)
+    if not user:
+        raise HTTPException(401, detail="Not authenticated.")
+    result = _supabase_rest(
+        "GET", "profiles",
+        params={"user_id": f"eq.{user['id']}", "select": "skills,year,degree,title,readiness,gaps,resume_text,updated_at"},
+        token=SUPABASE_SERVICE_KEY,
+    )
+    if result["status"] == 200:
+        rows = result["data"] if isinstance(result["data"], list) else []
+        return JSONResponse(rows[0] if rows else {})
+    raise HTTPException(500, detail="Failed to load profile.")
 
 
 class LinkedInImportRequest(BaseModel):
