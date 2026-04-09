@@ -3876,6 +3876,47 @@ async def get_dashboard_v2(authorization: Optional[str] = Header(None)):
     })
 
 
+# ── Resume File Extraction ────────────────────────────────────────────────────
+
+@app.post("/ninelab/resume-extract")
+async def resume_extract(file: UploadFile = File(...)):
+    filename = (file.filename or "").lower()
+    content = await file.read()
+    text = ""
+
+    if filename.endswith(".pdf"):
+        try:
+            import io
+            from pypdf import PdfReader
+            reader = PdfReader(io.BytesIO(content))
+            for page in reader.pages:
+                text += (page.extract_text() or "") + "\n"
+        except Exception as e:
+            raise HTTPException(400, detail=f"Could not read PDF: {str(e)}")
+
+    elif filename.endswith(".docx"):
+        try:
+            import io, zipfile, re
+            with zipfile.ZipFile(io.BytesIO(content)) as z:
+                with z.open("word/document.xml") as f:
+                    xml = f.read().decode("utf-8")
+                    text = re.sub(r"<[^>]+>", " ", xml)
+                    text = re.sub(r"\s+", " ", text).strip()
+        except Exception as e:
+            raise HTTPException(400, detail=f"Could not read DOCX: {str(e)}")
+
+    elif filename.endswith(".txt"):
+        text = content.decode("utf-8", errors="ignore")
+
+    else:
+        raise HTTPException(400, detail="Only PDF, DOCX, or TXT files are supported.")
+
+    text = text.strip()
+    if not text:
+        raise HTTPException(400, detail="Could not extract text from this file. Try pasting manually.")
+    return JSONResponse({"text": text[:5000]})
+
+
 # ── 15-Step ATS Framework Endpoints ──────────────────────────────────────────
 
 class ATSFrameworkRequest(BaseModel):

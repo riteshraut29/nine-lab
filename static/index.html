@@ -134,12 +134,34 @@
   }
   @media (max-width: 600px) { .input-grid { grid-template-columns: 1fr; } }
 
+  .input-box-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
   .input-box label {
-    display: block;
     font-size: 12px;
     font-weight: 600;
     color: #475569;
-    margin-bottom: 8px;
+  }
+  .upload-btn {
+    font-size: 11px;
+    font-weight: 600;
+    color: #3b82f6;
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    padding: 4px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .upload-btn:hover { background: #dbeafe; }
+  .upload-status {
+    font-size: 11px;
+    color: #16a34a;
+    margin-top: 5px;
+    min-height: 16px;
   }
   .input-box textarea {
     width: 100%;
@@ -444,8 +466,13 @@
       <div class="card-title">Input</div>
       <div class="input-grid">
         <div class="input-box">
-          <label>Your Resume Text</label>
-          <textarea id="resumeInput" placeholder="Paste your resume here — name, contact, education, skills, experience, projects..."></textarea>
+          <div class="input-box-header">
+            <label>Your Resume Text</label>
+            <label class="upload-btn" for="resumeFile">⬆ Upload PDF / DOCX</label>
+          </div>
+          <input type="file" id="resumeFile" accept=".pdf,.docx,.txt" style="display:none" onchange="handleResumeUpload(this)">
+          <textarea id="resumeInput" placeholder="Paste your resume here — or upload a PDF/DOCX above."></textarea>
+          <div class="upload-status" id="uploadStatus"></div>
         </div>
         <div class="input-box">
           <label>Job Description</label>
@@ -513,6 +540,25 @@
 
 <script>
   var BASE = '/ninelab';
+
+  async function handleResumeUpload(input) {
+    var file = input.files[0];
+    if (!file) return;
+    var status = document.getElementById('uploadStatus');
+    status.textContent = 'Reading ' + file.name + '...';
+    var form = new FormData();
+    form.append('file', file);
+    try {
+      var r = await fetch(BASE + '/resume-extract', { method: 'POST', body: form });
+      var data = await r.json();
+      if (!r.ok) { status.textContent = '✗ ' + (data.detail || 'Upload failed.'); return; }
+      document.getElementById('resumeInput').value = data.text;
+      status.textContent = '✓ ' + file.name + ' loaded successfully';
+    } catch(e) {
+      status.textContent = '✗ Upload failed. Try pasting manually.';
+    }
+    input.value = '';
+  }
   var _analysisData = null;
   var _resumeText = '';
   var _jdText = '';
