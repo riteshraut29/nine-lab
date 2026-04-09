@@ -3874,3 +3874,127 @@ async def get_dashboard_v2(authorization: Optional[str] = Header(None)):
             "offers": sum(1 for a in apps if a.get("status") == "offered"),
         },
     })
+
+
+# ── 15-Step ATS Framework Endpoints ──────────────────────────────────────────
+
+class ATSFrameworkRequest(BaseModel):
+    resume: str
+    jd: str
+
+STEP_NAMES = [
+    (1,  "Standardized Section Headings"),
+    (2,  "Linear Contact Information"),
+    (3,  "Text-Based Single Column PDF"),
+    (4,  "Single Page for Fresh Graduates"),
+    (5,  "Role-Specific Keyword Injection"),
+    (6,  "Categorized Skill Sections"),
+    (7,  "Quantified Achievements (XYZ Formula)"),
+    (8,  "Tech Stack in Project Descriptions"),
+    (9,  "Strong Action Verbs"),
+    (10, "Internship Under Work Experience"),
+    (11, "Standard Font Compliance"),
+    (12, "Education and CGPA Format"),
+    (13, "Standard Location Format"),
+    (14, "Certification Credential IDs"),
+    (15, "File Naming Convention"),
+]
+
+@app.post("/ninelab/ats-analyze")
+async def ats_analyze(req: ATSFrameworkRequest):
+    resume = req.resume.strip()[:4000]
+    jd = req.jd.strip()[:2000]
+    if not resume:
+        raise HTTPException(400, detail="Please paste your resume text.")
+    if not jd:
+        raise HTTPException(400, detail="Please paste the job description.")
+
+    steps_list = "\n".join([f"Step {n}: {name}" for n, name in STEP_NAMES])
+    prompt = f"""You are an ATS resume expert. Analyze this resume against the 15-Step ATS Framework.
+
+RESUME:
+{resume}
+
+JOB DESCRIPTION:
+{jd}
+
+Check each step and return ONLY a valid JSON object — no markdown, no explanation, just JSON:
+{{
+  "current_score": <number 0-100>,
+  "projected_score": <number 0-100, after fixing all issues>,
+  "steps": [
+    {{"step": 1, "name": "Standardized Section Headings", "pass": true/false, "note": "short reason if fail, empty string if pass"}},
+    {{"step": 2, "name": "Linear Contact Information", "pass": true/false, "note": ""}},
+    {{"step": 3, "name": "Text-Based Single Column PDF", "pass": true/false, "note": ""}},
+    {{"step": 4, "name": "Single Page for Fresh Graduates", "pass": true/false, "note": ""}},
+    {{"step": 5, "name": "Role-Specific Keyword Injection", "pass": true/false, "note": ""}},
+    {{"step": 6, "name": "Categorized Skill Sections", "pass": true/false, "note": ""}},
+    {{"step": 7, "name": "Quantified Achievements (XYZ Formula)", "pass": true/false, "note": ""}},
+    {{"step": 8, "name": "Tech Stack in Project Descriptions", "pass": true/false, "note": ""}},
+    {{"step": 9, "name": "Strong Action Verbs", "pass": true/false, "note": ""}},
+    {{"step": 10, "name": "Internship Under Work Experience", "pass": true/false, "note": ""}},
+    {{"step": 11, "name": "Standard Font Compliance", "pass": true/false, "note": ""}},
+    {{"step": 12, "name": "Education and CGPA Format", "pass": true/false, "note": ""}},
+    {{"step": 13, "name": "Standard Location Format", "pass": true/false, "note": ""}},
+    {{"step": 14, "name": "Certification Credential IDs", "pass": true/false, "note": ""}},
+    {{"step": 15, "name": "File Naming Convention", "pass": true/false, "note": ""}}
+  ]
+}}
+
+Be honest and specific. If a keyword from JD is missing, name it. If XYZ formula is missing, say which bullet."""
+
+    loop = asyncio.get_event_loop()
+    raw = await loop.run_in_executor(
+        executor,
+        lambda: gemini_call(prompt, retries=2, temperature=0.2)
+    )
+    try:
+        raw = raw.strip()
+        if raw.startswith("```"):
+            raw = re.sub(r"```[a-z]*\n?", "", raw).replace("```", "").strip()
+        result = json.loads(raw)
+        return JSONResponse(result)
+    except Exception:
+        raise HTTPException(500, detail="Could not parse AI response. Please try again.")
+
+
+@app.post("/ninelab/ats-generate")
+async def ats_generate(req: ATSFrameworkRequest):
+    resume = req.resume.strip()[:4000]
+    jd = req.jd.strip()[:2000]
+    if not resume:
+        raise HTTPException(400, detail="Please paste your resume text.")
+
+    prompt = f"""You are an ATS resume expert. Rewrite this resume applying the 15-Step ATS Framework for Indian students.
+
+ORIGINAL RESUME:
+{resume}
+
+JOB DESCRIPTION:
+{jd}
+
+APPLY ALL 15 STEPS:
+1. Use standard headings: CONTACT, OBJECTIVE, EDUCATION, SKILLS, EXPERIENCE, PROJECTS, CERTIFICATIONS
+2. Contact info on one line: Name | Phone | Email | LinkedIn | City
+3. Single column, no tables or graphics
+4. Keep to one page for fresher
+5. Inject exact keywords from the JD verbatim
+6. Categorize skills: Languages | Frameworks | Databases | Tools | Soft Skills
+7. Every bullet: Action Verb + Task + Metric (e.g. "Built X that achieved Y% improvement")
+8. List full tech stack inside each project entry
+9. Start every bullet with: Developed / Built / Designed / Implemented / Optimized
+10. All internships under EXPERIENCE section
+11. Use Arial/Calibri font instructions in text
+12. Education: Degree | College | City | Year | CGPA: X.X/10
+13. Location: City, State format only
+14. Add credential IDs for certifications
+15. Suggest filename: FirstName_LastName_Course_Year_Resume.pdf
+
+Return ONLY the improved resume text — clean, plain text, ready to copy."""
+
+    loop = asyncio.get_event_loop()
+    improved = await loop.run_in_executor(
+        executor,
+        lambda: gemini_call(prompt, retries=2, temperature=0.3)
+    )
+    return JSONResponse({"resume": improved or "Could not generate. Please try again."})
