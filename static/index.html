@@ -309,13 +309,14 @@
     .pdf-frame { flex: 1; border: none; }
 
     /* Print */
+    @page { size: A4; margin: 12mm; }
     @media print {
       body > * { display: none !important; }
       #sOut { display: block !important; min-height: auto !important; }
       .out-hd, .nav, .edit-panel, .prev-panel > div:first-child { display: none !important; }
       .out-body { display: block !important; height: auto !important; overflow: visible !important; }
       .prev-panel { background: white !important; padding: 0 !important; display: block !important; }
-      .resume-paper { box-shadow: none !important; max-width: 100% !important; padding: 0 !important; font-size: 11px !important; }
+      .resume-paper { box-shadow: none !important; max-width: 100% !important; padding: 12mm !important; font-size: 11px !important; border-radius: 0 !important; }
     }
 
     /* Responsive */
@@ -1037,12 +1038,18 @@ function buildResumeHTML(d, full) {
   }
 
   // Skills
-  const hasSkills = d.skills.langs.length || d.skills.frameworks.length || d.skills.tools.length;
+  // Filter out generic non-skill words
+  const genericWords = new Set(['operating system','data structure','data structures','networking','management','development','application','software','hardware','system','computer']);
+  function filterSkills(arr) { return arr.filter(s => !genericWords.has(s.toLowerCase())); }
+  const langs = filterSkills(d.skills.langs);
+  const frameworks = filterSkills(d.skills.frameworks);
+  const tools = filterSkills(d.skills.tools);
+  const hasSkills = langs.length || frameworks.length || tools.length;
   if (hasSkills) {
     html += `<div class="rp-sh">Technical Skills</div>`;
-    if (d.skills.langs.length) html += `<div class="rp-sk"><strong>Languages:</strong> ${esc(d.skills.langs.join(', '))}</div>`;
-    if (d.skills.frameworks.length) html += `<div class="rp-sk"><strong>Frameworks:</strong> ${esc(d.skills.frameworks.join(', '))}</div>`;
-    if (d.skills.tools.length) html += `<div class="rp-sk"><strong>Tools:</strong> ${esc(d.skills.tools.join(', '))}</div>`;
+    if (langs.length) html += `<div class="rp-sk"><strong>Languages:</strong> ${esc(langs.join(', '))}</div>`;
+    if (frameworks.length) html += `<div class="rp-sk"><strong>Frameworks:</strong> ${esc(frameworks.join(', '))}</div>`;
+    if (tools.length) html += `<div class="rp-sk"><strong>Tools:</strong> ${esc(tools.join(', '))}</div>`;
   }
 
   // Experience
@@ -1349,11 +1356,16 @@ function parseAIResumeIntoRd(text) {
     const blocks = eduRaw.split(/\n{2,}/).filter(Boolean);
     rd.education = blocks.map(b => {
       const lines = b.split('\n').map(l=>l.trim()).filter(Boolean);
+      // degree line: first non-empty line
       const degree = lines[0] || '';
-      const school = lines[1] || '';
-      const year = lines[2] || '';
+      // school: second line, but only take the part before any " | " (remove right-aligned college name)
+      const schoolRaw = lines[1] || '';
+      const school = schoolRaw.split(/\s*\|\s*/)[0].trim();
+      // year: line containing a 4-digit year or date range
+      const yearLine = lines.find(l => /\d{4}/.test(l) && !/cgpa/i.test(l)) || lines[2] || '';
+      // gpa: extract only the first number after CGPA/GPA
       const gpaM = b.match(/cgpa?:?\s*([\d.]+)/i);
-      return { degree, school, year, gpa: gpaM ? gpaM[1] : '' };
+      return { degree, school, year: yearLine, gpa: gpaM ? gpaM[1] : '' };
     }).filter(e=>e.degree);
   }
 
