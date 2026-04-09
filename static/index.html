@@ -308,6 +308,16 @@
     .pdf-ttl { font-size: 14px; font-weight: 600; }
     .pdf-frame { flex: 1; border: none; }
 
+    /* Print */
+    @media print {
+      body > * { display: none !important; }
+      #sOut { display: block !important; min-height: auto !important; }
+      .out-hd, .nav, .edit-panel, .prev-panel > div:first-child { display: none !important; }
+      .out-body { display: block !important; height: auto !important; overflow: visible !important; }
+      .prev-panel { background: white !important; padding: 0 !important; display: block !important; }
+      .resume-paper { box-shadow: none !important; max-width: 100% !important; padding: 0 !important; font-size: 11px !important; }
+    }
+
     /* Responsive */
     @media (max-width: 900px) { .form-prev { display: none; } }
     @media (max-width: 768px) {
@@ -648,7 +658,7 @@
       </div>
     </div>
     <div class="out-acts">
-      <button class="btn btn-ghost btn-sm" onclick="goTo('sLand')">Start Over</button>
+      <button class="btn btn-dark btn-sm" onclick="printResume()">⬇ Download / Print</button>
     </div>
   </div>
 
@@ -1288,12 +1298,20 @@ function parseAIResumeIntoRd(text) {
   if (summary) rd.summary = summary;
 
   if (skills) {
+    // Clean a captured group — strip any "Label: ..." that leaked in via pipe-separated single-line formats
+    function cleanSkillVal(v) {
+      return v.split('|')[0]          // stop at pipe separator
+               .replace(/[A-Z][a-z]+s?:\s*.*/g, '') // strip any leaked "Frameworks: ..." suffix
+               .split(/,/)
+               .map(s => s.trim())
+               .filter(s => s && !/^\d+$/.test(s) && s.length < 40);
+    }
     const lm = skills.match(/[Ll]anguages?:?\s*([^\n]+)/);
     const fm = skills.match(/[Ff]rameworks?[^:]*:?\s*([^\n]+)/);
     const tm = skills.match(/[Tt]ools?[^:]*:?\s*([^\n]+)/);
-    if (lm) rd.skills.langs = lm[1].split(/,|\//).map(s=>s.trim()).filter(Boolean);
-    if (fm) rd.skills.frameworks = fm[1].split(/,|\//).map(s=>s.trim()).filter(Boolean);
-    if (tm) rd.skills.tools = tm[1].split(/,|\//).map(s=>s.trim()).filter(Boolean);
+    if (lm) rd.skills.langs = cleanSkillVal(lm[1]);
+    if (fm) rd.skills.frameworks = cleanSkillVal(fm[1]);
+    if (tm) rd.skills.tools = cleanSkillVal(tm[1]);
   }
 
   if (expRaw) {
@@ -1315,9 +1333,15 @@ function parseAIResumeIntoRd(text) {
       const lines = b.split('\n').map(l=>l.trim()).filter(Boolean);
       const bullets = lines.filter(l=>l.startsWith('•')||l.startsWith('-')).map(l=>l.replace(/^[•\-]\s*/,''));
       const non = lines.filter(l=>!l.startsWith('•')&&!l.startsWith('-'));
-      const nameTech = non[0] || '';
-      const parts = nameTech.split(/\||-/).map(s=>s.trim());
-      return { name: parts[0]||'', tech: parts.slice(1).join(', ')||'', bullets: bullets.length ? bullets : [''] };
+      // First non-bullet line: "Project Name | Tech Stack" or "Project Name — Tech Stack"
+      const nameLine = non[0] || '';
+      const parts = nameLine.split(/\s*[\|—]\s*/).map(s=>s.trim());
+      const projName = parts[0] || '';
+      // tech = any part that doesn't look like a date (no month names or year patterns)
+      const dateRe = /\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec|\d{4})\b/i;
+      const techParts = parts.slice(1).filter(p => !dateRe.test(p));
+      const tech = techParts.join(', ');
+      return { name: projName, tech, bullets: bullets.length ? bullets : [''] };
     }).filter(p=>p.name);
   }
 
@@ -1505,13 +1529,8 @@ function closePdfModal() {
   document.getElementById('pdfModal').classList.remove('on');
   document.getElementById('pdfFrame').src = '';
 }
-function downloadPdf(key) {
-  const file = generatedFiles[key];
-  if (!file) return;
-  const a = document.createElement('a');
-  a.href = `${BASE}/pdf/${file}`;
-  a.download = file;
-  a.click();
+function printResume() {
+  window.print();
 }
 </script>
 </body>
