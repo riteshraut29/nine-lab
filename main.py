@@ -23,9 +23,13 @@ PORT = int(os.getenv("PORT", "22451"))
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
 TAVILY_API_KEY = os.getenv("TAVILY_API_KEY", "")
-SUPABASE_URL = os.getenv("SUPABASE_URL", "")
-SUPABASE_KEY = os.getenv("SUPABASE_KEY", "")
-SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SERVICE_KEY", "")
+def _clean_env(val: str) -> str:
+    """Strip whitespace and non-printable ASCII chars from env var values."""
+    return ''.join(c for c in (val or '').strip() if 32 <= ord(c) <= 126)
+
+SUPABASE_URL = _clean_env(os.getenv("SUPABASE_URL", ""))
+SUPABASE_KEY = _clean_env(os.getenv("SUPABASE_KEY", ""))
+SUPABASE_SERVICE_KEY = _clean_env(os.getenv("SUPABASE_SERVICE_KEY", ""))
 JSEARCH_API_KEY = os.getenv("JSEARCH_API_KEY", "d478886deemshee1d5a113b51de6p1d199ajsnee586dc31325")
 ADZUNA_APP_ID   = os.getenv("ADZUNA_APP_ID", "")
 ADZUNA_APP_KEY  = os.getenv("ADZUNA_APP_KEY", "")
@@ -198,6 +202,74 @@ def _detect_job_board(url: str):
         if domain in url_lower:
             return source
     return None
+
+
+def _fetch_jsearch_jobs(title: str, company: str) -> list[dict]:
+    if not JSEARCH_API_KEY:
+        return []
+    import httpx
+    try:
+        r = httpx.get(
+            "https://jsearch.p.rapidapi.com/search",
+            headers={"x-rapidapi-key": JSEARCH_API_KEY, "x-rapidapi-host": "jsearch.p.rapidapi.com"},
+            params={"query": f"{title} India", "page": "1", "num_pages": "1", "date_posted": "month"},
+            timeout=8,
+        )
+        if r.status_code != 200:
+            return []
+        out = []
+        for job in r.json().get("data", [])[:6]:
+            url = job.get("job_apply_link") or job.get("job_google_link", "")
+            if not url:
+                continue
+            pub = job.get("job_publisher", "")
+            source = ("LinkedIn" if "linkedin" in pub.lower() else
+                      "Indeed" if "indeed" in pub.lower() else
+                      "Glassdoor" if "glassdoor" in pub.lower() else pub or "Job Board")
+            is_intern = "intern" in (job.get("job_title") or "").lower()
+            out.append({
+                "title": (job.get("job_title") or title)[:100],
+                "company": (job.get("employer_name") or "")[:60],
+                "url": url, "source": source,
+                "type": "internship" if is_intern else "job",
+                "snippet": (job.get("job_description") or "")[:200].strip(),
+            })
+        return out
+    except Exception:
+        return []
+
+
+def _fetch_adzuna_jobs(title: str, is_internship: bool = False) -> list[dict]:
+    if not ADZUNA_APP_ID or not ADZUNA_APP_KEY:
+        return []
+    import httpx
+    try:
+        what = f"{title} internship" if is_internship else title
+        r = httpx.get(
+            "https://api.adzuna.com/v1/api/jobs/in/search/1",
+            params={"app_id": ADZUNA_APP_ID, "app_key": ADZUNA_APP_KEY,
+                    "results_per_page": 5, "what": what},
+            timeout=8,
+        )
+        if r.status_code != 200:
+            return []
+        out = []
+        for job in r.json().get("results", [])[:5]:
+            url = job.get("redirect_url", "")
+            if not url:
+                continue
+            t = job.get("title", title)
+            out.append({
+                "title": t[:100],
+                "company": job.get("company", {}).get("display_name", "")[:60],
+                "url": url, "source": "Adzuna",
+                "type": "internship" if is_internship or "intern" in t.lower() else "job",
+                "snippet": (job.get("description") or "")[:200].strip(),
+            })
+        return out
+    except Exception:
+        return []
+
 
 # ── Text helpers ──────────────────────────────────────────────────────────────
 
@@ -1731,6 +1803,88 @@ async def auth_refresh(request: Request):
             },
         })
     raise HTTPException(401, detail="Session expired. Please log in again.")
+
+
+def _supabase_rest(method: str, table: str, payload: dict = None, token: str = None, params: dict = None) -> dict:
+    """Helper for Supabase REST API (PostgREST)."""
+    import httpx
+    key = token or SUPABASE_SERVICE_KEY or SUPABASE_KEY
+    headers = {
+        "apikey": SUPABASE_KEY,
+        "Authorization": f"Bearer {key}",
+        "Content-Type": "application/json",
+        "Prefer": "return=representation",
+    }
+    url = f"{SUPABASE_URL}/rest/v1/{table}"
+    try:
+        if method == "GET":
+            r = httpx.get(url, headers=headers, params=params, timeout=10)
+        elif method == "POST":
+            r = httpx.post(url, headers=headers, json=payload, timeout=10)
+        elif method == "PATCH":
+            r = httpx.patch(url, headers=headers, json=payload, params=params, timeout=10)
+        elif method == "UPSERT":
+            headers["Prefer"] = "return=representation,resolution=merge-duplicates"
+            r = httpx.post(url, headers=headers, json=payload, timeout=10)
+        else:
+            return {"status": 400, "data": {}}
+        body = r.json() if r.text else {}
+        return {"status": r.status_code, "data": body}
+    except Exception as e:
+        return {"status": 500, "data": {"error": str(e)}}
+
+
+class ProfileSaveRequest(BaseModel):
+    skills: Optional[str] = ""
+    year: Optional[str] = ""
+    degree: Optional[str] = "B.Tech"
+    title: Optional[str] = ""
+    readiness: Optional[int] = 0
+    gaps: Optional[list] = []
+    resume_text: Optional[str] = ""
+
+@app.post("/ninelab/profile/save")
+async def profile_save(req: ProfileSaveRequest, authorization: Optional[str] = Header(None)):
+    token = (authorization or "").replace("Bearer ", "").strip()
+    user = get_user_from_token(token)
+    if not user:
+        raise HTTPException(401, detail="Not authenticated.")
+    user_id = user["id"]
+    payload = {
+        "user_id": user_id,
+        "skills": req.skills or "",
+        "year": req.year or "",
+        "degree": req.degree or "B.Tech",
+        "title": req.title or "",
+        "readiness": req.readiness or 0,
+        "gaps": req.gaps or [],
+        "resume_text": (req.resume_text or "")[:5000],
+        "updated_at": datetime.utcnow().isoformat(),
+    }
+    result = _supabase_rest("UPSERT", "profiles", payload=payload, token=SUPABASE_SERVICE_KEY)
+    if result["status"] in (200, 201):
+        return JSONResponse({"ok": True})
+    raise HTTPException(500, detail="Failed to save profile.")
+
+
+@app.get("/ninelab/profile/load")
+async def profile_load(authorization: Optional[str] = Header(None)):
+    token = (authorization or "").replace("Bearer ", "").strip()
+    user = get_user_from_token(token)
+    if not user:
+        raise HTTPException(401, detail="Not authenticated.")
+    user_id = user["id"]
+    result = _supabase_rest(
+        "GET", "profiles",
+        params={"user_id": f"eq.{user_id}", "select": "skills,year,degree,title,readiness,gaps,resume_text,updated_at"},
+        token=SUPABASE_SERVICE_KEY,
+    )
+    if result["status"] == 200:
+        rows = result["data"] if isinstance(result["data"], list) else []
+        if rows:
+            return JSONResponse(rows[0])
+        return JSONResponse({})
+    raise HTTPException(500, detail="Failed to load profile.")
 
 
 class LinkedInImportRequest(BaseModel):
@@ -4119,6 +4273,8 @@ async def health():
         "gemini": bool(GEMINI_API_KEY),
         "tavily": bool(TAVILY_API_KEY),
         "supabase": bool(SUPABASE_URL and SUPABASE_KEY),
+        "jsearch": bool(JSEARCH_API_KEY),
+        "adzuna": bool(ADZUNA_APP_ID and ADZUNA_APP_KEY),
     }}
 
 
@@ -4812,3 +4968,47 @@ async def get_dashboard_v2(authorization: Optional[str] = Header(None)):
             "offers": sum(1 for a in apps if a.get("status") == "offered"),
         },
     })
+
+
+# ── Real Jobs endpoint ────────────────────────────────────────────────────────
+
+@app.get("/ninelab/real-jobs")
+async def real_jobs(title: str = "", company: str = "", type: str = "both"):
+    title = title.strip()[:80]
+    company = company.strip()[:60]
+    if not title:
+        return JSONResponse({"jobs": [], "internships": []})
+
+    want_intern = type in ("internship", "both")
+    want_job    = type in ("job", "both")
+
+    raw = []
+    if JSEARCH_API_KEY:
+        raw.extend(_fetch_jsearch_jobs(title, company))
+    if ADZUNA_APP_ID and ADZUNA_APP_KEY:
+        raw.extend(_fetch_adzuna_jobs(title, is_internship=want_intern))
+
+    # Tavily fallback only if both APIs unavailable
+    if not raw and TAVILY_API_KEY:
+        try:
+            for r in tavily_search(f'"{title}" job apply 2025 India', retries=0):
+                url = r.get("url", "")
+                source = _detect_job_board(url) if url else None
+                if source:
+                    raw.append({"title": r.get("title", title)[:100], "company": "",
+                                "url": url, "source": source, "type": "job",
+                                "snippet": (r.get("content") or "")[:200].strip()})
+        except Exception:
+            pass
+
+    seen, jobs, internships = set(), [], []
+    for r in raw:
+        url = r.get("url", "")
+        if not url or url in seen:
+            continue
+        seen.add(url)
+        bucket = internships if r.get("type") == "internship" else jobs
+        if len(bucket) < 5:
+            bucket.append(r)
+
+    return JSONResponse({"jobs": jobs, "internships": internships})
