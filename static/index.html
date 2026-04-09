@@ -3,758 +3,776 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Nine Lab — ATS Resume Analyzer</title>
+<title>Nine Lab — ATS Resume Builder</title>
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f1f5f9;color:#1e293b;min-height:100vh}
 
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    background: #f8fafc;
-    color: #1e293b;
-    min-height: 100vh;
-  }
+/* NAV */
+.nav{display:flex;align-items:center;justify-content:space-between;padding:16px 24px;background:#fff;border-bottom:1px solid #e2e8f0;position:sticky;top:0;z-index:100}
+.nav-left{display:flex;align-items:center;gap:10px}
+.logo-box{width:32px;height:32px;background:#1e3a8a;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:13px}
+.nav-title{font-size:15px;font-weight:700}
+.nav-sub{font-size:11px;color:#94a3b8;margin-top:1px}
+.nav-badge{font-size:11px;background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;padding:4px 10px;border-radius:20px;font-weight:600}
 
-  /* NAV */
-  .nav {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 18px 24px;
-    background: #fff;
-    border-bottom: 1px solid #e2e8f0;
-    position: sticky;
-    top: 0;
-    z-index: 10;
-  }
-  .nav-logo {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  .nav-logo-mark {
-    width: 34px;
-    height: 34px;
-    background: #1e3a8a;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #fff;
-    font-weight: 800;
-    font-size: 14px;
-    letter-spacing: -0.5px;
-  }
-  .nav-title { font-size: 15px; font-weight: 700; color: #1e293b; }
-  .nav-sub { font-size: 11px; color: #94a3b8; margin-top: 1px; }
-  .nav-badge {
-    font-size: 11px;
-    background: #eff6ff;
-    color: #1d4ed8;
-    border: 1px solid #bfdbfe;
-    padding: 4px 10px;
-    border-radius: 20px;
-    font-weight: 600;
-  }
+/* WRAP */
+.wrap{max-width:720px;margin:0 auto;padding:28px 20px 80px}
 
-  /* WRAPPER */
-  .wrap { max-width: 860px; margin: 0 auto; padding: 32px 20px 60px; }
+/* LANDING */
+#screenLanding{}
+.hero{text-align:center;padding:40px 0 32px}
+.hero-tag{display:inline-block;font-size:11px;font-weight:700;letter-spacing:1px;color:#1d4ed8;background:#eff6ff;border:1px solid #bfdbfe;padding:4px 12px;border-radius:20px;margin-bottom:16px}
+.hero h1{font-size:32px;font-weight:800;color:#0f172a;line-height:1.2;letter-spacing:-0.5px}
+.hero p{font-size:14px;color:#64748b;margin-top:10px;line-height:1.6;max-width:440px;margin-left:auto;margin-right:auto}
+.stat-row{display:flex;gap:10px;justify-content:center;margin-top:20px;flex-wrap:wrap}
+.stat-pill{font-size:12px;color:#475569;background:#fff;border:1px solid #e2e8f0;padding:5px 14px;border-radius:20px}
+.stat-pill b{color:#1e293b}
+.mode-cards{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:28px}
+@media(max-width:500px){.mode-cards{grid-template-columns:1fr}}
+.mode-card{background:#fff;border:2px solid #e2e8f0;border-radius:16px;padding:24px;cursor:pointer;transition:all 0.15s;text-align:left}
+.mode-card:hover{border-color:#3b82f6;box-shadow:0 4px 16px rgba(59,130,246,0.12)}
+.mode-icon{font-size:28px;margin-bottom:12px}
+.mode-title{font-size:16px;font-weight:700;color:#0f172a;margin-bottom:6px}
+.mode-desc{font-size:13px;color:#64748b;line-height:1.5}
+.mode-card.primary{border-color:#1e3a8a;background:#f8faff}
+.mode-card.primary .mode-title{color:#1e3a8a}
 
-  /* HERO */
-  .hero { text-align: center; margin-bottom: 36px; }
-  .hero-tag {
-    display: inline-block;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 1px;
-    color: #1d4ed8;
-    background: #eff6ff;
-    border: 1px solid #bfdbfe;
-    padding: 4px 12px;
-    border-radius: 20px;
-    margin-bottom: 14px;
-  }
-  .hero h1 {
-    font-size: 30px;
-    font-weight: 800;
-    color: #0f172a;
-    line-height: 1.2;
-    letter-spacing: -0.5px;
-  }
-  .hero p {
-    font-size: 14px;
-    color: #64748b;
-    margin-top: 10px;
-    max-width: 480px;
-    margin-left: auto;
-    margin-right: auto;
-    line-height: 1.6;
-  }
+/* STEP INDICATOR */
+.step-indicator{display:flex;align-items:center;justify-content:center;margin-bottom:24px;gap:0}
+.si-step{display:flex;flex-direction:column;align-items:center;gap:4px}
+.si-circle{width:28px;height:28px;border-radius:50%;border:2px solid #e2e8f0;background:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#94a3b8;transition:all 0.2s}
+.si-circle.active{border-color:#1e3a8a;background:#1e3a8a;color:#fff}
+.si-circle.done{border-color:#16a34a;background:#16a34a;color:#fff}
+.si-label{font-size:9px;color:#94a3b8;font-weight:600;letter-spacing:0.3px;white-space:nowrap}
+.si-label.active{color:#1e3a8a}
+.si-line{width:24px;height:2px;background:#e2e8f0;margin-bottom:14px}
+.si-line.done{background:#16a34a}
 
-  /* STAT ROW */
-  .stat-row {
-    display: flex;
-    gap: 12px;
-    justify-content: center;
-    margin-top: 20px;
-    flex-wrap: wrap;
-  }
-  .stat-pill {
-    font-size: 12px;
-    color: #475569;
-    background: #fff;
-    border: 1px solid #e2e8f0;
-    padding: 6px 14px;
-    border-radius: 20px;
-  }
-  .stat-pill b { color: #1e293b; }
+/* CARD */
+.card{background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:28px;box-shadow:0 1px 3px rgba(0,0,0,0.04)}
+.card-title{font-size:18px;font-weight:800;color:#0f172a;margin-bottom:4px}
+.card-sub{font-size:13px;color:#64748b;margin-bottom:24px}
 
-  /* CARD */
-  .card {
-    background: #fff;
-    border: 1px solid #e2e8f0;
-    border-radius: 16px;
-    padding: 28px;
-    margin-bottom: 20px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-  }
-  .card-title {
-    font-size: 13px;
-    font-weight: 700;
-    color: #94a3b8;
-    letter-spacing: 0.8px;
-    text-transform: uppercase;
-    margin-bottom: 16px;
-  }
+/* FORM */
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+@media(max-width:500px){.field-row{grid-template-columns:1fr}}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:6px}
+.field input,.field textarea,.field select{width:100%;padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-family:inherit;color:#1e293b;outline:none;transition:border-color 0.15s;background:#fff}
+.field input:focus,.field textarea:focus{border-color:#3b82f6}
+.field textarea{resize:vertical;line-height:1.5}
+.field .hint{font-size:11px;color:#94a3b8;margin-top:4px}
 
-  /* INPUT GRID */
-  .input-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-  }
-  @media (max-width: 600px) { .input-grid { grid-template-columns: 1fr; } }
+/* EXPERIENCE / PROJECT BLOCKS */
+.block-list{display:flex;flex-direction:column;gap:12px;margin-bottom:14px}
+.block-item{background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:12px;padding:16px;position:relative}
+.block-item-title{font-size:12px;font-weight:700;color:#475569;margin-bottom:12px;text-transform:uppercase;letter-spacing:0.5px}
+.block-remove{position:absolute;top:10px;right:12px;background:none;border:none;color:#94a3b8;font-size:16px;cursor:pointer;padding:2px 6px;border-radius:4px}
+.block-remove:hover{color:#ef4444;background:#fee2e2}
+.btn-add-block{width:100%;padding:10px;border:1.5px dashed #cbd5e1;border-radius:10px;background:transparent;color:#64748b;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.15s;margin-bottom:14px}
+.btn-add-block:hover{border-color:#3b82f6;color:#3b82f6;background:#eff6ff}
 
-  .input-box-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 8px;
-  }
-  .input-box label {
-    font-size: 12px;
-    font-weight: 600;
-    color: #475569;
-  }
-  .upload-btn {
-    font-size: 11px;
-    font-weight: 600;
-    color: #3b82f6;
-    background: #eff6ff;
-    border: 1px solid #bfdbfe;
-    padding: 4px 10px;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: background 0.15s;
-  }
-  .upload-btn:hover { background: #dbeafe; }
-  .upload-status {
-    font-size: 11px;
-    color: #16a34a;
-    margin-top: 5px;
-    min-height: 16px;
-  }
-  .input-box textarea {
-    width: 100%;
-    height: 200px;
-    border: 1.5px solid #e2e8f0;
-    border-radius: 10px;
-    padding: 12px 14px;
-    font-size: 13px;
-    font-family: inherit;
-    color: #1e293b;
-    resize: vertical;
-    outline: none;
-    transition: border-color 0.15s;
-    line-height: 1.5;
-  }
-  .input-box textarea:focus { border-color: #3b82f6; }
-  .input-box textarea::placeholder { color: #cbd5e1; }
+/* BUTTONS */
+.btn-row{display:flex;gap:10px;margin-top:20px}
+.btn-primary{flex:1;padding:14px;background:#1e3a8a;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;transition:background 0.15s}
+.btn-primary:hover{background:#1e40af}
+.btn-primary:disabled{background:#94a3b8;cursor:not-allowed}
+.btn-secondary{padding:14px 20px;background:#fff;color:#475569;border:1.5px solid #e2e8f0;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer}
+.btn-secondary:hover{background:#f8fafc}
+.btn-full{width:100%;padding:14px;background:#1e3a8a;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;transition:background 0.15s;margin-top:8px}
+.btn-full:hover{background:#1e40af}
+.btn-full:disabled{background:#94a3b8;cursor:not-allowed}
+.btn-green{background:#059669}
+.btn-green:hover{background:#047857}
+.btn-outline{background:transparent;color:#475569;border:1.5px solid #e2e8f0;margin-top:8px}
+.btn-outline:hover{background:#f8fafc}
 
-  .btn-analyze {
-    width: 100%;
-    margin-top: 16px;
-    padding: 15px;
-    background: #1e3a8a;
-    color: #fff;
-    border: none;
-    border-radius: 12px;
-    font-size: 15px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: background 0.15s, transform 0.1s;
-    letter-spacing: -0.2px;
-  }
-  .btn-analyze:hover { background: #1e40af; }
-  .btn-analyze:active { transform: scale(0.99); }
-  .btn-analyze:disabled { background: #94a3b8; cursor: not-allowed; }
+/* GENERATING */
+#screenGenerating{display:none;text-align:center;padding:60px 20px}
+.gen-spinner{width:48px;height:48px;border:4px solid #e2e8f0;border-top-color:#1e3a8a;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 20px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.gen-title{font-size:20px;font-weight:700;color:#0f172a;margin-bottom:8px}
+.gen-sub{font-size:14px;color:#64748b;margin-bottom:32px}
+.gen-steps{max-width:320px;margin:0 auto;text-align:left}
+.gen-step-item{display:flex;align-items:center;gap:10px;padding:8px 0;font-size:13px;color:#94a3b8;border-bottom:1px solid #f1f5f9}
+.gen-step-item.active{color:#1e3a8a;font-weight:600}
+.gen-step-item.done{color:#16a34a}
+.gen-dot{width:8px;height:8px;border-radius:50%;background:#e2e8f0;flex-shrink:0}
+.gen-dot.active{background:#1e3a8a;animation:pulse 1s infinite}
+.gen-dot.done{background:#16a34a}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
 
-  /* ANALYSIS SCREEN */
-  #screenAnalysis { display: none; }
+/* RESULT */
+#screenResult{display:none}
+.score-card{background:linear-gradient(135deg,#1e3a8a,#1d4ed8);border-radius:16px;padding:28px;color:#fff;text-align:center;margin-bottom:16px}
+.score-label{font-size:11px;font-weight:700;letter-spacing:1px;opacity:0.7;margin-bottom:8px}
+.score-num{font-size:72px;font-weight:800;line-height:1;letter-spacing:-3px}
+.score-bar-bg{background:rgba(255,255,255,0.2);border-radius:20px;height:8px;max-width:240px;margin:14px auto 8px;overflow:hidden}
+.score-bar-fill{height:100%;background:#4ade80;border-radius:20px;transition:width 1.2s ease}
+.score-steps-info{font-size:13px;opacity:0.85}
+.score-steps-info b{color:#4ade80}
 
-  .analysis-header {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 20px;
-  }
-  .analysis-header .spinner {
-    width: 18px;
-    height: 18px;
-    border: 2.5px solid #e2e8f0;
-    border-top-color: #3b82f6;
-    border-radius: 50%;
-    animation: spin 0.7s linear infinite;
-    flex-shrink: 0;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .analysis-header span { font-size: 14px; font-weight: 600; color: #475569; }
+.result-tabs{display:flex;gap:0;border-bottom:2px solid #e2e8f0;margin-bottom:20px}
+.result-tab{padding:10px 18px;font-size:13px;font-weight:600;color:#94a3b8;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px}
+.result-tab.active{color:#1e3a8a;border-bottom-color:#1e3a8a}
 
-  .steps-list { display: flex; flex-direction: column; gap: 8px; }
+.resume-text{background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:12px;padding:20px;font-size:12.5px;line-height:1.8;white-space:pre-wrap;font-family:'Courier New',monospace;color:#1e293b;max-height:480px;overflow-y:auto}
 
-  .step-row {
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
-    padding: 10px 14px;
-    border-radius: 10px;
-    background: #f8fafc;
-    opacity: 0;
-    transform: translateY(6px);
-    transition: opacity 0.25s, transform 0.25s;
-    font-size: 13px;
-  }
-  .step-row.visible { opacity: 1; transform: translateY(0); }
-  .step-row.pass { background: #f0fdf4; }
-  .step-row.fail { background: #fef2f2; }
+.issues-list{display:flex;flex-direction:column;gap:8px;margin-bottom:16px}
+.issue-row{display:flex;gap:10px;padding:12px 14px;border-radius:10px;font-size:13px}
+.issue-row.fail{background:#fef2f2;border:1px solid #fecaca}
+.issue-row.pass{background:#f0fdf4;border:1px solid #bbf7d0}
+.issue-icon{font-size:14px;flex-shrink:0;margin-top:1px}
+.issue-body{}
+.issue-name{font-weight:700;color:#1e293b}
+.issue-note{color:#64748b;margin-top:2px;font-size:12px}
 
-  .step-icon {
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 11px;
-    font-weight: 700;
-    margin-top: 1px;
-  }
-  .step-icon.pass { background: #dcfce7; color: #16a34a; }
-  .step-icon.fail { background: #fee2e2; color: #dc2626; }
-  .step-icon.pending { background: #f1f5f9; color: #94a3b8; }
+/* ANALYZE screens */
+#screenAnalyze{display:none}
+.analyze-header{text-align:center;margin-bottom:24px}
+.analyze-header h2{font-size:22px;font-weight:800;color:#0f172a;margin-bottom:6px}
+.analyze-header p{font-size:13px;color:#64748b}
 
-  .step-info { flex: 1; }
-  .step-name { font-weight: 600; color: #1e293b; }
-  .step-note { font-size: 12px; color: #ef4444; margin-top: 2px; }
-  .step-num { font-size: 11px; color: #94a3b8; min-width: 30px; margin-top: 2px; }
+/* Upload area */
+.upload-area{border:2px dashed #cbd5e1;border-radius:12px;padding:28px;text-align:center;background:#fafafa;cursor:pointer;transition:all 0.15s;margin-bottom:12px}
+.upload-area:hover{border-color:#3b82f6;background:#eff6ff}
+.upload-area.has-file{border-color:#16a34a;background:#f0fdf4}
+.upload-icon{font-size:32px;margin-bottom:8px}
+.upload-label{font-size:14px;font-weight:600;color:#374151}
+.upload-sub{font-size:12px;color:#94a3b8;margin-top:4px}
+.upload-status{font-size:12px;color:#16a34a;font-weight:600;margin-top:6px}
 
-  /* RESULT SCREEN */
-  #screenResult { display: none; }
+/* TOAST */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:#1e293b;color:#fff;padding:10px 20px;border-radius:8px;font-size:13px;font-weight:500;opacity:0;transition:opacity 0.2s,transform 0.2s;pointer-events:none;z-index:999;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
-  .score-section {
-    text-align: center;
-    padding: 28px;
-    background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 100%);
-    border-radius: 16px;
-    margin-bottom: 20px;
-    color: #fff;
-  }
-  .score-label { font-size: 12px; font-weight: 600; letter-spacing: 1px; opacity: 0.7; margin-bottom: 8px; }
-  .score-number { font-size: 64px; font-weight: 800; line-height: 1; letter-spacing: -2px; }
-  .score-bar-wrap {
-    background: rgba(255,255,255,0.2);
-    border-radius: 20px;
-    height: 8px;
-    margin: 14px auto 10px;
-    max-width: 260px;
-    overflow: hidden;
-  }
-  .score-bar-fill {
-    height: 100%;
-    border-radius: 20px;
-    background: #4ade80;
-    transition: width 1s ease;
-  }
-  .score-arrow {
-    font-size: 13px;
-    opacity: 0.9;
-    margin-top: 6px;
-  }
-  .score-arrow b { color: #4ade80; }
-
-  .issues-section { margin-bottom: 20px; }
-  .issues-title {
-    font-size: 13px;
-    font-weight: 700;
-    color: #0f172a;
-    margin-bottom: 12px;
-  }
-  .issue-item {
-    display: flex;
-    gap: 10px;
-    align-items: flex-start;
-    padding: 10px 14px;
-    background: #fef9ec;
-    border: 1px solid #fde68a;
-    border-radius: 10px;
-    margin-bottom: 8px;
-    font-size: 13px;
-  }
-  .issue-arrow { color: #f59e0b; font-weight: 700; flex-shrink: 0; margin-top: 1px; }
-  .issue-text { color: #78350f; line-height: 1.5; }
-
-  .pass-section { margin-bottom: 20px; }
-  .pass-grid { display: flex; flex-wrap: wrap; gap: 8px; }
-  .pass-tag {
-    font-size: 12px;
-    background: #f0fdf4;
-    color: #15803d;
-    border: 1px solid #bbf7d0;
-    padding: 5px 12px;
-    border-radius: 20px;
-    font-weight: 500;
-  }
-
-  .btn-generate {
-    width: 100%;
-    padding: 15px;
-    background: #059669;
-    color: #fff;
-    border: none;
-    border-radius: 12px;
-    font-size: 15px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: background 0.15s;
-    margin-bottom: 10px;
-  }
-  .btn-generate:hover { background: #047857; }
-  .btn-generate:disabled { background: #94a3b8; cursor: not-allowed; }
-
-  .btn-reset {
-    width: 100%;
-    padding: 13px;
-    background: transparent;
-    color: #64748b;
-    border: 1.5px solid #e2e8f0;
-    border-radius: 12px;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-  }
-  .btn-reset:hover { background: #f8fafc; }
-
-  /* GENERATED RESUME */
-  #screenGenerate { display: none; }
-  .resume-output {
-    background: #f8fafc;
-    border: 1.5px solid #e2e8f0;
-    border-radius: 12px;
-    padding: 20px;
-    font-size: 13px;
-    line-height: 1.7;
-    white-space: pre-wrap;
-    font-family: 'Courier New', monospace;
-    color: #1e293b;
-    max-height: 500px;
-    overflow-y: auto;
-  }
-  .btn-copy {
-    width: 100%;
-    padding: 13px;
-    background: #1e3a8a;
-    color: #fff;
-    border: none;
-    border-radius: 12px;
-    font-size: 14px;
-    font-weight: 700;
-    cursor: pointer;
-    margin-top: 12px;
-    margin-bottom: 10px;
-  }
-  .btn-copy:hover { background: #1e40af; }
-
-  /* RESEARCH FOOTER */
-  .research-bar {
-    background: #0f172a;
-    color: #94a3b8;
-    text-align: center;
-    padding: 14px 20px;
-    font-size: 11px;
-    letter-spacing: 0.3px;
-  }
-  .research-bar b { color: #e2e8f0; }
-
-  /* TOAST */
-  .toast {
-    position: fixed;
-    bottom: 24px;
-    left: 50%;
-    transform: translateX(-50%) translateY(20px);
-    background: #1e293b;
-    color: #fff;
-    padding: 10px 20px;
-    border-radius: 8px;
-    font-size: 13px;
-    font-weight: 500;
-    opacity: 0;
-    transition: opacity 0.2s, transform 0.2s;
-    pointer-events: none;
-    z-index: 999;
-  }
-  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-
-  /* Loading overlay */
-  .generating-wrap {
-    text-align: center;
-    padding: 32px;
-    color: #64748b;
-    font-size: 14px;
-  }
-  .generating-wrap .big-spinner {
-    width: 36px;
-    height: 36px;
-    border: 3px solid #e2e8f0;
-    border-top-color: #3b82f6;
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-    margin: 0 auto 14px;
-  }
+/* FOOTER */
+.footer{background:#0f172a;color:#475569;text-align:center;padding:16px 20px;font-size:11px;letter-spacing:0.3px}
+.footer b{color:#94a3b8}
 </style>
 </head>
 <body>
 
-<!-- NAV -->
 <nav class="nav">
-  <div class="nav-logo">
-    <div class="nav-logo-mark">9L</div>
+  <div class="nav-left">
+    <div class="logo-box">9L</div>
     <div>
       <div class="nav-title">Nine Lab</div>
-      <div class="nav-sub">ATS Resume Framework</div>
+      <div class="nav-sub">ATS Resume Builder</div>
     </div>
   </div>
   <div class="nav-badge">15-Step Framework</div>
 </nav>
 
-<!-- MAIN -->
 <div class="wrap">
 
-  <!-- SCREEN 1: INPUT -->
-  <div id="screenInput">
+  <!-- LANDING -->
+  <div id="screenLanding">
     <div class="hero">
       <div class="hero-tag">RESEARCH IMPLEMENTATION · KAVERI THINKFEST 2026</div>
-      <h1>Why is ATS rejecting<br>your resume?</h1>
-      <p>Paste your resume and job description. Our 15-step framework checks every ATS requirement and shows you exactly what to fix.</p>
+      <h1>Build a resume ATS<br>can't ignore</h1>
+      <p>Based on a 15-step framework developed for Indian students. Tested on 20 resumes — average ATS score went from 42% to 85%.</p>
       <div class="stat-row">
-        <div class="stat-pill"><b>75%</b> resumes never reach HR</div>
-        <div class="stat-pill"><b>42% → 85%</b> avg score improvement</div>
-        <div class="stat-pill"><b>15</b> ATS checks in 30 sec</div>
+        <div class="stat-pill"><b>75%</b> resumes auto-rejected</div>
+        <div class="stat-pill"><b>42% → 85%</b> score improvement</div>
+        <div class="stat-pill"><b>15</b> ATS rules applied</div>
+      </div>
+    </div>
+    <div class="mode-cards">
+      <div class="mode-card primary" onclick="startBuild()">
+        <div class="mode-icon">🏗️</div>
+        <div class="mode-title">Build My Resume</div>
+        <div class="mode-desc">Fill in your details — we apply all 15 ATS rules and generate an optimized resume from scratch.</div>
+      </div>
+      <div class="mode-card" onclick="startAnalyze()">
+        <div class="mode-icon">🔍</div>
+        <div class="mode-title">Analyze My Resume</div>
+        <div class="mode-desc">Upload or paste your existing resume — we score it against all 15 steps and show what to fix.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BUILD FLOW -->
+  <div id="screenBuild" style="display:none">
+
+    <!-- Step Indicator -->
+    <div class="step-indicator" id="stepIndicator"></div>
+
+    <!-- Step 1: Personal Info -->
+    <div class="build-step" id="buildStep1">
+      <div class="card">
+        <div class="card-title">Personal Information</div>
+        <div class="card-sub">This goes on the first line of your resume — exactly as ATS expects.</div>
+        <div class="field-row">
+          <div class="field"><label>Full Name *</label><input id="b_name" type="text" placeholder="Ritesh Raut"></div>
+          <div class="field"><label>Phone *</label><input id="b_phone" type="tel" placeholder="9876543210"></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Email *</label><input id="b_email" type="email" placeholder="ritesh@gmail.com"></div>
+          <div class="field"><label>LinkedIn URL</label><input id="b_linkedin" type="text" placeholder="linkedin.com/in/ritesh"></div>
+        </div>
+        <div class="field">
+          <label>City, State *</label>
+          <input id="b_city" type="text" placeholder="Pune, Maharashtra">
+          <div class="hint">Write full state name — ATS NLP fails on short forms like "MH"</div>
+        </div>
+        <div class="btn-row">
+          <button class="btn-secondary" onclick="showLanding()">← Back</button>
+          <button class="btn-primary" onclick="nextStep(1)">Next →</button>
+        </div>
       </div>
     </div>
 
-    <div class="card">
-      <div class="card-title">Input</div>
-      <div class="input-grid">
-        <div class="input-box">
-          <div class="input-box-header">
-            <label>Your Resume Text</label>
-            <label class="upload-btn" for="resumeFile">⬆ Upload PDF / DOCX</label>
+    <!-- Step 2: Education -->
+    <div class="build-step" id="buildStep2" style="display:none">
+      <div class="card">
+        <div class="card-title">Education</div>
+        <div class="card-sub">Degree, college, year and CGPA must be clearly labeled — ATS eligibility filters check these.</div>
+        <div class="field">
+          <label>Full Degree Name *</label>
+          <input id="b_degree" type="text" placeholder="Master of Computer Applications">
+          <div class="hint">Write full form — not MCA, not M.C.A.</div>
+        </div>
+        <div class="field">
+          <label>College Name *</label>
+          <input id="b_college" type="text" placeholder="G.H. Raisoni College of Engineering and Management, Pune">
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Graduation Year *</label><input id="b_gradyear" type="text" placeholder="2025"></div>
+          <div class="field">
+            <label>CGPA *</label>
+            <input id="b_cgpa" type="text" placeholder="8.4">
+            <div class="hint">Out of 10 — labeled as "CGPA: 8.4/10"</div>
           </div>
-          <input type="file" id="resumeFile" accept=".pdf,.docx,.txt" style="display:none" onchange="handleResumeUpload(this)">
-          <textarea id="resumeInput" placeholder="Paste your resume here — or upload a PDF/DOCX above."></textarea>
-          <div class="upload-status" id="uploadStatus"></div>
         </div>
-        <div class="input-box">
-          <label>Job Description</label>
-          <textarea id="jdInput" placeholder="Paste the job description you're applying to..."></textarea>
+        <div class="btn-row">
+          <button class="btn-secondary" onclick="prevStep(2)">← Back</button>
+          <button class="btn-primary" onclick="nextStep(2)">Next →</button>
         </div>
       </div>
-      <button class="btn-analyze" onclick="startAnalysis()">Run 15-Step ATS Framework →</button>
+    </div>
+
+    <!-- Step 3: Skills -->
+    <div class="build-step" id="buildStep3" style="display:none">
+      <div class="card">
+        <div class="card-title">Skills</div>
+        <div class="card-sub">Categorized skills boost weighted keyword scores in ATS — don't dump everything in one box.</div>
+        <div class="field">
+          <label>Languages</label>
+          <input id="b_langs" type="text" placeholder="Python, Java, JavaScript, C++">
+        </div>
+        <div class="field">
+          <label>Frameworks & Libraries</label>
+          <input id="b_frameworks" type="text" placeholder="React, Django, Spring Boot, Node.js">
+        </div>
+        <div class="field">
+          <label>Databases</label>
+          <input id="b_databases" type="text" placeholder="MySQL, MongoDB, PostgreSQL">
+        </div>
+        <div class="field">
+          <label>Tools & Platforms</label>
+          <input id="b_tools" type="text" placeholder="Git, Docker, VS Code, Postman, Linux">
+        </div>
+        <div class="field">
+          <label>Soft Skills</label>
+          <input id="b_soft" type="text" placeholder="Leadership, Communication, Problem Solving">
+        </div>
+        <div class="btn-row">
+          <button class="btn-secondary" onclick="prevStep(3)">← Back</button>
+          <button class="btn-primary" onclick="nextStep(3)">Next →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 4: Experience -->
+    <div class="build-step" id="buildStep4" style="display:none">
+      <div class="card">
+        <div class="card-title">Work Experience & Internships</div>
+        <div class="card-sub">All internships go here — not under projects. Each bullet must have action + task + result.</div>
+        <div class="block-list" id="expList"></div>
+        <button class="btn-add-block" onclick="addExp()">+ Add Experience / Internship</button>
+        <div class="btn-row">
+          <button class="btn-secondary" onclick="prevStep(4)">← Back</button>
+          <button class="btn-primary" onclick="nextStep(4)">Next →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 5: Projects & Certs -->
+    <div class="build-step" id="buildStep5" style="display:none">
+      <div class="card">
+        <div class="card-title">Projects & Certifications</div>
+        <div class="card-sub">Every project must list its full tech stack. Certs need a Credential ID to pass ATS validation.</div>
+        <div style="font-size:12px;font-weight:700;color:#94a3b8;letter-spacing:0.5px;margin-bottom:10px;">PROJECTS</div>
+        <div class="block-list" id="projList"></div>
+        <button class="btn-add-block" onclick="addProj()">+ Add Project</button>
+        <div style="font-size:12px;font-weight:700;color:#94a3b8;letter-spacing:0.5px;margin:4px 0 10px;">CERTIFICATIONS</div>
+        <div class="block-list" id="certList"></div>
+        <button class="btn-add-block" onclick="addCert()">+ Add Certification</button>
+        <div class="btn-row">
+          <button class="btn-secondary" onclick="prevStep(5)">← Back</button>
+          <button class="btn-primary" onclick="nextStep(5)">Next →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 6: JD + Generate -->
+    <div class="build-step" id="buildStep6" style="display:none">
+      <div class="card">
+        <div class="card-title">Job Description</div>
+        <div class="card-sub">Most critical step — AI extracts exact keywords and injects them verbatim into your resume.</div>
+        <div class="field">
+          <label>Career Objective (optional)</label>
+          <textarea id="b_objective" rows="2" placeholder="MCA graduate seeking Backend Developer role specializing in Python and REST APIs..."></textarea>
+        </div>
+        <div class="field">
+          <label>Paste Job Description *</label>
+          <textarea id="b_jd" rows="7" placeholder="Paste the full job description here — responsibilities, requirements, tech stack needed..."></textarea>
+          <div class="hint">The more complete the JD, the better the keyword matching</div>
+        </div>
+        <div class="btn-row">
+          <button class="btn-secondary" onclick="prevStep(6)">← Back</button>
+          <button class="btn-primary" id="generateBtn" onclick="generateResume()">Generate Resume →</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- GENERATING -->
+  <div id="screenGenerating">
+    <div class="gen-spinner"></div>
+    <div class="gen-title">Building your resume...</div>
+    <div class="gen-sub">Applying all 15 ATS framework steps</div>
+    <div class="gen-steps">
+      <div class="gen-step-item" id="gs1"><div class="gen-dot"></div>Extracting JD keywords</div>
+      <div class="gen-step-item" id="gs2"><div class="gen-dot"></div>Injecting keywords verbatim</div>
+      <div class="gen-step-item" id="gs3"><div class="gen-dot"></div>Structuring sections & headings</div>
+      <div class="gen-step-item" id="gs4"><div class="gen-dot"></div>Rewriting bullets (XYZ formula)</div>
+      <div class="gen-step-item" id="gs5"><div class="gen-dot"></div>Validating ATS score</div>
     </div>
   </div>
 
-  <!-- SCREEN 2: ANALYSIS -->
-  <div id="screenAnalysis">
-    <div class="card">
-      <div class="analysis-header">
-        <div class="spinner" id="analysisSpinner"></div>
-        <span id="analysisStatus">Running 15-Step ATS Framework...</span>
-      </div>
-      <div class="steps-list" id="stepsList"></div>
-    </div>
-  </div>
-
-  <!-- SCREEN 3: RESULT -->
+  <!-- RESULT -->
   <div id="screenResult">
-    <div class="score-section">
-      <div class="score-label">YOUR ATS SCORE</div>
-      <div class="score-number" id="currentScore">—</div>
-      <div class="score-bar-wrap">
-        <div class="score-bar-fill" id="scoreBar" style="width:0%"></div>
-      </div>
-      <div class="score-arrow">Fix issues → projected score: <b id="projectedScore">—</b></div>
+    <div class="score-card">
+      <div class="score-label">ATS SCORE</div>
+      <div class="score-num" id="scoreNum">—</div>
+      <div class="score-bar-bg"><div class="score-bar-fill" id="scoreBarFill" style="width:0%"></div></div>
+      <div class="score-steps-info" id="scoreStepsInfo"></div>
     </div>
-
     <div class="card">
-      <div class="issues-section" id="issuesSection">
-        <div class="issues-title" id="issuesTitle">Issues Found</div>
-        <div id="issuesList"></div>
+      <div class="result-tabs">
+        <div class="result-tab active" onclick="switchTab('resume')">📄 Resume</div>
+        <div class="result-tab" onclick="switchTab('analysis')">📊 15-Step Analysis</div>
       </div>
-      <div class="pass-section">
-        <div class="issues-title">✓ Passing Steps</div>
-        <div class="pass-grid" id="passList"></div>
+      <div id="tabResume">
+        <div class="resume-text" id="resumeOutput"></div>
+        <button class="btn-full btn-green" onclick="copyResume()">Copy Resume Text</button>
+        <button class="btn-full btn-outline" onclick="resetAll()">Start Over</button>
       </div>
-      <button class="btn-generate" id="generateBtn" onclick="generateResume()">Generate Fixed Resume →</button>
-      <button class="btn-reset" onclick="resetAll()">← Start Over</button>
+      <div id="tabAnalysis" style="display:none">
+        <div class="issues-list" id="analysisList"></div>
+        <button class="btn-full btn-outline" onclick="resetAll()">Start Over</button>
+      </div>
     </div>
   </div>
 
-  <!-- SCREEN 4: GENERATED RESUME -->
-  <div id="screenGenerate">
+  <!-- ANALYZE FLOW -->
+  <div id="screenAnalyze">
+    <div class="analyze-header">
+      <h2>Analyze My Resume</h2>
+      <p>Upload or paste your resume — we check all 15 ATS rules and show exact issues.</p>
+    </div>
     <div class="card">
-      <div class="card-title">Fixed Resume — All 15 Steps Applied</div>
-      <div id="generateContent"></div>
-      <button class="btn-reset" onclick="backToResult()">← Back to Analysis</button>
-      <button class="btn-reset" style="margin-top:0" onclick="resetAll()">Start Over</button>
+      <div class="field">
+        <label>Upload Resume (PDF / DOCX)</label>
+        <div class="upload-area" id="uploadArea" onclick="document.getElementById('analyzeFile').click()">
+          <div class="upload-icon">📎</div>
+          <div class="upload-label">Click to upload PDF or DOCX</div>
+          <div class="upload-sub">or paste text below</div>
+          <div class="upload-status" id="analyzeUploadStatus"></div>
+        </div>
+        <input type="file" id="analyzeFile" accept=".pdf,.docx,.txt" style="display:none" onchange="handleAnalyzeUpload(this)">
+      </div>
+      <div class="field">
+        <label>Resume Text</label>
+        <textarea id="analyzeResume" rows="6" placeholder="Or paste your resume text here..."></textarea>
+      </div>
+      <div class="field">
+        <label>Job Description *</label>
+        <textarea id="analyzeJd" rows="5" placeholder="Paste the job description you're targeting..."></textarea>
+      </div>
+      <div class="btn-row">
+        <button class="btn-secondary" onclick="showLanding()">← Back</button>
+        <button class="btn-primary" onclick="runAnalysis()">Run 15-Step Check →</button>
+      </div>
     </div>
   </div>
 
-</div>
+  <!-- ANALYSIS PROGRESS -->
+  <div id="screenAnalyzing" style="display:none">
+    <div class="card">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px">
+        <div class="gen-spinner" style="width:20px;height:20px;border-width:2.5px;flex-shrink:0"></div>
+        <span style="font-size:14px;font-weight:600;color:#475569" id="analyzeStatus">Checking 15 steps...</span>
+      </div>
+      <div id="analyzeStepsList" style="display:flex;flex-direction:column;gap:8px"></div>
+    </div>
+  </div>
 
-<!-- RESEARCH FOOTER -->
-<div class="research-bar">
-  <b>Nine Lab</b> · Based on research paper: "A Structured 15-Step Framework for Improving AI-Generated Resume Accuracy and ATS Compatibility" · Kaveri ThinkFest 2026 · GHRCE Pune
-</div>
+</div><!-- end wrap -->
 
+<div class="footer">
+  <b>Nine Lab</b> · "A Structured 15-Step Framework for ATS Resume Optimization" · Kaveri ThinkFest 2026 · GHRCE Pune
+</div>
 <div class="toast" id="toast"></div>
 
 <script>
-  var BASE = '/ninelab';
+var BASE = '/ninelab';
+var _currentStep = 1;
+var _totalSteps = 6;
+var _expCount = 0, _projCount = 0, _certCount = 0;
+var _resultData = null;
 
-  async function handleResumeUpload(input) {
-    var file = input.files[0];
-    if (!file) return;
-    var status = document.getElementById('uploadStatus');
-    status.textContent = 'Reading ' + file.name + '...';
-    var form = new FormData();
-    form.append('file', file);
-    try {
-      var r = await fetch(BASE + '/resume-extract', { method: 'POST', body: form });
-      var data = await r.json();
-      if (!r.ok) { status.textContent = '✗ ' + (data.detail || 'Upload failed.'); return; }
-      document.getElementById('resumeInput').value = data.text;
-      status.textContent = '✓ ' + file.name + ' loaded successfully';
-    } catch(e) {
-      status.textContent = '✗ Upload failed. Try pasting manually.';
+// ── UTILS ──────────────────────────────────────────────────────────────────
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(function(){ t.classList.remove('show'); }, 2500);
+}
+
+function showScreen(id) {
+  ['screenLanding','screenBuild','screenGenerating','screenResult','screenAnalyze','screenAnalyzing'].forEach(function(s){
+    document.getElementById(s).style.display = 'none';
+  });
+  document.getElementById(id).style.display = 'block';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ── LANDING ────────────────────────────────────────────────────────────────
+function showLanding() { showScreen('screenLanding'); }
+function startAnalyze() { showScreen('screenAnalyze'); }
+
+function startBuild() {
+  _currentStep = 1;
+  showScreen('screenBuild');
+  showBuildStep(1);
+  renderStepIndicator();
+}
+
+// ── STEP INDICATOR ─────────────────────────────────────────────────────────
+var STEP_LABELS = ['Personal','Education','Skills','Experience','Projects','Generate'];
+function renderStepIndicator() {
+  var el = document.getElementById('stepIndicator');
+  el.innerHTML = '';
+  for (var i = 1; i <= _totalSteps; i++) {
+    var circle = document.createElement('div');
+    circle.className = 'si-step';
+    var cls = i < _currentStep ? 'done' : (i === _currentStep ? 'active' : '');
+    circle.innerHTML = '<div class="si-circle ' + cls + '">' + (i < _currentStep ? '✓' : i) + '</div>'
+      + '<div class="si-label ' + (i === _currentStep ? 'active' : '') + '">' + STEP_LABELS[i-1] + '</div>';
+    el.appendChild(circle);
+    if (i < _totalSteps) {
+      var line = document.createElement('div');
+      line.className = 'si-line' + (i < _currentStep ? ' done' : '');
+      el.appendChild(line);
     }
-    input.value = '';
   }
-  var _analysisData = null;
-  var _resumeText = '';
-  var _jdText = '';
+}
 
-  function show(id) {
-    ['screenInput','screenAnalysis','screenResult','screenGenerate'].forEach(function(s){
-      document.getElementById(s).style.display = 'none';
+function showBuildStep(n) {
+  document.querySelectorAll('.build-step').forEach(function(s){ s.style.display='none'; });
+  var el = document.getElementById('buildStep' + n);
+  if (el) el.style.display = 'block';
+}
+
+// ── NAVIGATION ─────────────────────────────────────────────────────────────
+function nextStep(from) {
+  if (from === 1) {
+    if (!v('b_name') || !v('b_phone') || !v('b_email') || !v('b_city')) {
+      showToast('Please fill required fields.'); return;
+    }
+  }
+  if (from === 2) {
+    if (!v('b_degree') || !v('b_college') || !v('b_gradyear') || !v('b_cgpa')) {
+      showToast('Please fill all education fields.'); return;
+    }
+  }
+  if (from === 6) return;
+  _currentStep = from + 1;
+  renderStepIndicator();
+  showBuildStep(_currentStep);
+}
+
+function prevStep(from) {
+  _currentStep = from - 1;
+  renderStepIndicator();
+  showBuildStep(_currentStep);
+}
+
+function v(id) { return (document.getElementById(id)||{}).value||''; }
+
+// ── ADD BLOCKS ─────────────────────────────────────────────────────────────
+function addExp() {
+  var i = ++_expCount;
+  var div = document.createElement('div');
+  div.className = 'block-item'; div.id = 'exp_' + i;
+  div.innerHTML = '<div class="block-item-title">Experience #' + i + '</div>'
+    + '<button class="block-remove" onclick="removeBlock(\'exp_\'+' + i + ')">✕</button>'
+    + '<div class="field-row">'
+    + '<div class="field"><label>Company Name</label><input id="exp_co_' + i + '" type="text" placeholder="ABC Technologies"></div>'
+    + '<div class="field"><label>Role / Title</label><input id="exp_role_' + i + '" type="text" placeholder="Software Intern"></div>'
+    + '</div>'
+    + '<div class="field"><label>Duration</label><input id="exp_dur_' + i + '" type="text" placeholder="Jun 2024 – Aug 2024"></div>'
+    + '<div class="field"><label>Key Points (one per line — Action + Task + Metric)</label>'
+    + '<textarea id="exp_pts_' + i + '" rows="3" placeholder="Built REST API with Django serving 10,000 req/day&#10;Reduced query time by 35% using indexing"></textarea></div>';
+  document.getElementById('expList').appendChild(div);
+}
+
+function addProj() {
+  var i = ++_projCount;
+  var div = document.createElement('div');
+  div.className = 'block-item'; div.id = 'proj_' + i;
+  div.innerHTML = '<div class="block-item-title">Project #' + i + '</div>'
+    + '<button class="block-remove" onclick="removeBlock(\'proj_\'+' + i + ')">✕</button>'
+    + '<div class="field-row">'
+    + '<div class="field"><label>Project Name</label><input id="proj_name_' + i + '" type="text" placeholder="Student Portal"></div>'
+    + '<div class="field"><label>Tech Stack (list all)</label><input id="proj_tech_' + i + '" type="text" placeholder="Python, Django, MySQL, Bootstrap"></div>'
+    + '</div>'
+    + '<div class="field"><label>Description & Key Points (one per line)</label>'
+    + '<textarea id="proj_pts_' + i + '" rows="3" placeholder="Developed portal for 500+ students with real-time attendance tracking&#10;Reduced manual work by 60%"></textarea></div>';
+  document.getElementById('projList').appendChild(div);
+}
+
+function addCert() {
+  var i = ++_certCount;
+  var div = document.createElement('div');
+  div.className = 'block-item'; div.id = 'cert_' + i;
+  div.innerHTML = '<div class="block-item-title">Certification #' + i + '</div>'
+    + '<button class="block-remove" onclick="removeBlock(\'cert_\'+' + i + ')">✕</button>'
+    + '<div class="field-row">'
+    + '<div class="field"><label>Certification Name</label><input id="cert_name_' + i + '" type="text" placeholder="AWS Cloud Practitioner"></div>'
+    + '<div class="field"><label>Issuer</label><input id="cert_issuer_' + i + '" type="text" placeholder="Amazon Web Services"></div>'
+    + '</div>'
+    + '<div class="field-row">'
+    + '<div class="field"><label>Year</label><input id="cert_year_' + i + '" type="text" placeholder="2024"></div>'
+    + '<div class="field"><label>Credential ID</label><input id="cert_id_' + i + '" type="text" placeholder="AWS-CLF-XXXXX"></div>'
+    + '</div>';
+  document.getElementById('certList').appendChild(div);
+}
+
+function removeBlock(id) { var el = document.getElementById(id); if(el) el.remove(); }
+
+// ── COLLECT FORM DATA ──────────────────────────────────────────────────────
+function collectFormData() {
+  var exp = [];
+  for (var i = 1; i <= _expCount; i++) {
+    if (!document.getElementById('exp_' + i)) continue;
+    exp.push({
+      company: v('exp_co_' + i), role: v('exp_role_' + i),
+      duration: v('exp_dur_' + i), points: v('exp_pts_' + i)
     });
-    document.getElementById(id).style.display = 'block';
-    window.scrollTo({top:0, behavior:'smooth'});
   }
-
-  function showToast(msg) {
-    var t = document.getElementById('toast');
-    t.textContent = msg;
-    t.classList.add('show');
-    setTimeout(function(){ t.classList.remove('show'); }, 2500);
+  var projs = [];
+  for (var i = 1; i <= _projCount; i++) {
+    if (!document.getElementById('proj_' + i)) continue;
+    projs.push({ name: v('proj_name_' + i), tech: v('proj_tech_' + i), points: v('proj_pts_' + i) });
   }
+  var certs = [];
+  for (var i = 1; i <= _certCount; i++) {
+    if (!document.getElementById('cert_' + i)) continue;
+    certs.push({ name: v('cert_name_' + i), issuer: v('cert_issuer_' + i), year: v('cert_year_' + i), id: v('cert_id_' + i) });
+  }
+  return {
+    full_name: v('b_name'), phone: v('b_phone'), email: v('b_email'),
+    linkedin: v('b_linkedin'), city: v('b_city'),
+    degree: v('b_degree'), college: v('b_college'),
+    grad_year: v('b_gradyear'), cgpa: v('b_cgpa'),
+    languages: v('b_langs'), frameworks: v('b_frameworks'),
+    databases: v('b_databases'), tools: v('b_tools'), soft_skills: v('b_soft'),
+    experience: JSON.stringify(exp), projects: JSON.stringify(projs),
+    certifications: JSON.stringify(certs),
+    objective: v('b_objective'), jd: v('b_jd'),
+  };
+}
 
-  async function startAnalysis() {
-    _resumeText = document.getElementById('resumeInput').value.trim();
-    _jdText = document.getElementById('jdInput').value.trim();
+// ── GENERATE ───────────────────────────────────────────────────────────────
+async function generateResume() {
+  if (!v('b_jd')) { showToast('Please paste the job description.'); return; }
+  var btn = document.getElementById('generateBtn');
+  btn.disabled = true; btn.textContent = 'Generating...';
 
-    if (!_resumeText) { showToast('Please paste your resume text.'); return; }
-    if (!_jdText) { showToast('Please paste the job description.'); return; }
+  var data = collectFormData();
+  showScreen('screenGenerating');
+  animateGenSteps();
 
-    show('screenAnalysis');
-    buildStepRows();
+  try {
+    var r = await fetch(BASE + '/resume-build', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(data)
+    });
+    var result = await r.json();
+    if (!r.ok) { showToast(result.detail || 'Generation failed.'); showScreen('screenBuild'); showBuildStep(6); btn.disabled=false; btn.textContent='Generate Resume →'; return; }
+    _resultData = result;
+    showResultScreen(result);
+  } catch(e) {
+    showToast('Network error. Please try again.');
+    showScreen('screenBuild'); showBuildStep(6);
+  }
+  btn.disabled = false; btn.textContent = 'Generate Resume →';
+}
 
-    try {
-      var r = await fetch(BASE + '/ats-analyze', {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({resume: _resumeText, jd: _jdText})
-      });
-      if (!r.ok) {
-        var e = await r.json().catch(function(){return {};});
-        showToast(e.detail || 'Analysis failed. Please try again.');
-        show('screenInput');
-        return;
+function animateGenSteps() {
+  var steps = ['gs1','gs2','gs3','gs4','gs5'];
+  var i = 0;
+  function tick() {
+    if (i > 0) {
+      var prev = document.getElementById(steps[i-1]);
+      if (prev) { prev.classList.remove('active'); prev.classList.add('done'); prev.querySelector('.gen-dot').className = 'gen-dot done'; }
+    }
+    if (i < steps.length) {
+      var cur = document.getElementById(steps[i]);
+      if (cur) { cur.classList.add('active'); cur.querySelector('.gen-dot').className = 'gen-dot active'; }
+      i++;
+      setTimeout(tick, 1800);
+    }
+  }
+  tick();
+}
+
+// ── RESULT ─────────────────────────────────────────────────────────────────
+function showResultScreen(data) {
+  showScreen('screenResult');
+  var ats = data.ats || {};
+  var score = ats.current_score || 0;
+  var steps = ats.steps || [];
+  var passed = steps.filter(function(s){ return s.pass; }).length;
+
+  document.getElementById('scoreNum').textContent = score + '%';
+  document.getElementById('scoreStepsInfo').innerHTML = '<b>' + passed + '/15</b> steps passing';
+  setTimeout(function(){ document.getElementById('scoreBarFill').style.width = score + '%'; }, 100);
+
+  document.getElementById('resumeOutput').textContent = data.resume || '';
+
+  // Analysis list
+  var list = document.getElementById('analysisList');
+  list.innerHTML = '';
+  steps.forEach(function(s) {
+    var row = document.createElement('div');
+    row.className = 'issue-row ' + (s.pass ? 'pass' : 'fail');
+    row.innerHTML = '<div class="issue-icon">' + (s.pass ? '✓' : '✗') + '</div>'
+      + '<div class="issue-body"><div class="issue-name">Step ' + s.step + ': ' + s.name + '</div>'
+      + ((!s.pass && s.note) ? '<div class="issue-note">' + s.note + '</div>' : '') + '</div>';
+    list.appendChild(row);
+  });
+
+  switchTab('resume');
+}
+
+function switchTab(tab) {
+  document.querySelectorAll('.result-tab').forEach(function(t,i){ t.classList.toggle('active', (tab==='resume'&&i===0)||(tab==='analysis'&&i===1)); });
+  document.getElementById('tabResume').style.display = tab==='resume' ? 'block' : 'none';
+  document.getElementById('tabAnalysis').style.display = tab==='analysis' ? 'block' : 'none';
+}
+
+function copyResume() {
+  var text = document.getElementById('resumeOutput').textContent;
+  navigator.clipboard.writeText(text).then(function(){ showToast('Copied to clipboard!'); }).catch(function(){ showToast('Select text manually and copy.'); });
+}
+
+// ── ANALYZE FLOW ───────────────────────────────────────────────────────────
+async function handleAnalyzeUpload(input) {
+  var file = input.files[0]; if (!file) return;
+  var status = document.getElementById('analyzeUploadStatus');
+  var area = document.getElementById('uploadArea');
+  status.textContent = 'Reading ' + file.name + '...';
+  var form = new FormData(); form.append('file', file);
+  try {
+    var r = await fetch(BASE + '/resume-extract', { method:'POST', body:form });
+    var d = await r.json();
+    if (!r.ok) { status.textContent = '✗ ' + (d.detail||'Upload failed.'); return; }
+    document.getElementById('analyzeResume').value = d.text;
+    status.textContent = '✓ ' + file.name + ' loaded';
+    area.classList.add('has-file');
+  } catch(e) { status.textContent = '✗ Failed. Paste manually.'; }
+  input.value = '';
+}
+
+async function runAnalysis() {
+  var resume = document.getElementById('analyzeResume').value.trim();
+  var jd = document.getElementById('analyzeJd').value.trim();
+  if (!resume) { showToast('Please upload or paste your resume.'); return; }
+  if (!jd) { showToast('Please paste the job description.'); return; }
+
+  showScreen('screenAnalyzing');
+  buildAnalyzeStepRows();
+  document.getElementById('analyzeStatus').textContent = 'Checking 15 steps...';
+
+  try {
+    var r = await fetch(BASE + '/ats-analyze', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({resume: resume, jd: jd})
+    });
+    var data = await r.json();
+    if (!r.ok) { showToast(data.detail||'Analysis failed.'); showScreen('screenAnalyze'); return; }
+    await revealAnalyzeSteps(data.steps || []);
+    document.getElementById('analyzeStatus').textContent = 'Analysis complete!';
+    setTimeout(function(){ showResultScreen({resume: resume, ats: data}); }, 600);
+  } catch(e) { showToast('Network error.'); showScreen('screenAnalyze'); }
+}
+
+function buildAnalyzeStepRows() {
+  var list = document.getElementById('analyzeStepsList'); list.innerHTML = '';
+  var names = ['Standardized Section Headings','Linear Contact Information','Text-Based Single Column PDF',
+    'Single Page for Fresh Graduates','Role-Specific Keyword Injection','Categorized Skill Sections',
+    'Quantified Achievements (XYZ Formula)','Tech Stack in Project Descriptions','Strong Action Verbs',
+    'Internship Under Work Experience','Standard Font Compliance','Education and CGPA Format',
+    'Standard Location Format','Certification Credential IDs','File Naming Convention'];
+  names.forEach(function(name, idx) {
+    var row = document.createElement('div');
+    row.id = 'ar_' + (idx+1);
+    row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:8px;background:#f8fafc;font-size:13px;opacity:0;transition:opacity 0.2s,transform 0.2s;transform:translateY(4px)';
+    row.innerHTML = '<span style="min-width:22px;font-size:11px;color:#94a3b8">S' + (idx+1) + '</span>'
+      + '<span id="ar_icon_' + (idx+1) + '" style="font-size:14px">·</span>'
+      + '<span>' + name + '</span>'
+      + '<span id="ar_note_' + (idx+1) + '" style="margin-left:auto;font-size:11px;color:#ef4444"></span>';
+    list.appendChild(row);
+  });
+}
+
+function revealAnalyzeSteps(steps) {
+  return new Promise(function(resolve) {
+    var i = 0;
+    function next() {
+      if (i >= steps.length) { resolve(); return; }
+      var s = steps[i];
+      var row = document.getElementById('ar_' + s.step);
+      var icon = document.getElementById('ar_icon_' + s.step);
+      var note = document.getElementById('ar_note_' + s.step);
+      if (row) {
+        row.style.opacity = '1'; row.style.transform = 'translateY(0)';
+        row.style.background = s.pass ? '#f0fdf4' : '#fef2f2';
+        if (icon) icon.textContent = s.pass ? '✓' : '✗';
+        if (icon) icon.style.color = s.pass ? '#16a34a' : '#dc2626';
+        if (note && s.note) note.textContent = s.note;
       }
-      _analysisData = await r.json();
-      await revealSteps(_analysisData.steps);
-      document.getElementById('analysisSpinner').style.display = 'none';
-      document.getElementById('analysisStatus').textContent = 'Analysis complete!';
-      setTimeout(function(){ showResult(_analysisData); }, 600);
-    } catch(err) {
-      showToast('Network error. Please try again.');
-      show('screenInput');
+      i++; setTimeout(next, 100);
     }
-  }
+    next();
+  });
+}
 
-  function buildStepRows() {
-    var list = document.getElementById('stepsList');
-    list.innerHTML = '';
-    var steps = [
-      [1,'Standardized Section Headings'],
-      [2,'Linear Contact Information'],
-      [3,'Text-Based Single Column PDF'],
-      [4,'Single Page for Fresh Graduates'],
-      [5,'Role-Specific Keyword Injection'],
-      [6,'Categorized Skill Sections'],
-      [7,'Quantified Achievements (XYZ Formula)'],
-      [8,'Tech Stack in Project Descriptions'],
-      [9,'Strong Action Verbs'],
-      [10,'Internship Under Work Experience'],
-      [11,'Standard Font Compliance'],
-      [12,'Education and CGPA Format'],
-      [13,'Standard Location Format'],
-      [14,'Certification Credential IDs'],
-      [15,'File Naming Convention'],
-    ];
-    steps.forEach(function(s){
-      var row = document.createElement('div');
-      row.className = 'step-row';
-      row.id = 'step-row-' + s[0];
-      row.innerHTML = '<span class="step-num">Step ' + s[0] + '</span>'
-        + '<div class="step-icon pending" id="step-icon-' + s[0] + '">·</div>'
-        + '<div class="step-info"><div class="step-name">' + s[1] + '</div>'
-        + '<div class="step-note" id="step-note-' + s[0] + '"></div></div>';
-      list.appendChild(row);
-    });
-  }
-
-  function revealSteps(steps) {
-    return new Promise(function(resolve){
-      var i = 0;
-      function next() {
-        if (i >= steps.length) { resolve(); return; }
-        var s = steps[i];
-        var row = document.getElementById('step-row-' + s.step);
-        var icon = document.getElementById('step-icon-' + s.step);
-        var note = document.getElementById('step-note-' + s.step);
-        if (row) {
-          row.classList.add('visible', s.pass ? 'pass' : 'fail');
-          icon.className = 'step-icon ' + (s.pass ? 'pass' : 'fail');
-          icon.textContent = s.pass ? '✓' : '✗';
-          if (!s.pass && s.note) note.textContent = s.note;
-        }
-        i++;
-        setTimeout(next, 120);
-      }
-      next();
-    });
-  }
-
-  function showResult(data) {
-    var steps = data.steps || [];
-    var failed = steps.filter(function(s){ return !s.pass; });
-    var passed = steps.filter(function(s){ return s.pass; });
-    var score = data.current_score || 0;
-    var proj = data.projected_score || 0;
-
-    document.getElementById('currentScore').textContent = score + '%';
-    document.getElementById('projectedScore').textContent = proj + '%';
-    setTimeout(function(){
-      document.getElementById('scoreBar').style.width = score + '%';
-    }, 100);
-
-    // Issues
-    var issuesList = document.getElementById('issuesList');
-    issuesList.innerHTML = '';
-    if (failed.length === 0) {
-      document.getElementById('issuesTitle').textContent = '✓ No critical issues found!';
-    } else {
-      document.getElementById('issuesTitle').textContent = failed.length + ' issue' + (failed.length > 1 ? 's' : '') + ' found';
-      failed.forEach(function(s){
-        var div = document.createElement('div');
-        div.className = 'issue-item';
-        div.innerHTML = '<span class="issue-arrow">→</span>'
-          + '<span class="issue-text"><b>Step ' + s.step + ': ' + s.name + '</b>'
-          + (s.note ? '<br>' + s.note : '') + '</span>';
-        issuesList.appendChild(div);
-      });
-    }
-
-    // Passing
-    var passList = document.getElementById('passList');
-    passList.innerHTML = '';
-    passed.forEach(function(s){
-      var tag = document.createElement('span');
-      tag.className = 'pass-tag';
-      tag.textContent = '✓ ' + s.name;
-      passList.appendChild(tag);
-    });
-
-    show('screenResult');
-  }
-
-  async function generateResume() {
-    var btn = document.getElementById('generateBtn');
-    btn.disabled = true;
-    btn.textContent = 'Generating...';
-
-    var content = document.getElementById('generateContent');
-    content.innerHTML = '<div class="generating-wrap"><div class="big-spinner"></div>Applying all 15 steps to your resume...</div>';
-    show('screenGenerate');
-
-    try {
-      var r = await fetch(BASE + '/ats-generate', {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({resume: _resumeText, jd: _jdText})
-      });
-      var data = await r.json();
-      var improved = data.resume || 'Could not generate. Please try again.';
-      content.innerHTML = '<div class="resume-output" id="resumeOutput"></div>'
-        + '<button class="btn-copy" onclick="copyResume()">Copy Resume Text</button>';
-      document.getElementById('resumeOutput').textContent = improved;
-    } catch(err) {
-      content.innerHTML = '<div class="generating-wrap">Failed to generate. Please try again.</div>';
-    }
-
-    btn.disabled = false;
-    btn.textContent = 'Generate Fixed Resume →';
-  }
-
-  function copyResume() {
-    var text = document.getElementById('resumeOutput').textContent;
-    navigator.clipboard.writeText(text).then(function(){
-      showToast('Resume copied to clipboard!');
-    }).catch(function(){
-      showToast('Select the text manually and copy.');
-    });
-  }
-
-  function backToResult() {
-    show('screenResult');
-  }
-
-  function resetAll() {
-    _analysisData = null;
-    document.getElementById('resumeInput').value = '';
-    document.getElementById('jdInput').value = '';
-    show('screenInput');
-  }
+function resetAll() {
+  _expCount = 0; _projCount = 0; _certCount = 0; _currentStep = 1;
+  document.getElementById('expList').innerHTML = '';
+  document.getElementById('projList').innerHTML = '';
+  document.getElementById('certList').innerHTML = '';
+  showLanding();
+}
 </script>
 </body>
 </html>
