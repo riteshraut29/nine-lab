@@ -648,8 +648,7 @@
       </div>
     </div>
     <div class="out-acts">
-      <button class="btn btn-out btn-sm" onclick="showPdfModal('resume')">👁 View Resume PDF</button>
-      <button class="btn btn-dark btn-sm" onclick="downloadPdf('resume')">⬇ Download PDF</button>
+      <button class="btn btn-ghost btn-sm" onclick="goTo('sLand')">Start Over</button>
     </div>
   </div>
 
@@ -662,7 +661,6 @@
         <button class="ed-tab" onclick="setEdSec('edu')">Edu</button>
         <button class="ed-tab" onclick="setEdSec('skills')">Skills</button>
         <button class="ed-tab" onclick="setEdSec('proj')">Projects</button>
-        <button class="ed-tab" onclick="setEdSec('pdfs')">All PDFs</button>
       </div>
 
       <!-- Editor: Personal -->
@@ -723,11 +721,6 @@
         <button class="add-entry-btn" onclick="addEdProj()">+ Add Project</button>
       </div>
 
-      <!-- Editor: PDFs -->
-      <div class="ed-sec" id="edPdfs">
-        <p style="font-size:13px;color:var(--muted);margin-bottom:16px;">Download your complete placement kit — 4 AI-generated documents.</p>
-        <div class="pdf-cards" id="pdfCards"></div>
-      </div>
     </div>
 
     <!-- Preview panel -->
@@ -743,16 +736,6 @@
   </div>
 </div>
 
-<!-- PDF Modal -->
-<div class="pdf-modal" id="pdfModal" onclick="if(event.target===this)closePdfModal()">
-  <div class="pdf-inner">
-    <div class="pdf-hd">
-      <span class="pdf-ttl" id="pdfModalTitle">Resume</span>
-      <button class="btn btn-icon" onclick="closePdfModal()">✕</button>
-    </div>
-    <iframe class="pdf-frame" id="pdfFrame" src=""></iframe>
-  </div>
-</div>
 
 <script>
 const BASE = '/ninelab';
