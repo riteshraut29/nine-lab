@@ -1131,14 +1131,14 @@ async function startGenerate() {
   resetAgents();
 
   try {
-    const body = new URLSearchParams({
+    const body = JSON.stringify({
       resume: resumeText,
       jd: jdText || title || 'Software Engineer role',
       company: company || 'Company',
       name: rd.personal.name || '',
       email: rd.personal.email || ''
     });
-    const r = await fetch(`${BASE}/generate`, { method:'POST', body });
+    const r = await fetch(`${BASE}/generate`, { method:'POST', body, headers:{'Content-Type':'application/json'} });
     const data = await r.json();
     if (!r.ok) {
       const d = data.detail;
