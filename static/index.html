@@ -1113,15 +1113,15 @@ async function startGenerate() {
   const errEl = document.getElementById('jobErr');
   errEl.classList.remove('on');
 
-  if (!company) { errEl.textContent = 'Please enter the company name.'; errEl.classList.add('on'); return; }
-  if (!jdText || jdText.length < 50) { errEl.textContent = 'Please paste the job description (min 50 characters).'; errEl.classList.add('on'); return; }
+  // Only name required; everything else is optional
+  if (!rd.personal.name.trim() && !rawResumeText) {
+    errEl.textContent = 'Please enter your name (Personal section) before generating.';
+    errEl.classList.add('on'); return;
+  }
 
   jd.company = company; jd.title = title; jd.jd = jdText;
 
-  const resumeText = rawResumeText || buildPlainResume(rd);
-  if (!resumeText || resumeText.length < 30) {
-    errEl.textContent = 'Please add some resume data first.'; errEl.classList.add('on'); return;
-  }
+  const resumeText = rawResumeText || buildPlainResume(rd) || rd.personal.name || 'Resume';
 
   const btn = document.querySelector('[onclick="startGenerate()"]');
   if (btn) btn.disabled = true;
@@ -1133,21 +1133,26 @@ async function startGenerate() {
   try {
     const body = new URLSearchParams({
       resume: resumeText,
-      jd: jdText,
-      company: company,
+      jd: jdText || title || 'Software Engineer role',
+      company: company || 'Company',
       name: rd.personal.name || '',
       email: rd.personal.email || ''
     });
     const r = await fetch(`${BASE}/generate`, { method:'POST', body });
     const data = await r.json();
-    if (!r.ok) throw new Error(data.detail || 'Generation failed');
+    if (!r.ok) {
+      const d = data.detail;
+      const msg = Array.isArray(d) ? d.map(e => e.msg || JSON.stringify(e)).join(', ')
+                : typeof d === 'string' ? d : JSON.stringify(d) || 'Generation failed';
+      throw new Error(msg);
+    }
     currentJobId = data.job_id;
     pollStatus();
   } catch(e) {
     goTo('sJob');
     if (btn) btn.disabled = false;
     document.getElementById('genBtnTxt').textContent = '🚀 Generate My Resume';
-    errEl.textContent = 'Error: ' + e.message; errEl.classList.add('on');
+    errEl.textContent = e.message; errEl.classList.add('on');
   }
 }
 
