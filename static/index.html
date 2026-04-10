@@ -1585,19 +1585,19 @@ let oppData = { jobs: [], internships: [] };
 let oppTab = 'jobs';
 
 async function loadOpportunities() {
-  const title = jd.title || rd.personal.name || '';
-  const company = jd.company || '';
+  // Use job title from the JD, never the user's name
+  const searchTitle = jd.title || 'Software Developer';
   const section = document.getElementById('oppSection');
   if (section) section.style.display = 'block';
-  if (!title && !company) {
-    renderOppFallback();
-    return;
-  }
-  document.getElementById('oppSub').textContent =
-    `Finding real openings for "${title}"${company ? ' at ' + company : ''}…`;
+
+  document.getElementById('oppSub').textContent = `Searching real openings for "${searchTitle}" in India…`;
+  // Show spinners
+  document.getElementById('oppJobs').innerHTML = '<div class="opp-spinner"><div class="spinner"></div> Searching jobs…</div>';
+  document.getElementById('oppInternships').innerHTML = '<div class="opp-spinner"><div class="spinner"></div> Searching internships…</div>';
 
   try {
-    const params = new URLSearchParams({ title, company, type: 'both' });
+    // Search general market — no company filter
+    const params = new URLSearchParams({ title: searchTitle, type: 'both' });
     const r = await fetch(`${BASE}/real-jobs?${params}`);
     if (r.ok) {
       const data = await r.json();
@@ -1606,8 +1606,10 @@ async function loadOpportunities() {
     }
   } catch(e) {}
 
-  document.getElementById('oppSub').textContent =
-    `Real openings for "${title}"` + (company ? ` · ${company}` : '');
+  const total = oppData.jobs.length + oppData.internships.length;
+  document.getElementById('oppSub').textContent = total > 0
+    ? `${total} real openings found for "${searchTitle}"`
+    : `No live results found — browse platforms below`;
 
   renderOppTab('jobs');
   renderOppTab('internships');
@@ -1629,24 +1631,28 @@ function renderOppTab(type) {
   if (!el) return;
   const list = oppData[type] || [];
   if (!list.length) {
-    el.innerHTML = renderFallbackBoards(type);
+    el.innerHTML = `<div class="opp-empty">No live listings found. Search directly on these platforms:</div>${renderFallbackBoards(type)}`;
     return;
   }
-  el.innerHTML = `<div class="opp-grid">${list.map(job => `
-    <div class="opp-card">
-      <div class="opp-card-top">
-        <div>
-          <div class="opp-card-title">${esc(job.title)}</div>
-          ${job.company ? `<div class="opp-card-co">${esc(job.company)}</div>` : ''}
-        </div>
-        <span class="opp-src">${esc(job.source)}</span>
-      </div>
-      ${job.snippet ? `<div class="opp-snippet">${esc(job.snippet)}</div>` : ''}
-      <a class="opp-apply" href="${esc(job.url)}" target="_blank" rel="noopener">Apply →</a>
-    </div>`).join('')}
-  </div>
-  <div style="margin-top:18px;font-size:12px;color:var(--subtle);">Can't find what you need? Search manually:</div>
-  ${renderFallbackBoards(type)}`;
+  el.innerHTML = `
+    <div class="opp-grid">
+      ${list.map(job => `
+        <div class="opp-card">
+          <div class="opp-card-top">
+            <div style="flex:1;min-width:0;">
+              <div class="opp-card-title">${esc(job.title)}</div>
+              ${job.company ? `<div class="opp-card-co">${esc(job.company)}</div>` : ''}
+            </div>
+            <span class="opp-src">${esc(job.source)}</span>
+          </div>
+          ${job.snippet ? `<div class="opp-snippet">${esc(job.snippet)}</div>` : ''}
+          <a class="opp-apply" href="${esc(job.url)}" target="_blank" rel="noopener">Apply →</a>
+        </div>`).join('')}
+    </div>
+    <details style="margin-top:16px;">
+      <summary style="font-size:12px;color:var(--subtle);cursor:pointer;">Search more on job platforms</summary>
+      ${renderFallbackBoards(type)}
+    </details>`;
 }
 
 function renderOppFreelancing() {
