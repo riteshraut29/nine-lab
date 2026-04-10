@@ -1720,16 +1720,14 @@ function renderFallbackBoards(type) {
   const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
   const boards = type === 'internships'
     ? [
-        { name:'Internshala', ico:'🎓', url:`https://internshala.com/internships/${slug}-internship/` },
         { name:'LinkedIn',    ico:'💼', url:`https://www.linkedin.com/jobs/search/?keywords=${q}+internship&location=India` },
-        { name:'Indeed India',ico:'🔍', url:`https://in.indeed.com/jobs?q=${q}+internship&l=India` },
         { name:'Naukri',      ico:'🟠', url:`https://www.naukri.com/${slug}-internship-jobs` },
+        { name:'Indeed India',ico:'🔍', url:`https://in.indeed.com/jobs?q=${q}+internship&l=India` },
       ]
     : [
         { name:'LinkedIn',    ico:'💼', url:`https://www.linkedin.com/jobs/search/?keywords=${q}&location=India` },
         { name:'Naukri',      ico:'🟠', url:`https://www.naukri.com/${slug}-jobs` },
         { name:'Indeed India',ico:'🔍', url:`https://in.indeed.com/jobs?q=${q}&l=India` },
-        { name:'Foundit',     ico:'🔵', url:`https://www.foundit.in/srp/results?searchId=&query=${q}&location=India` },
       ];
   return `<div class="opp-fallback" style="margin-top:12px;">
     ${boards.map(b => `
