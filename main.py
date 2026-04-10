@@ -206,17 +206,17 @@ def _detect_job_board(url: str):
 
 def _build_skill_queries(skills: list[str], title: str, is_internship: bool = False) -> list[str]:
     """Build ordered list of search queries from most to least specific."""
-    intern = " internship" if is_internship else ""
+    intern = " internship" if is_internship else " job"
     queries = []
     # Most specific: top 2 skills combined
     if len(skills) >= 2:
-        queries.append(f"{skills[0]} {skills[1]}{intern} India site:linkedin.com OR site:indeed.in OR site:naukri.com")
+        queries.append(f"{skills[0]} {skills[1]}{intern} India")
     # Each top skill individually
     for s in skills[:4]:
-        queries.append(f"{s}{intern} India site:linkedin.com OR site:indeed.in OR site:naukri.com")
+        queries.append(f"{s}{intern} India")
     # Job title fallback
     if title:
-        queries.append(f"{title}{intern} India site:linkedin.com OR site:indeed.in OR site:naukri.com")
+        queries.append(f"{title}{' internship' if is_internship else ''} India")
     # Deduplicate preserving order
     seen, result = set(), []
     for q in queries:
@@ -250,15 +250,16 @@ def _fetch_jsearch_jobs(skills: list[str], title: str, is_internship: bool = Fal
                 seen_urls.add(url)
                 pub = (job.get("job_publisher") or "").lower()
                 url_l = url.lower()
-                # Only keep LinkedIn, Indeed, Naukri
                 if "linkedin" in pub or "linkedin" in url_l:
                     source = "LinkedIn"
                 elif "indeed" in pub or "indeed" in url_l:
                     source = "Indeed"
                 elif "naukri" in url_l:
                     source = "Naukri"
+                elif "glassdoor" in pub or "glassdoor" in url_l:
+                    source = "Glassdoor"
                 else:
-                    continue  # skip other sources
+                    source = job.get("job_publisher") or "Job Board"
                 is_intern = "intern" in (job.get("job_title") or "").lower()
                 out.append({
                     "title": (job.get("job_title") or title)[:100],
@@ -267,7 +268,7 @@ def _fetch_jsearch_jobs(skills: list[str], title: str, is_internship: bool = Fal
                     "type": "internship" if is_intern else "job",
                     "snippet": (job.get("job_description") or "")[:200].strip(),
                 })
-                if len(out) >= 6:
+                if len(out) >= 8:
                     break
         except Exception:
             continue
@@ -5099,11 +5100,12 @@ async def real_jobs(title: str = "", skills: str = "", type: str = "both"):
 
     loop = asyncio.get_event_loop()
 
-    # Run JSearch for jobs + internships in parallel (LinkedIn, Indeed, Naukri only)
-    jsearch_jobs_task   = loop.run_in_executor(None, _fetch_jsearch_jobs, skill_list, title, False)
-    jsearch_intern_task = loop.run_in_executor(None, _fetch_jsearch_jobs, skill_list, title, True) if want_intern else None
+    # JSearch for jobs + internships, Adzuna for India-specific internships
+    jsearch_jobs_task    = loop.run_in_executor(None, _fetch_jsearch_jobs, skill_list, title, False)
+    jsearch_intern_task  = loop.run_in_executor(None, _fetch_jsearch_jobs, skill_list, title, True) if want_intern else None
+    adzuna_intern_task   = loop.run_in_executor(None, _fetch_adzuna_jobs,  skill_list, title, True)  if want_intern else None
 
-    tasks = [t for t in [jsearch_jobs_task, jsearch_intern_task] if t]
+    tasks = [t for t in [jsearch_jobs_task, jsearch_intern_task, adzuna_intern_task] if t]
     results = await asyncio.gather(*tasks, return_exceptions=True)
 
     raw = []
