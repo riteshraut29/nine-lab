@@ -216,28 +216,80 @@
 
     /* ─────────────────── PROCESSING ─────────────────── */
     .proc-body {
+      flex: 1; display: flex; gap: 0; overflow: hidden; height: calc(100vh - 56px);
+    }
+    /* Left panel — pipeline */
+    .proc-left {
       flex: 1; display: flex; flex-direction: column; align-items: center;
-      justify-content: center; padding: 40px 24px;
+      justify-content: center; padding: 40px 32px; overflow-y: auto;
     }
-    .proc-t { font-size: 26px; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 6px; text-align: center; }
-    .proc-s { font-size: 15px; color: var(--muted); margin-bottom: 36px; text-align: center; }
-    .prog-wrap { width: 100%; max-width: 540px; margin-bottom: 10px; }
-    .prog-bar { width: 100%; height: 5px; background: var(--border); border-radius: 100px; overflow: hidden; }
-    .prog-fill { height: 100%; background: var(--accent); border-radius: 100px; transition: width 0.5s ease; width: 0%; }
-    .prog-pct { font-size: 12px; color: var(--muted); text-align: right; margin-top: 5px; }
-    .prog-msg { font-size: 13px; color: var(--muted); text-align: center; margin-bottom: 28px; min-height: 20px; }
-    .agents-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; max-width: 540px; }
+    .proc-t { font-size: 24px; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 6px; text-align: center; }
+    .proc-s { font-size: 14px; color: var(--muted); margin-bottom: 28px; text-align: center; }
+    .prog-wrap { width: 100%; max-width: 480px; margin-bottom: 8px; }
+    .prog-bar { width: 100%; height: 6px; background: var(--border); border-radius: 100px; overflow: hidden; }
+    .prog-fill { height: 100%; background: linear-gradient(90deg, var(--accent), #6366f1); border-radius: 100px; transition: width 0.6s cubic-bezier(0.4,0,0.2,1); width: 0%; }
+    .prog-pct { font-size: 12px; color: var(--muted); text-align: right; margin-top: 6px; font-weight: 600; }
+    .prog-msg { font-size: 13px; color: var(--muted); text-align: center; margin-bottom: 24px; min-height: 20px; }
+
+    /* Pipeline steps (vertical) */
+    .pipeline { width: 100%; max-width: 480px; display: flex; flex-direction: column; gap: 8px; }
     .ag {
+      display: flex; align-items: center; gap: 14px;
       background: var(--surface); border: 1.5px solid var(--border);
-      border-radius: 12px; padding: 14px; transition: all 0.3s;
+      border-radius: 14px; padding: 14px 16px; transition: all 0.35s cubic-bezier(0.4,0,0.2,1);
+      position: relative; overflow: hidden;
     }
-    .ag.run { border-color: var(--blue); background: var(--blue-bg); }
-    .ag.done { border-color: var(--green); background: var(--green-bg); }
-    .ag-ico { font-size: 20px; margin-bottom: 7px; }
-    .ag-name { font-size: 12px; font-weight: 600; margin-bottom: 3px; }
-    .ag-st { font-size: 11px; color: var(--subtle); }
+    .ag::before {
+      content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+      background: var(--border); transition: background 0.3s;
+    }
+    .ag.run { border-color: #93c5fd; background: #eff6ff; }
+    .ag.run::before { background: var(--blue); }
+    .ag.done { border-color: #6ee7b7; background: #f0fdf4; }
+    .ag.done::before { background: var(--green); }
+    .ag-ico-wrap {
+      width: 40px; height: 40px; border-radius: 10px; background: var(--bg);
+      border: 1.5px solid var(--border); display: flex; align-items: center;
+      justify-content: center; font-size: 18px; flex-shrink: 0; transition: all 0.3s;
+    }
+    .ag.run .ag-ico-wrap { background: #dbeafe; border-color: #93c5fd; }
+    .ag.done .ag-ico-wrap { background: #d1fae5; border-color: #6ee7b7; }
+    .ag-info { flex: 1; min-width: 0; }
+    .ag-name { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
+    .ag-desc { font-size: 11px; color: var(--subtle); line-height: 1.4; }
+    .ag-st-wrap { flex-shrink: 0; display: flex; align-items: center; gap: 6px; }
+    .ag-st { font-size: 11px; color: var(--subtle); font-weight: 500; }
     .ag.run .ag-st { color: var(--blue); }
     .ag.done .ag-st { color: var(--green); }
+    .ag-spinner { width: 14px; height: 14px; border: 2px solid #bfdbfe; border-top-color: var(--blue); border-radius: 50%; animation: spin 0.7s linear infinite; display: none; }
+    .ag.run .ag-spinner { display: block; }
+    .ag-check { font-size: 15px; display: none; }
+    .ag.done .ag-check { display: block; }
+
+    /* Right panel — live log */
+    .proc-right {
+      width: 300px; flex-shrink: 0; border-left: 1px solid var(--border);
+      background: #0f172a; display: flex; flex-direction: column; overflow: hidden;
+    }
+    .log-hd {
+      padding: 14px 16px; border-bottom: 1px solid rgba(255,255,255,0.07);
+      font-size: 11px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase;
+      color: #64748b; display: flex; align-items: center; gap: 8px; flex-shrink: 0;
+    }
+    .log-dot { width: 6px; height: 6px; border-radius: 50%; background: #22c55e; animation: pulse-dot 1.5s ease-in-out infinite; }
+    @keyframes pulse-dot { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(0.8)} }
+    .log-body { flex: 1; overflow-y: auto; padding: 12px 16px; display: flex; flex-direction: column; gap: 4px; font-family: 'Menlo','Consolas',monospace; }
+    .log-body::-webkit-scrollbar { width: 3px; }
+    .log-body::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+    .log-line { font-size: 11px; line-height: 1.6; display: flex; gap: 8px; animation: log-in 0.2s ease; }
+    @keyframes log-in { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:translateY(0); } }
+    .log-ts { color: #334155; flex-shrink: 0; }
+    .log-txt { color: #94a3b8; }
+    .log-txt.info { color: #7dd3fc; }
+    .log-txt.ok   { color: #4ade80; }
+    .log-txt.warn { color: #fbbf24; }
+    .log-txt.head { color: #e2e8f0; font-weight: 600; }
+    @media(max-width:768px){ .proc-right { display: none; } .proc-left { padding: 28px 16px; } }
 
     /* ─────────────────── OUTPUT ─────────────────── */
     .out-hd {
@@ -641,20 +693,70 @@
     <div></div>
   </nav>
   <div class="proc-body">
-    <h2 class="proc-t">Building your resume…</h2>
-    <p class="proc-s" id="procSub">Analyzing your resume and job description…</p>
-    <div class="prog-wrap">
-      <div class="prog-bar"><div class="prog-fill" id="progFill"></div></div>
-      <div class="prog-pct" id="progPct">0%</div>
+    <!-- Left: pipeline -->
+    <div class="proc-left">
+      <h2 class="proc-t">Building your resume…</h2>
+      <p class="proc-s" id="procSub">Multi-agent AI pipeline running</p>
+      <div class="prog-wrap">
+        <div class="prog-bar"><div class="prog-fill" id="progFill"></div></div>
+        <div class="prog-pct" id="progPct">0%</div>
+      </div>
+      <div class="prog-msg" id="progMsg">Initializing agents…</div>
+      <div class="pipeline">
+        <div class="ag" id="ag0">
+          <div class="ag-ico-wrap">🔍</div>
+          <div class="ag-info">
+            <div class="ag-name">Research Agent</div>
+            <div class="ag-desc">Searches web for company info, role requirements & market context</div>
+          </div>
+          <div class="ag-st-wrap"><div class="ag-spinner"></div><div class="ag-check">✅</div><div class="ag-st" id="ag0s">Waiting</div></div>
+        </div>
+        <div class="ag" id="ag1">
+          <div class="ag-ico-wrap">📊</div>
+          <div class="ag-info">
+            <div class="ag-name">Analysis Agent</div>
+            <div class="ag-desc">Scores your profile against the JD, finds skill gaps & strengths</div>
+          </div>
+          <div class="ag-st-wrap"><div class="ag-spinner"></div><div class="ag-check">✅</div><div class="ag-st" id="ag1s">Waiting</div></div>
+        </div>
+        <div class="ag" id="ag2">
+          <div class="ag-ico-wrap">✍️</div>
+          <div class="ag-info">
+            <div class="ag-name">Resume Writer</div>
+            <div class="ag-desc">Rewrites bullets with impact metrics, ATS keywords & action verbs</div>
+          </div>
+          <div class="ag-st-wrap"><div class="ag-spinner"></div><div class="ag-check">✅</div><div class="ag-st" id="ag2s">Waiting</div></div>
+        </div>
+        <div class="ag" id="ag3">
+          <div class="ag-ico-wrap">🗺️</div>
+          <div class="ag-info">
+            <div class="ag-name">Prep Planner</div>
+            <div class="ag-desc">Builds a 7-day interview prep plan with resources & questions</div>
+          </div>
+          <div class="ag-st-wrap"><div class="ag-spinner"></div><div class="ag-check">✅</div><div class="ag-st" id="ag3s">Waiting</div></div>
+        </div>
+        <div class="ag" id="ag4">
+          <div class="ag-ico-wrap">🏢</div>
+          <div class="ag-info">
+            <div class="ag-name">Company Intel</div>
+            <div class="ag-desc">Gathers culture, tech stack, recent news & interview style</div>
+          </div>
+          <div class="ag-st-wrap"><div class="ag-spinner"></div><div class="ag-check">✅</div><div class="ag-st" id="ag4s">Waiting</div></div>
+        </div>
+        <div class="ag" id="ag5">
+          <div class="ag-ico-wrap">📄</div>
+          <div class="ag-info">
+            <div class="ag-name">Resume Builder</div>
+            <div class="ag-desc">Formats final resume into clean ATS-ready layout</div>
+          </div>
+          <div class="ag-st-wrap"><div class="ag-spinner"></div><div class="ag-check">✅</div><div class="ag-st" id="ag5s">Waiting</div></div>
+        </div>
+      </div>
     </div>
-    <div class="prog-msg" id="progMsg">Initializing agents…</div>
-    <div class="agents-grid">
-      <div class="ag" id="ag0"><div class="ag-ico">🔍</div><div class="ag-name">Research</div><div class="ag-st" id="ag0s">Waiting…</div></div>
-      <div class="ag" id="ag1"><div class="ag-ico">📊</div><div class="ag-name">Analysis</div><div class="ag-st" id="ag1s">Waiting…</div></div>
-      <div class="ag" id="ag2"><div class="ag-ico">✍️</div><div class="ag-name">Resume</div><div class="ag-st" id="ag2s">Waiting…</div></div>
-      <div class="ag" id="ag3"><div class="ag-ico">🗺️</div><div class="ag-name">Prep Plan</div><div class="ag-st" id="ag3s">Waiting…</div></div>
-      <div class="ag" id="ag4"><div class="ag-ico">🏢</div><div class="ag-name">Company</div><div class="ag-st" id="ag4s">Waiting…</div></div>
-      <div class="ag" id="ag5"><div class="ag-ico">📄</div><div class="ag-name">PDF Build</div><div class="ag-st" id="ag5s">Waiting…</div></div>
+    <!-- Right: live log -->
+    <div class="proc-right">
+      <div class="log-hd"><div class="log-dot"></div>Live Activity</div>
+      <div class="log-body" id="logBody"></div>
     </div>
   </div>
 </div>
@@ -1238,13 +1340,30 @@ function buildPlainResume(d) {
 
 // ── Polling ───────────────────────────────────────────────────────────────────
 function resetAgents() {
+  _logStart = Date.now();
+  _lastStage = '';
   for (let i=0;i<6;i++) {
     document.getElementById('ag'+i)?.classList.remove('run','done');
-    document.getElementById('ag'+i+'s').textContent = 'Waiting…';
+    document.getElementById('ag'+i+'s').textContent = 'Waiting';
   }
   document.getElementById('progFill').style.width = '0%';
   document.getElementById('progPct').textContent = '0%';
   document.getElementById('progMsg').textContent = 'Initializing…';
+  document.getElementById('logBody').innerHTML = '';
+  addLog('System booting up…', 'head');
+  addLog('Connecting to AI agents', 'info');
+}
+
+let _logStart = Date.now();
+function addLog(txt, type='') {
+  const el = document.getElementById('logBody');
+  if (!el) return;
+  const elapsed = ((Date.now() - _logStart)/1000).toFixed(1);
+  const line = document.createElement('div');
+  line.className = 'log-line';
+  line.innerHTML = `<span class="log-ts">+${elapsed}s</span><span class="log-txt ${type}">${txt}</span>`;
+  el.appendChild(line);
+  el.scrollTop = el.scrollHeight;
 }
 
 function pollStatus() {
@@ -1265,6 +1384,7 @@ function pollStatus() {
   }, 1500);
 }
 
+let _lastStage = '';
 function updateProcUI(data) {
   const pct = data.progress || 0;
   document.getElementById('progFill').style.width = pct + '%';
@@ -1272,16 +1392,45 @@ function updateProcUI(data) {
   document.getElementById('progMsg').textContent = data.message || '';
 
   const stage = data.stage;
+  if (stage === _lastStage) return;
+  _lastStage = stage;
+
   if (stage === 'research') {
-    setAg(0,'run','Searching web…');
+    addLog('Research Agent activated', 'head');
+    addLog('Querying company database…', 'info');
+    addLog('Fetching role requirements & market data', 'info');
+    setAg(0,'run','Searching…');
   } else if (stage === 'analysis') {
-    setAg(0,'done','Done ✓'); setAg(1,'run','Analyzing fit…');
+    addLog('Research Agent → complete', 'ok');
+    addLog('Analysis Agent activated', 'head');
+    addLog('Scoring profile against job description…', 'info');
+    addLog('Detecting skill gaps and keyword matches', 'info');
+    setAg(0,'done','Done'); setAg(1,'run','Scoring…');
   } else if (stage === 'pdf') {
-    setAg(0,'done','Done ✓'); setAg(1,'done','Done ✓');
-    setAg(2,'run','Optimizing…'); setAg(3,'run','Planning…'); setAg(4,'run','Researching…');
-    if (pct >= 85) { setAg(2,'done','Done ✓'); setAg(3,'done','Done ✓'); setAg(4,'done','Done ✓'); setAg(5,'run','Generating PDFs…'); }
+    addLog('Analysis Agent → complete', 'ok');
+    addLog('Resume Writer activated', 'head');
+    addLog('Rewriting bullets with impact metrics…', 'info');
+    addLog('Injecting ATS keywords from JD', 'info');
+    addLog('Prep Planner activated', 'head');
+    addLog('Building 7-day interview roadmap…', 'info');
+    addLog('Company Intel activated', 'head');
+    addLog('Gathering culture & tech stack data', 'info');
+    setAg(0,'done','Done'); setAg(1,'done','Done');
+    setAg(2,'run','Writing…'); setAg(3,'run','Planning…'); setAg(4,'run','Researching…');
+    if (pct >= 85) {
+      addLog('Resume Writer → complete', 'ok');
+      addLog('Prep Planner → complete', 'ok');
+      addLog('Company Intel → complete', 'ok');
+      addLog('Resume Builder activated', 'head');
+      addLog('Formatting final ATS-ready layout…', 'info');
+      setAg(2,'done','Done'); setAg(3,'done','Done'); setAg(4,'done','Done');
+      setAg(5,'run','Formatting…');
+    }
   } else if (stage === 'done') {
-    for(let i=0;i<6;i++) setAg(i,'done','Done ✓');
+    addLog('Resume Builder → complete', 'ok');
+    addLog('All agents finished ✓', 'ok');
+    addLog('Preparing your results…', 'info');
+    for(let i=0;i<6;i++) setAg(i,'done','Done');
   }
 }
 
