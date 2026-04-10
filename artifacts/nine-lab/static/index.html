@@ -386,6 +386,68 @@
     .opp-fb-name { font-size: 13px; font-weight: 600; }
     .opp-fb-hint { font-size: 11px; color: var(--muted); }
 
+    /* ─────────────────── AUTH ─────────────────── */
+    .auth-body {
+      flex: 1; display: flex; align-items: stretch; height: calc(100vh - 56px);
+    }
+    /* Left — form */
+    .auth-form-side {
+      flex: 1; display: flex; flex-direction: column; align-items: center;
+      justify-content: center; padding: 48px 32px;
+    }
+    .auth-card { width: 100%; max-width: 360px; }
+    .auth-title { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 6px; }
+    .auth-sub { font-size: 13px; color: var(--muted); margin-bottom: 28px; line-height: 1.6; }
+    .auth-toggle {
+      display: flex; background: var(--accent-light); border-radius: 10px;
+      padding: 3px; gap: 3px; margin-bottom: 24px;
+    }
+    .auth-toggle-btn {
+      flex: 1; padding: 8px; border: none; background: none; font-family: inherit;
+      font-size: 13px; font-weight: 500; color: var(--muted); border-radius: 7px;
+      cursor: pointer; transition: all 0.15s;
+    }
+    .auth-toggle-btn.on { background: var(--surface); color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .auth-err { background: #FEF2F2; border: 1px solid #FECACA; color: #B91C1C; padding: 10px 14px; border-radius: 8px; font-size: 13px; margin-bottom: 14px; display: none; }
+    .auth-err.on { display: block; }
+    .auth-ok { background: #F0FDF4; border: 1px solid #6EE7B7; color: #065F46; padding: 10px 14px; border-radius: 8px; font-size: 13px; margin-bottom: 14px; display: none; }
+    .auth-ok.on { display: block; }
+    .auth-divider { text-align: center; font-size: 12px; color: var(--subtle); margin: 18px 0; position: relative; }
+    .auth-divider::before, .auth-divider::after {
+      content: ''; position: absolute; top: 50%; width: 42%; height: 1px; background: var(--border);
+    }
+    .auth-divider::before { left: 0; } .auth-divider::after { right: 0; }
+    .auth-avatar {
+      width: 32px; height: 32px; border-radius: 50%; background: var(--accent);
+      color: white; display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 700; cursor: pointer; flex-shrink: 0;
+    }
+    /* Right — dark panel */
+    .auth-right {
+      width: 340px; flex-shrink: 0; background: #0f172a; display: flex;
+      flex-direction: column; overflow: hidden;
+    }
+    .auth-right-hd {
+      padding: 28px 24px 0;
+    }
+    .auth-brand { font-size: 18px; font-weight: 700; color: #e2e8f0; letter-spacing: -0.5px; margin-bottom: 4px; }
+    .auth-brand em { font-style: normal; color: #6366f1; }
+    .auth-brand-sub { font-size: 12px; color: #475569; margin-bottom: 28px; }
+    .auth-features { display: flex; flex-direction: column; gap: 16px; padding: 0 24px; flex: 1; justify-content: center; }
+    .auth-feat { display: flex; align-items: flex-start; gap: 12px; }
+    .auth-feat-ico {
+      width: 34px; height: 34px; border-radius: 8px; background: rgba(99,102,241,0.15);
+      border: 1px solid rgba(99,102,241,0.2); display: flex; align-items: center;
+      justify-content: center; font-size: 16px; flex-shrink: 0; margin-top: 1px;
+    }
+    .auth-feat-t { font-size: 13px; font-weight: 600; color: #e2e8f0; margin-bottom: 2px; }
+    .auth-feat-d { font-size: 11px; color: #64748b; line-height: 1.5; }
+    .auth-right-foot { padding: 20px 24px; border-top: 1px solid rgba(255,255,255,0.06); font-size: 11px; color: #334155; }
+    @media(max-width:700px){ .auth-right { display: none; } }
+    /* Nav user pill */
+    .nav-user { display: flex; align-items: center; gap: 8px; }
+    .nav-user-name { font-size: 13px; font-weight: 500; color: var(--text); }
+
     /* Print */
     @page { size: A4; margin: 12mm; }
     @media print {
@@ -423,7 +485,9 @@
       <div class="pill" id="p2"></div>
       <div class="pill" id="p3"></div>
     </div>
-    <div></div>
+    <div id="navAuthArea">
+      <button class="btn btn-ghost btn-sm" onclick="goTo('sAuth')">Sign In</button>
+    </div>
   </nav>
   <div class="land-body">
     <h1 class="land-h">AI Resume Builder</h1>
@@ -856,6 +920,104 @@
     <div id="oppJobs"><div class="opp-spinner"><div class="spinner"></div> Searching jobs…</div></div>
     <div id="oppInternships" style="display:none;"><div class="opp-spinner"><div class="spinner"></div> Searching internships…</div></div>
     <div id="oppFreelancing" style="display:none;"></div>
+  </div>
+</div>
+
+
+<!-- ══════════════ STEP: AUTH ══════════════ -->
+<div id="sAuth" class="step">
+  <nav class="nav">
+    <span class="logo" onclick="goTo('sLand')" style="cursor:pointer">Nine<em>Lab</em></span>
+    <div></div>
+    <button class="btn btn-ghost btn-sm" onclick="goTo('sLand')">← Back</button>
+  </nav>
+  <div class="auth-body">
+
+    <!-- Left: form -->
+    <div class="auth-form-side">
+      <div class="auth-card">
+        <h2 class="auth-title" id="authTitle">Welcome back</h2>
+        <p class="auth-sub" id="authSub">Sign in to save your resumes and access your history.</p>
+
+        <!-- Toggle -->
+        <div class="auth-toggle">
+          <button class="auth-toggle-btn on" id="authTabLogin" onclick="switchAuthTab('login')">Sign In</button>
+          <button class="auth-toggle-btn" id="authTabReg" onclick="switchAuthTab('register')">Create Account</button>
+        </div>
+
+        <div class="auth-err" id="authErr"></div>
+        <div class="auth-ok" id="authOk"></div>
+
+        <!-- Name field (register only) -->
+        <div class="fg" id="authNameFg" style="display:none">
+          <label class="lbl">Full Name</label>
+          <input type="text" id="authName" placeholder="Rahul Sharma" autocomplete="name">
+        </div>
+
+        <div class="fg">
+          <label class="lbl">Email</label>
+          <input type="email" id="authEmail" placeholder="you@email.com" autocomplete="email"
+            onkeydown="if(event.key==='Enter')document.getElementById('authPass').focus()">
+        </div>
+        <div class="fg">
+          <label class="lbl">Password</label>
+          <input type="password" id="authPass" placeholder="Min. 6 characters" autocomplete="current-password"
+            onkeydown="if(event.key==='Enter')submitAuth()">
+        </div>
+
+        <button class="btn btn-dark" style="width:100%;margin-top:4px" onclick="submitAuth()" id="authBtn">
+          <span id="authBtnTxt">Sign In</span>
+        </button>
+
+        <p style="font-size:12px;color:var(--subtle);text-align:center;margin-top:16px">
+          <span id="authSwitch">Don't have an account?</span>
+          <button onclick="switchAuthTab(document.getElementById('authTabLogin').classList.contains('on')?'register':'login')"
+            style="background:none;border:none;color:var(--blue);cursor:pointer;font-size:12px;font-family:inherit;padding:0 4px;">
+            <span id="authSwitchLbl">Create one</span>
+          </button>
+        </p>
+      </div>
+    </div>
+
+    <!-- Right: dark info panel -->
+    <div class="auth-right">
+      <div class="auth-right-hd">
+        <div class="auth-brand">Nine<em>Lab</em></div>
+        <div class="auth-brand-sub">AI Resume Builder for students</div>
+      </div>
+      <div class="auth-features">
+        <div class="auth-feat">
+          <div class="auth-feat-ico">✍️</div>
+          <div>
+            <div class="auth-feat-t">AI rewrites your resume</div>
+            <div class="auth-feat-d">Keywords matched to the job description, bullets rewritten with impact metrics</div>
+          </div>
+        </div>
+        <div class="auth-feat">
+          <div class="auth-feat-ico">📊</div>
+          <div>
+            <div class="auth-feat-t">ATS score before & after</div>
+            <div class="auth-feat-d">See exactly how much the AI improved your match against the JD</div>
+          </div>
+        </div>
+        <div class="auth-feat">
+          <div class="auth-feat-ico">💼</div>
+          <div>
+            <div class="auth-feat-t">Real job listings</div>
+            <div class="auth-feat-d">Jobs and internships matched to your skills from LinkedIn, Indeed & more</div>
+          </div>
+        </div>
+        <div class="auth-feat">
+          <div class="auth-feat-ico">☁️</div>
+          <div>
+            <div class="auth-feat-t">Saved to your account</div>
+            <div class="auth-feat-d">Resume data synced so you can pick up where you left off</div>
+          </div>
+        </div>
+      </div>
+      <div class="auth-right-foot">Free for students · No card required</div>
+    </div>
+
   </div>
 </div>
 
@@ -1854,6 +2016,108 @@ function renderOppFallback() {
   renderOppTab('internships');
   renderOppFreelancing();
 }
+
+// ══════════════════════════════════════════════════════
+//  AUTH
+// ══════════════════════════════════════════════════════
+let authMode = 'login'; // 'login' | 'register'
+
+function switchAuthTab(mode) {
+  authMode = mode;
+  const isReg = mode === 'register';
+  document.getElementById('authTabLogin').classList.toggle('on', !isReg);
+  document.getElementById('authTabReg').classList.toggle('on', isReg);
+  document.getElementById('authNameFg').style.display = isReg ? '' : 'none';
+  document.getElementById('authTitle').textContent = isReg ? 'Create account' : 'Welcome back';
+  document.getElementById('authSub').textContent = isReg
+    ? 'Free account — no card required.'
+    : 'Sign in to save your resumes and access your history.';
+  document.getElementById('authBtnTxt').textContent = isReg ? 'Create Account' : 'Sign In';
+  document.getElementById('authSwitch').textContent = isReg ? 'Already have an account?' : "Don't have an account?";
+  document.getElementById('authSwitchLbl').textContent = isReg ? 'Sign in' : 'Create one';
+  document.getElementById('authErr').classList.remove('on');
+  document.getElementById('authOk').classList.remove('on');
+}
+
+async function submitAuth() {
+  const email = document.getElementById('authEmail').value.trim();
+  const pass  = document.getElementById('authPass').value;
+  const name  = document.getElementById('authName').value.trim();
+  const errEl = document.getElementById('authErr');
+  const okEl  = document.getElementById('authOk');
+  errEl.classList.remove('on'); okEl.classList.remove('on');
+
+  if (!email || !pass) { errEl.textContent = 'Email and password are required.'; errEl.classList.add('on'); return; }
+
+  const btn = document.getElementById('authBtn');
+  btn.disabled = true;
+  document.getElementById('authBtnTxt').textContent = authMode === 'register' ? 'Creating…' : 'Signing in…';
+
+  try {
+    const url = authMode === 'register' ? `${BASE}/auth/register` : `${BASE}/auth/login`;
+    const body = authMode === 'register'
+      ? JSON.stringify({ email, password: pass, full_name: name })
+      : JSON.stringify({ email, password: pass });
+
+    const r = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body });
+    const data = await r.json();
+
+    if (!r.ok) {
+      const d = data.detail;
+      errEl.textContent = typeof d === 'string' ? d : JSON.stringify(d) || 'Something went wrong.';
+      errEl.classList.add('on');
+      return;
+    }
+
+    // Save token + user
+    localStorage.setItem('nl_token', data.access_token);
+    localStorage.setItem('nl_refresh', data.refresh_token || '');
+    localStorage.setItem('nl_user', JSON.stringify(data.user || {}));
+    updateNavAuth(data.user);
+
+    okEl.textContent = authMode === 'register' ? '✓ Account created! Redirecting…' : '✓ Signed in!';
+    okEl.classList.add('on');
+    setTimeout(() => goTo('sLand'), 900);
+  } catch(e) {
+    errEl.textContent = 'Network error — please try again.';
+    errEl.classList.add('on');
+  } finally {
+    btn.disabled = false;
+    document.getElementById('authBtnTxt').textContent = authMode === 'register' ? 'Create Account' : 'Sign In';
+  }
+}
+
+function updateNavAuth(user) {
+  const area = document.getElementById('navAuthArea');
+  if (!area) return;
+  if (user && user.email) {
+    const initial = (user.full_name || user.email || '?')[0].toUpperCase();
+    area.innerHTML = `
+      <div class="nav-user">
+        <div class="auth-avatar" title="${user.email}" onclick="signOut()">${initial}</div>
+        <span class="nav-user-name">${user.full_name || user.email.split('@')[0]}</span>
+      </div>`;
+  } else {
+    area.innerHTML = `<button class="btn btn-ghost btn-sm" onclick="goTo('sAuth')">Sign In</button>`;
+  }
+}
+
+function signOut() {
+  const token = localStorage.getItem('nl_token');
+  if (token) fetch(`${BASE}/auth/logout`, { method:'POST', headers:{'Authorization':'Bearer '+token} });
+  localStorage.removeItem('nl_token');
+  localStorage.removeItem('nl_refresh');
+  localStorage.removeItem('nl_user');
+  updateNavAuth(null);
+}
+
+// Restore session on load
+(function restoreSession() {
+  try {
+    const u = JSON.parse(localStorage.getItem('nl_user') || 'null');
+    if (u && localStorage.getItem('nl_token')) updateNavAuth(u);
+  } catch(e) {}
+})();
 </script>
 </body>
 </html>
