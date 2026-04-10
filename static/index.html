@@ -308,6 +308,32 @@
     .pdf-ttl { font-size: 14px; font-weight: 600; }
     .pdf-frame { flex: 1; border: none; }
 
+    /* Opportunities */
+    .opp-section { padding: 32px 28px 48px; border-top: 1px solid var(--border); background: var(--bg); }
+    .opp-hd { font-size: 18px; font-weight: 700; letter-spacing: -0.3px; margin-bottom: 4px; }
+    .opp-sub { font-size: 13px; color: var(--muted); margin-bottom: 20px; }
+    .opp-tabs { display: flex; gap: 6px; margin-bottom: 20px; }
+    .opp-tab { padding: 7px 16px; border-radius: 100px; border: 1.5px solid var(--border); background: var(--surface); font-size: 13px; font-weight: 500; color: var(--muted); cursor: pointer; transition: all 0.15s; font-family: inherit; }
+    .opp-tab.on { background: var(--accent); border-color: var(--accent); color: white; }
+    .opp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+    .opp-card { background: var(--surface); border: 1.5px solid var(--border); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 8px; transition: box-shadow 0.15s; }
+    .opp-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
+    .opp-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+    .opp-card-title { font-size: 13px; font-weight: 600; line-height: 1.4; }
+    .opp-card-co { font-size: 12px; color: var(--muted); }
+    .opp-src { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; padding: 2px 7px; border-radius: 4px; background: var(--accent-light); color: var(--muted); flex-shrink: 0; }
+    .opp-snippet { font-size: 11px; color: var(--subtle); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .opp-apply { display: inline-flex; align-items: center; gap: 5px; padding: 7px 14px; background: var(--accent); color: white; border-radius: 7px; font-size: 12px; font-weight: 600; text-decoration: none; margin-top: 4px; transition: opacity 0.15s; align-self: flex-start; }
+    .opp-apply:hover { opacity: 0.85; }
+    .opp-spinner { display: flex; align-items: center; gap: 10px; padding: 32px 0; color: var(--muted); font-size: 13px; }
+    .opp-empty { padding: 28px 0; color: var(--muted); font-size: 13px; }
+    .opp-fallback { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; margin-top: 8px; }
+    .opp-fb-card { display: flex; align-items: center; gap: 10px; padding: 12px 14px; background: var(--surface); border: 1.5px solid var(--border); border-radius: 10px; text-decoration: none; color: var(--text); transition: all 0.15s; }
+    .opp-fb-card:hover { border-color: var(--accent); background: var(--accent-light); }
+    .opp-fb-ico { font-size: 20px; }
+    .opp-fb-name { font-size: 13px; font-weight: 600; }
+    .opp-fb-hint { font-size: 11px; color: var(--muted); }
+
     /* Print */
     @page { size: A4; margin: 12mm; }
     @media print {
@@ -738,6 +764,20 @@
         <div style="text-align:center;color:#aaa;padding:40px 0;">Building your resume…</div>
       </div>
     </div>
+  </div>
+
+  <!-- Opportunities Section -->
+  <div class="opp-section" id="oppSection" style="display:none;">
+    <h2 class="opp-hd">Opportunities for You</h2>
+    <p class="opp-sub" id="oppSub">Finding real openings matching your profile…</p>
+    <div class="opp-tabs">
+      <button class="opp-tab on" onclick="switchOppTab('jobs')">💼 Jobs</button>
+      <button class="opp-tab" onclick="switchOppTab('internships')">🎓 Internships</button>
+      <button class="opp-tab" onclick="switchOppTab('freelancing')">💻 Freelancing</button>
+    </div>
+    <div id="oppJobs"><div class="opp-spinner"><div class="spinner"></div> Searching jobs…</div></div>
+    <div id="oppInternships" style="display:none;"><div class="opp-spinner"><div class="spinner"></div> Searching internships…</div></div>
+    <div id="oppFreelancing" style="display:none;"></div>
   </div>
 </div>
 
@@ -1266,6 +1306,7 @@ function handleDone(data) {
 
   goTo('sOut');
   renderOutput();
+  loadOpportunities();
 }
 
 // Parse FORGE agent <<TAG>> format into rd
@@ -1537,6 +1578,132 @@ function closePdfModal() {
 }
 function printResume() {
   window.print();
+}
+
+// ── Opportunities ─────────────────────────────────────────────────────────────
+let oppData = { jobs: [], internships: [] };
+let oppTab = 'jobs';
+
+async function loadOpportunities() {
+  const title = jd.title || rd.personal.name || '';
+  const company = jd.company || '';
+  const section = document.getElementById('oppSection');
+  if (section) section.style.display = 'block';
+  if (!title && !company) {
+    renderOppFallback();
+    return;
+  }
+  document.getElementById('oppSub').textContent =
+    `Finding real openings for "${title}"${company ? ' at ' + company : ''}…`;
+
+  try {
+    const params = new URLSearchParams({ title, company, type: 'both' });
+    const r = await fetch(`${BASE}/real-jobs?${params}`);
+    if (r.ok) {
+      const data = await r.json();
+      oppData.jobs = data.jobs || [];
+      oppData.internships = data.internships || [];
+    }
+  } catch(e) {}
+
+  document.getElementById('oppSub').textContent =
+    `Real openings for "${title}"` + (company ? ` · ${company}` : '');
+
+  renderOppTab('jobs');
+  renderOppTab('internships');
+  renderOppFreelancing();
+}
+
+function switchOppTab(tab) {
+  oppTab = tab;
+  document.querySelectorAll('.opp-tab').forEach(t => t.classList.remove('on'));
+  event.currentTarget.classList.add('on');
+  ['jobs','internships','freelancing'].forEach(t => {
+    const el = document.getElementById('opp' + cap(t));
+    if (el) el.style.display = t === tab ? 'block' : 'none';
+  });
+}
+
+function renderOppTab(type) {
+  const el = document.getElementById('opp' + cap(type));
+  if (!el) return;
+  const list = oppData[type] || [];
+  if (!list.length) {
+    el.innerHTML = renderFallbackBoards(type);
+    return;
+  }
+  el.innerHTML = `<div class="opp-grid">${list.map(job => `
+    <div class="opp-card">
+      <div class="opp-card-top">
+        <div>
+          <div class="opp-card-title">${esc(job.title)}</div>
+          ${job.company ? `<div class="opp-card-co">${esc(job.company)}</div>` : ''}
+        </div>
+        <span class="opp-src">${esc(job.source)}</span>
+      </div>
+      ${job.snippet ? `<div class="opp-snippet">${esc(job.snippet)}</div>` : ''}
+      <a class="opp-apply" href="${esc(job.url)}" target="_blank" rel="noopener">Apply →</a>
+    </div>`).join('')}
+  </div>
+  <div style="margin-top:18px;font-size:12px;color:var(--subtle);">Can't find what you need? Search manually:</div>
+  ${renderFallbackBoards(type)}`;
+}
+
+function renderOppFreelancing() {
+  const el = document.getElementById('oppFreelancing');
+  if (!el) return;
+  const title = jd.title || rd.personal.name || 'developer';
+  const q = encodeURIComponent(title);
+  const platforms = [
+    { name:'Freelancer', hint:'Bid on projects worldwide', ico:'🌐', url:`https://www.freelancer.in/jobs/?q=${q}` },
+    { name:'Upwork',     hint:'Top freelancing platform', ico:'🟢', url:`https://www.upwork.com/search/jobs/?q=${q}` },
+    { name:'Fiverr',     hint:'Offer services as gigs',   ico:'🎯', url:`https://www.fiverr.com/search/gigs?query=${q}` },
+    { name:'Toptal',     hint:'Elite remote freelancing',  ico:'⭐', url:`https://www.toptal.com/#join-only-the-best` },
+    { name:'Internshala Freelance', hint:'Indian freelance projects', ico:'🇮🇳', url:`https://internshala.com/freelancing-projects/${q}-projects/` },
+    { name:'LinkedIn',   hint:'Freelance & contract roles', ico:'💼', url:`https://www.linkedin.com/jobs/search/?keywords=${q}+freelance&location=India` },
+  ];
+  el.innerHTML = `
+    <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">Click a platform to find freelance projects matching your profile.</p>
+    <div class="opp-fallback">
+      ${platforms.map(p => `
+        <a class="opp-fb-card" href="${p.url}" target="_blank" rel="noopener">
+          <span class="opp-fb-ico">${p.ico}</span>
+          <div><div class="opp-fb-name">${p.name}</div><div class="opp-fb-hint">${p.hint}</div></div>
+        </a>`).join('')}
+    </div>`;
+}
+
+function renderFallbackBoards(type) {
+  const title = jd.title || rd.personal.name || 'software developer';
+  const q = encodeURIComponent(title);
+  const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+  const boards = type === 'internships'
+    ? [
+        { name:'Internshala', ico:'🎓', url:`https://internshala.com/internships/${slug}-internship/` },
+        { name:'LinkedIn',    ico:'💼', url:`https://www.linkedin.com/jobs/search/?keywords=${q}+internship&location=India` },
+        { name:'Indeed India',ico:'🔍', url:`https://in.indeed.com/jobs?q=${q}+internship&l=India` },
+        { name:'Naukri',      ico:'🟠', url:`https://www.naukri.com/${slug}-internship-jobs` },
+      ]
+    : [
+        { name:'LinkedIn',    ico:'💼', url:`https://www.linkedin.com/jobs/search/?keywords=${q}&location=India` },
+        { name:'Naukri',      ico:'🟠', url:`https://www.naukri.com/${slug}-jobs` },
+        { name:'Indeed India',ico:'🔍', url:`https://in.indeed.com/jobs?q=${q}&l=India` },
+        { name:'Foundit',     ico:'🔵', url:`https://www.foundit.in/srp/results?searchId=&query=${q}&location=India` },
+      ];
+  return `<div class="opp-fallback" style="margin-top:12px;">
+    ${boards.map(b => `
+      <a class="opp-fb-card" href="${b.url}" target="_blank" rel="noopener">
+        <span class="opp-fb-ico">${b.ico}</span>
+        <div><div class="opp-fb-name">${b.name}</div><div class="opp-fb-hint">Search on ${b.name}</div></div>
+      </a>`).join('')}
+  </div>`;
+}
+
+function renderOppFallback() {
+  document.getElementById('oppSub').textContent = 'Browse opportunities on job platforms:';
+  renderOppTab('jobs');
+  renderOppTab('internships');
+  renderOppFreelancing();
 }
 </script>
 </body>
