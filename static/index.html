@@ -1655,27 +1655,61 @@ function renderOppTab(type) {
     </details>`;
 }
 
-function renderOppFreelancing() {
+async function renderOppFreelancing() {
   const el = document.getElementById('oppFreelancing');
   if (!el) return;
-  const title = jd.title || rd.personal.name || 'developer';
-  const q = encodeURIComponent(title);
-  const platforms = [
-    { name:'Freelancer', hint:'Bid on projects worldwide', ico:'🌐', url:`https://www.freelancer.in/jobs/?q=${q}` },
-    { name:'Upwork',     hint:'Top freelancing platform', ico:'🟢', url:`https://www.upwork.com/search/jobs/?q=${q}` },
-    { name:'Fiverr',     hint:'Offer services as gigs',   ico:'🎯', url:`https://www.fiverr.com/search/gigs?query=${q}` },
-    { name:'Toptal',     hint:'Elite remote freelancing',  ico:'⭐', url:`https://www.toptal.com/#join-only-the-best` },
-    { name:'Internshala Freelance', hint:'Indian freelance projects', ico:'🇮🇳', url:`https://internshala.com/freelancing-projects/${q}-projects/` },
-    { name:'LinkedIn',   hint:'Freelance & contract roles', ico:'💼', url:`https://www.linkedin.com/jobs/search/?keywords=${q}+freelance&location=India` },
-  ];
+
+  // Build skill list from parsed resume
+  const skills = [
+    ...rd.skills.langs,
+    ...rd.skills.frameworks,
+    ...rd.skills.tools
+  ].filter(Boolean).slice(0, 5);
+  const searchTitle = jd.title || 'developer';
+
+  el.innerHTML = '<div class="opp-spinner"><div class="spinner"></div> Searching remote & freelance jobs…</div>';
+
+  let jobs = [];
+  try {
+    const params = new URLSearchParams({
+      skills: skills.join(','),
+      title: searchTitle
+    });
+    const r = await fetch(`${BASE}/freelance-jobs?${params}`);
+    if (r.ok) {
+      const data = await r.json();
+      jobs = data.jobs || [];
+    }
+  } catch(e) {}
+
+  if (!jobs.length) {
+    const q = encodeURIComponent(searchTitle);
+    el.innerHTML = `
+      <div class="opp-empty">No live results found. Browse these platforms:</div>
+      <div class="opp-fallback">
+        <a class="opp-fb-card" href="https://remoteok.com/?tags=${encodeURIComponent(skills[0]||'developer')}" target="_blank" rel="noopener"><span class="opp-fb-ico">🌐</span><div><div class="opp-fb-name">RemoteOK</div><div class="opp-fb-hint">Remote tech jobs</div></div></a>
+        <a class="opp-fb-card" href="https://remotive.com/remote-jobs?search=${q}" target="_blank" rel="noopener"><span class="opp-fb-ico">🟢</span><div><div class="opp-fb-name">Remotive</div><div class="opp-fb-hint">Remote jobs worldwide</div></div></a>
+        <a class="opp-fb-card" href="https://www.upwork.com/search/jobs/?q=${q}" target="_blank" rel="noopener"><span class="opp-fb-ico">⭐</span><div><div class="opp-fb-name">Upwork</div><div class="opp-fb-hint">Freelance projects</div></div></a>
+        <a class="opp-fb-card" href="https://internshala.com/freelancing-projects/${q}-projects/" target="_blank" rel="noopener"><span class="opp-fb-ico">🇮🇳</span><div><div class="opp-fb-name">Internshala</div><div class="opp-fb-hint">Indian freelance projects</div></div></a>
+      </div>`;
+    return;
+  }
+
   el.innerHTML = `
-    <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">Click a platform to find freelance projects matching your profile.</p>
-    <div class="opp-fallback">
-      ${platforms.map(p => `
-        <a class="opp-fb-card" href="${p.url}" target="_blank" rel="noopener">
-          <span class="opp-fb-ico">${p.ico}</span>
-          <div><div class="opp-fb-name">${p.name}</div><div class="opp-fb-hint">${p.hint}</div></div>
-        </a>`).join('')}
+    <div class="opp-grid">
+      ${jobs.map(job => `
+        <div class="opp-card">
+          <div class="opp-card-top">
+            <div style="flex:1;min-width:0;">
+              <div class="opp-card-title">${esc(job.title)}</div>
+              ${job.company ? `<div class="opp-card-co">${esc(job.company)}</div>` : ''}
+            </div>
+            <span class="opp-src">${esc(job.source)}</span>
+          </div>
+          ${job.tags && job.tags.length ? `<div style="display:flex;flex-wrap:wrap;gap:4px;">${job.tags.slice(0,4).map(t=>`<span style="font-size:10px;padding:2px 7px;background:var(--accent-light);border-radius:4px;color:var(--muted);">${esc(t)}</span>`).join('')}</div>` : ''}
+          ${job.snippet ? `<div class="opp-snippet">${esc(job.snippet)}</div>` : ''}
+          <a class="opp-apply" href="${esc(job.url)}" target="_blank" rel="noopener">Apply →</a>
+        </div>`).join('')}
     </div>`;
 }
 

@@ -271,6 +271,70 @@ def _fetch_adzuna_jobs(title: str, is_internship: bool = False) -> list[dict]:
         return []
 
 
+def _fetch_remoteok_jobs(skills: list[str]) -> list[dict]:
+    """Fetch remote/freelance jobs from RemoteOK — no API key needed."""
+    import httpx
+    try:
+        tag = skills[0].lower().replace(' ', '-') if skills else 'developer'
+        r = httpx.get(
+            f"https://remoteok.com/api?tags={tag}",
+            headers={"User-Agent": "Mozilla/5.0 (NineLab Resume App)"},
+            timeout=8,
+        )
+        if r.status_code != 200:
+            return []
+        data = r.json()
+        # First item is metadata, skip it
+        jobs = [j for j in data if isinstance(j, dict) and j.get("url")]
+        out = []
+        for job in jobs[:8]:
+            url = job.get("url", "")
+            if not url.startswith("http"):
+                url = "https://remoteok.com" + url
+            out.append({
+                "title": (job.get("position") or "")[:100],
+                "company": (job.get("company") or "")[:60],
+                "url": url,
+                "source": "RemoteOK",
+                "snippet": (job.get("description") or "")[:200].strip(),
+                "tags": job.get("tags", [])[:5],
+            })
+        return out
+    except Exception:
+        return []
+
+
+def _fetch_remotive_jobs(skills: list[str]) -> list[dict]:
+    """Fetch remote jobs from Remotive — no API key needed."""
+    import httpx
+    try:
+        query = skills[0] if skills else "developer"
+        r = httpx.get(
+            "https://remotive.com/api/remote-jobs",
+            params={"search": query, "limit": 8},
+            headers={"User-Agent": "Mozilla/5.0 (NineLab Resume App)"},
+            timeout=8,
+        )
+        if r.status_code != 200:
+            return []
+        out = []
+        for job in r.json().get("jobs", [])[:8]:
+            url = job.get("url", "")
+            if not url:
+                continue
+            out.append({
+                "title": (job.get("title") or "")[:100],
+                "company": (job.get("company_name") or "")[:60],
+                "url": url,
+                "source": "Remotive",
+                "snippet": "",
+                "tags": job.get("tags", [])[:5],
+            })
+        return out
+    except Exception:
+        return []
+
+
 # ── Text helpers ──────────────────────────────────────────────────────────────
 
 def strip_md(text: str) -> str:
@@ -5012,3 +5076,35 @@ async def real_jobs(title: str = "", company: str = "", type: str = "both"):
             bucket.append(r)
 
     return JSONResponse({"jobs": jobs, "internships": internships})
+
+
+# ── Freelance Jobs endpoint ───────────────────────────────────────────────────
+
+@app.get("/ninelab/freelance-jobs")
+async def freelance_jobs(skills: str = "", title: str = ""):
+    """Fetch freelance/remote jobs from RemoteOK + Remotive. No API keys needed."""
+    skill_list = [s.strip() for s in skills.split(",") if s.strip()]
+    if not skill_list and title:
+        skill_list = [title.strip()]
+    if not skill_list:
+        skill_list = ["developer"]
+
+    raw = []
+    loop = asyncio.get_event_loop()
+    remoteok_task = loop.run_in_executor(None, _fetch_remoteok_jobs, skill_list)
+    remotive_task = loop.run_in_executor(None, _fetch_remotive_jobs, skill_list)
+    remoteok_results, remotive_results = await asyncio.gather(remoteok_task, remotive_task)
+    raw.extend(remoteok_results)
+    raw.extend(remotive_results)
+
+    seen, out = set(), []
+    for r in raw:
+        url = r.get("url", "")
+        if not url or url in seen:
+            continue
+        seen.add(url)
+        out.append(r)
+        if len(out) >= 12:
+            break
+
+    return JSONResponse({"jobs": out})
