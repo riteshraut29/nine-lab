@@ -248,6 +248,18 @@ def _fetch_jsearch_jobs(skills: list[str], title: str, is_internship: bool = Fal
                 if not url or url in seen_urls:
                     continue
                 seen_urls.add(url)
+                job_title = (job.get("job_title") or "").strip()
+                employer  = (job.get("employer_name") or "").strip()
+
+                # Skip aggregate search-result pages — real postings have an employer name
+                # and don't have digit-heavy titles like "1,39,166 software developer jobs"
+                if not employer:
+                    continue
+                if re.search(r'\d[\d,]{2,}\s+\w+\s+jobs', job_title, re.IGNORECASE):
+                    continue
+                if re.search(r'\d+\s+(job vacancies|openings|positions|jobs in)', job_title, re.IGNORECASE):
+                    continue
+
                 pub = (job.get("job_publisher") or "").lower()
                 url_l = url.lower()
                 if "linkedin" in pub or "linkedin" in url_l:
@@ -260,10 +272,11 @@ def _fetch_jsearch_jobs(skills: list[str], title: str, is_internship: bool = Fal
                     source = "Glassdoor"
                 else:
                     source = job.get("job_publisher") or "Job Board"
-                is_intern = "intern" in (job.get("job_title") or "").lower()
+
+                is_intern = "intern" in job_title.lower()
                 out.append({
-                    "title": (job.get("job_title") or title)[:100],
-                    "company": (job.get("employer_name") or "")[:60],
+                    "title": job_title[:100],
+                    "company": employer[:60],
                     "url": url, "source": source,
                     "type": "internship" if is_intern else "job",
                     "snippet": (job.get("job_description") or "")[:200].strip(),
