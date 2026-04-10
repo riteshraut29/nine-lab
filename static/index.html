@@ -706,50 +706,26 @@
         <div class="ag" id="ag0">
           <div class="ag-ico-wrap">🔍</div>
           <div class="ag-info">
-            <div class="ag-name">Research Agent</div>
-            <div class="ag-desc">Searches web for company info, role requirements & market context</div>
+            <div class="ag-name">Research</div>
+            <div class="ag-desc">Reads your role & JD — extracts required skills, keywords & context</div>
           </div>
           <div class="ag-st-wrap"><div class="ag-spinner"></div><div class="ag-check">✅</div><div class="ag-st" id="ag0s">Waiting</div></div>
         </div>
         <div class="ag" id="ag1">
           <div class="ag-ico-wrap">📊</div>
           <div class="ag-info">
-            <div class="ag-name">Analysis Agent</div>
-            <div class="ag-desc">Scores your profile against the JD, finds skill gaps & strengths</div>
+            <div class="ag-name">ATS Scoring</div>
+            <div class="ag-desc">Measures keyword match, section completeness & format quality</div>
           </div>
           <div class="ag-st-wrap"><div class="ag-spinner"></div><div class="ag-check">✅</div><div class="ag-st" id="ag1s">Waiting</div></div>
         </div>
         <div class="ag" id="ag2">
           <div class="ag-ico-wrap">✍️</div>
           <div class="ag-info">
-            <div class="ag-name">Resume Writer</div>
-            <div class="ag-desc">Rewrites bullets with impact metrics, ATS keywords & action verbs</div>
+            <div class="ag-name">Resume Writing</div>
+            <div class="ag-desc">Rewrites every bullet with action verbs, metrics & missing JD keywords</div>
           </div>
           <div class="ag-st-wrap"><div class="ag-spinner"></div><div class="ag-check">✅</div><div class="ag-st" id="ag2s">Waiting</div></div>
-        </div>
-        <div class="ag" id="ag3">
-          <div class="ag-ico-wrap">🗺️</div>
-          <div class="ag-info">
-            <div class="ag-name">Prep Planner</div>
-            <div class="ag-desc">Builds a 7-day interview prep plan with resources & questions</div>
-          </div>
-          <div class="ag-st-wrap"><div class="ag-spinner"></div><div class="ag-check">✅</div><div class="ag-st" id="ag3s">Waiting</div></div>
-        </div>
-        <div class="ag" id="ag4">
-          <div class="ag-ico-wrap">🏢</div>
-          <div class="ag-info">
-            <div class="ag-name">Company Intel</div>
-            <div class="ag-desc">Gathers culture, tech stack, recent news & interview style</div>
-          </div>
-          <div class="ag-st-wrap"><div class="ag-spinner"></div><div class="ag-check">✅</div><div class="ag-st" id="ag4s">Waiting</div></div>
-        </div>
-        <div class="ag" id="ag5">
-          <div class="ag-ico-wrap">📄</div>
-          <div class="ag-info">
-            <div class="ag-name">Resume Builder</div>
-            <div class="ag-desc">Formats final resume into clean ATS-ready layout</div>
-          </div>
-          <div class="ag-st-wrap"><div class="ag-spinner"></div><div class="ag-check">✅</div><div class="ag-st" id="ag5s">Waiting</div></div>
         </div>
       </div>
     </div>
@@ -1342,7 +1318,7 @@ function buildPlainResume(d) {
 function resetAgents() {
   _logStart = Date.now();
   _lastStage = '';
-  for (let i=0;i<6;i++) {
+  for (let i=0;i<3;i++) {
     document.getElementById('ag'+i)?.classList.remove('run','done');
     document.getElementById('ag'+i+'s').textContent = 'Waiting';
   }
@@ -1350,8 +1326,8 @@ function resetAgents() {
   document.getElementById('progPct').textContent = '0%';
   document.getElementById('progMsg').textContent = 'Initializing…';
   document.getElementById('logBody').innerHTML = '';
-  addLog('System booting up…', 'head');
-  addLog('Connecting to AI agents', 'info');
+  addLog('Pipeline starting…', 'head');
+  addLog('Sending your profile to AI', 'info');
 }
 
 let _logStart = Date.now();
@@ -1396,41 +1372,26 @@ function updateProcUI(data) {
   _lastStage = stage;
 
   if (stage === 'research') {
-    addLog('Research Agent activated', 'head');
-    addLog('Querying company database…', 'info');
-    addLog('Fetching role requirements & market data', 'info');
-    setAg(0,'run','Searching…');
+    addLog('Reading job description…', 'info');
+    addLog('Extracting required skills & keywords', 'info');
+    setAg(0,'run','Reading JD…');
   } else if (stage === 'analysis') {
-    addLog('Research Agent → complete', 'ok');
-    addLog('Analysis Agent activated', 'head');
-    addLog('Scoring profile against job description…', 'info');
-    addLog('Detecting skill gaps and keyword matches', 'info');
-    setAg(0,'done','Done'); setAg(1,'run','Scoring…');
+    setAg(0,'done','Done');
+    addLog('Research → done', 'ok');
+    addLog('Calculating ATS keyword match…', 'info');
+    addLog('Checking section completeness & format', 'info');
+    setAg(1,'run','Scoring…');
   } else if (stage === 'pdf') {
-    addLog('Analysis Agent → complete', 'ok');
-    addLog('Resume Writer activated', 'head');
-    addLog('Rewriting bullets with impact metrics…', 'info');
-    addLog('Injecting ATS keywords from JD', 'info');
-    addLog('Prep Planner activated', 'head');
-    addLog('Building 7-day interview roadmap…', 'info');
-    addLog('Company Intel activated', 'head');
-    addLog('Gathering culture & tech stack data', 'info');
     setAg(0,'done','Done'); setAg(1,'done','Done');
-    setAg(2,'run','Writing…'); setAg(3,'run','Planning…'); setAg(4,'run','Researching…');
-    if (pct >= 85) {
-      addLog('Resume Writer → complete', 'ok');
-      addLog('Prep Planner → complete', 'ok');
-      addLog('Company Intel → complete', 'ok');
-      addLog('Resume Builder activated', 'head');
-      addLog('Formatting final ATS-ready layout…', 'info');
-      setAg(2,'done','Done'); setAg(3,'done','Done'); setAg(4,'done','Done');
-      setAg(5,'run','Formatting…');
-    }
+    addLog('ATS Scoring → done', 'ok');
+    addLog('Rewriting experience bullets…', 'info');
+    addLog('Injecting missing keywords from JD', 'info');
+    addLog('Strengthening action verbs & metrics', 'info');
+    setAg(2,'run','Writing…');
   } else if (stage === 'done') {
-    addLog('Resume Builder → complete', 'ok');
-    addLog('All agents finished ✓', 'ok');
-    addLog('Preparing your results…', 'info');
-    for(let i=0;i<6;i++) setAg(i,'done','Done');
+    setAg(0,'done','Done'); setAg(1,'done','Done'); setAg(2,'done','Done');
+    addLog('Resume Writing → done', 'ok');
+    addLog('Resume ready ✓', 'ok');
   }
 }
 
