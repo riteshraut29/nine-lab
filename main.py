@@ -204,135 +204,180 @@ def _detect_job_board(url: str):
     return None
 
 
-def _fetch_jsearch_jobs(title: str, company: str) -> list[dict]:
+def _build_skill_queries(skills: list[str], title: str, is_internship: bool = False) -> list[str]:
+    """Build ordered list of search queries from most to least specific."""
+    queries = []
+    suffix = " internship India" if is_internship else " developer India"
+    intern_suffix = " internship India" if is_internship else " India"
+    # Most specific: top 2 skills combined
+    if len(skills) >= 2:
+        queries.append(f"{skills[0]} {skills[1]}{intern_suffix}")
+    # Each top skill individually
+    for s in skills[:4]:
+        queries.append(f"{s}{suffix}")
+    # Job title as fallback
+    if title:
+        queries.append(f"{title}{' internship' if is_internship else ''} India")
+    # Deduplicate preserving order
+    seen, result = set(), []
+    for q in queries:
+        if q not in seen:
+            seen.add(q); result.append(q)
+    return result
+
+
+def _fetch_jsearch_jobs(skills: list[str], title: str, is_internship: bool = False) -> list[dict]:
     if not JSEARCH_API_KEY:
         return []
     import httpx
-    try:
-        r = httpx.get(
-            "https://jsearch.p.rapidapi.com/search",
-            headers={"x-rapidapi-key": JSEARCH_API_KEY, "x-rapidapi-host": "jsearch.p.rapidapi.com"},
-            params={"query": f"{title} India", "page": "1", "num_pages": "1", "date_posted": "month"},
-            timeout=8,
-        )
-        if r.status_code != 200:
-            return []
-        out = []
-        for job in r.json().get("data", [])[:6]:
-            url = job.get("job_apply_link") or job.get("job_google_link", "")
-            if not url:
+    queries = _build_skill_queries(skills, title, is_internship)
+    seen_urls, out = set(), []
+    for query in queries:
+        if len(out) >= 6:
+            break
+        try:
+            r = httpx.get(
+                "https://jsearch.p.rapidapi.com/search",
+                headers={"x-rapidapi-key": JSEARCH_API_KEY, "x-rapidapi-host": "jsearch.p.rapidapi.com"},
+                params={"query": query, "page": "1", "num_pages": "1", "date_posted": "month"},
+                timeout=8,
+            )
+            if r.status_code != 200:
                 continue
-            pub = job.get("job_publisher", "")
-            source = ("LinkedIn" if "linkedin" in pub.lower() else
-                      "Indeed" if "indeed" in pub.lower() else
-                      "Glassdoor" if "glassdoor" in pub.lower() else pub or "Job Board")
-            is_intern = "intern" in (job.get("job_title") or "").lower()
-            out.append({
-                "title": (job.get("job_title") or title)[:100],
-                "company": (job.get("employer_name") or "")[:60],
-                "url": url, "source": source,
-                "type": "internship" if is_intern else "job",
-                "snippet": (job.get("job_description") or "")[:200].strip(),
-            })
-        return out
-    except Exception:
-        return []
+            for job in r.json().get("data", []):
+                url = job.get("job_apply_link") or job.get("job_google_link", "")
+                if not url or url in seen_urls:
+                    continue
+                seen_urls.add(url)
+                pub = job.get("job_publisher", "")
+                source = ("LinkedIn" if "linkedin" in pub.lower() else
+                          "Indeed" if "indeed" in pub.lower() else
+                          "Glassdoor" if "glassdoor" in pub.lower() else pub or "Job Board")
+                is_intern = "intern" in (job.get("job_title") or "").lower()
+                out.append({
+                    "title": (job.get("job_title") or title)[:100],
+                    "company": (job.get("employer_name") or "")[:60],
+                    "url": url, "source": source,
+                    "type": "internship" if is_intern else "job",
+                    "snippet": (job.get("job_description") or "")[:200].strip(),
+                })
+                if len(out) >= 6:
+                    break
+        except Exception:
+            continue
+    return out
 
 
-def _fetch_adzuna_jobs(title: str, is_internship: bool = False) -> list[dict]:
+def _fetch_adzuna_jobs(skills: list[str], title: str, is_internship: bool = False) -> list[dict]:
     if not ADZUNA_APP_ID or not ADZUNA_APP_KEY:
         return []
     import httpx
-    try:
-        what = f"{title} internship" if is_internship else title
-        r = httpx.get(
-            "https://api.adzuna.com/v1/api/jobs/in/search/1",
-            params={"app_id": ADZUNA_APP_ID, "app_key": ADZUNA_APP_KEY,
-                    "results_per_page": 5, "what": what},
-            timeout=8,
-        )
-        if r.status_code != 200:
-            return []
-        out = []
-        for job in r.json().get("results", [])[:5]:
-            url = job.get("redirect_url", "")
-            if not url:
+    queries = _build_skill_queries(skills, title, is_internship)
+    seen_urls, out = set(), []
+    for query in queries:
+        if len(out) >= 5:
+            break
+        try:
+            r = httpx.get(
+                "https://api.adzuna.com/v1/api/jobs/in/search/1",
+                params={"app_id": ADZUNA_APP_ID, "app_key": ADZUNA_APP_KEY,
+                        "results_per_page": 5, "what": query},
+                timeout=8,
+            )
+            if r.status_code != 200:
                 continue
-            t = job.get("title", title)
-            out.append({
-                "title": t[:100],
-                "company": job.get("company", {}).get("display_name", "")[:60],
-                "url": url, "source": "Adzuna",
-                "type": "internship" if is_internship or "intern" in t.lower() else "job",
-                "snippet": (job.get("description") or "")[:200].strip(),
-            })
-        return out
-    except Exception:
-        return []
+            for job in r.json().get("results", []):
+                url = job.get("redirect_url", "")
+                if not url or url in seen_urls:
+                    continue
+                seen_urls.add(url)
+                t = job.get("title", title)
+                out.append({
+                    "title": t[:100],
+                    "company": job.get("company", {}).get("display_name", "")[:60],
+                    "url": url, "source": "Adzuna",
+                    "type": "internship" if is_internship or "intern" in t.lower() else "job",
+                    "snippet": (job.get("description") or "")[:200].strip(),
+                })
+                if len(out) >= 5:
+                    break
+        except Exception:
+            continue
+    return out
 
 
 def _fetch_remoteok_jobs(skills: list[str]) -> list[dict]:
-    """Fetch remote/freelance jobs from RemoteOK — no API key needed."""
+    """Fetch remote/freelance jobs from RemoteOK — no API key needed. Tries each skill until 5+ results."""
     import httpx
-    try:
-        tag = skills[0].lower().replace(' ', '-') if skills else 'developer'
-        r = httpx.get(
-            f"https://remoteok.com/api?tags={tag}",
-            headers={"User-Agent": "Mozilla/5.0 (NineLab Resume App)"},
-            timeout=8,
-        )
-        if r.status_code != 200:
-            return []
-        data = r.json()
-        # First item is metadata, skip it
-        jobs = [j for j in data if isinstance(j, dict) and j.get("url")]
-        out = []
-        for job in jobs[:8]:
-            url = job.get("url", "")
-            if not url.startswith("http"):
-                url = "https://remoteok.com" + url
-            out.append({
-                "title": (job.get("position") or "")[:100],
-                "company": (job.get("company") or "")[:60],
-                "url": url,
-                "source": "RemoteOK",
-                "snippet": (job.get("description") or "")[:200].strip(),
-                "tags": job.get("tags", [])[:5],
-            })
-        return out
-    except Exception:
-        return []
+    seen_urls, out = set(), []
+    for skill in (skills[:4] if skills else ['developer']):
+        if len(out) >= 6:
+            break
+        tag = skill.lower().replace(' ', '-').replace('#', 'sharp').replace('+', 'plus')
+        try:
+            r = httpx.get(
+                f"https://remoteok.com/api?tags={tag}",
+                headers={"User-Agent": "Mozilla/5.0 (NineLab)"},
+                timeout=8,
+            )
+            if r.status_code != 200:
+                continue
+            for job in r.json():
+                if not isinstance(job, dict) or not job.get("url"):
+                    continue
+                url = job["url"]
+                if not url.startswith("http"):
+                    url = "https://remoteok.com" + url
+                if url in seen_urls:
+                    continue
+                seen_urls.add(url)
+                out.append({
+                    "title": (job.get("position") or "")[:100],
+                    "company": (job.get("company") or "")[:60],
+                    "url": url, "source": "RemoteOK",
+                    "snippet": (job.get("description") or "")[:200].strip(),
+                    "tags": job.get("tags", [])[:5],
+                })
+                if len(out) >= 6:
+                    break
+        except Exception:
+            continue
+    return out
 
 
 def _fetch_remotive_jobs(skills: list[str]) -> list[dict]:
-    """Fetch remote jobs from Remotive — no API key needed."""
+    """Fetch remote jobs from Remotive — no API key needed. Tries each skill until 5+ results."""
     import httpx
-    try:
-        query = skills[0] if skills else "developer"
-        r = httpx.get(
-            "https://remotive.com/api/remote-jobs",
-            params={"search": query, "limit": 8},
-            headers={"User-Agent": "Mozilla/5.0 (NineLab Resume App)"},
-            timeout=8,
-        )
-        if r.status_code != 200:
-            return []
-        out = []
-        for job in r.json().get("jobs", [])[:8]:
-            url = job.get("url", "")
-            if not url:
+    seen_urls, out = set(), []
+    for skill in (skills[:4] if skills else ['developer']):
+        if len(out) >= 6:
+            break
+        try:
+            r = httpx.get(
+                "https://remotive.com/api/remote-jobs",
+                params={"search": skill, "limit": 10},
+                headers={"User-Agent": "Mozilla/5.0 (NineLab)"},
+                timeout=8,
+            )
+            if r.status_code != 200:
                 continue
-            out.append({
-                "title": (job.get("title") or "")[:100],
-                "company": (job.get("company_name") or "")[:60],
-                "url": url,
-                "source": "Remotive",
-                "snippet": "",
-                "tags": job.get("tags", [])[:5],
-            })
-        return out
-    except Exception:
-        return []
+            for job in r.json().get("jobs", []):
+                url = job.get("url", "")
+                if not url or url in seen_urls:
+                    continue
+                seen_urls.add(url)
+                out.append({
+                    "title": (job.get("title") or "")[:100],
+                    "company": (job.get("company_name") or "")[:60],
+                    "url": url, "source": "Remotive",
+                    "snippet": (job.get("description") or "")[:150].strip(),
+                    "tags": job.get("tags", [])[:5],
+                })
+                if len(out) >= 6:
+                    break
+        except Exception:
+            continue
+    return out
 
 
 # ── Text helpers ──────────────────────────────────────────────────────────────
@@ -5037,33 +5082,30 @@ async def get_dashboard_v2(authorization: Optional[str] = Header(None)):
 # ── Real Jobs endpoint ────────────────────────────────────────────────────────
 
 @app.get("/ninelab/real-jobs")
-async def real_jobs(title: str = "", company: str = "", type: str = "both"):
+async def real_jobs(title: str = "", skills: str = "", type: str = "both"):
+    """Fetch real job/internship listings. Searches by skills first, title as fallback."""
     title = title.strip()[:80]
-    company = company.strip()[:60]
-    if not title:
+    skill_list = [s.strip() for s in skills.split(",") if s.strip()][:6]
+    if not skill_list and not title:
         return JSONResponse({"jobs": [], "internships": []})
 
     want_intern = type in ("internship", "both")
-    want_job    = type in ("job", "both")
+
+    loop = asyncio.get_event_loop()
+
+    # Run JSearch + Adzuna in parallel, each with skill-based retry
+    jsearch_jobs_task    = loop.run_in_executor(None, _fetch_jsearch_jobs, skill_list, title, False)
+    jsearch_intern_task  = loop.run_in_executor(None, _fetch_jsearch_jobs, skill_list, title, True) if want_intern else None
+    adzuna_jobs_task     = loop.run_in_executor(None, _fetch_adzuna_jobs,  skill_list, title, False)
+    adzuna_intern_task   = loop.run_in_executor(None, _fetch_adzuna_jobs,  skill_list, title, True) if want_intern else None
+
+    tasks = [t for t in [jsearch_jobs_task, jsearch_intern_task, adzuna_jobs_task, adzuna_intern_task] if t]
+    results = await asyncio.gather(*tasks, return_exceptions=True)
 
     raw = []
-    if JSEARCH_API_KEY:
-        raw.extend(_fetch_jsearch_jobs(title, company))
-    if ADZUNA_APP_ID and ADZUNA_APP_KEY:
-        raw.extend(_fetch_adzuna_jobs(title, is_internship=want_intern))
-
-    # Tavily fallback only if both APIs unavailable
-    if not raw and TAVILY_API_KEY:
-        try:
-            for r in tavily_search(f'"{title}" job apply 2025 India', retries=0):
-                url = r.get("url", "")
-                source = _detect_job_board(url) if url else None
-                if source:
-                    raw.append({"title": r.get("title", title)[:100], "company": "",
-                                "url": url, "source": source, "type": "job",
-                                "snippet": (r.get("content") or "")[:200].strip()})
-        except Exception:
-            pass
+    for r in results:
+        if isinstance(r, list):
+            raw.extend(r)
 
     seen, jobs, internships = set(), [], []
     for r in raw:
@@ -5072,7 +5114,7 @@ async def real_jobs(title: str = "", company: str = "", type: str = "both"):
             continue
         seen.add(url)
         bucket = internships if r.get("type") == "internship" else jobs
-        if len(bucket) < 5:
+        if len(bucket) < 8:
             bucket.append(r)
 
     return JSONResponse({"jobs": jobs, "internships": internships})

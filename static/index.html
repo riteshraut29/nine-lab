@@ -1596,8 +1596,9 @@ async function loadOpportunities() {
   document.getElementById('oppInternships').innerHTML = '<div class="opp-spinner"><div class="spinner"></div> Searching internships…</div>';
 
   try {
-    // Search general market — no company filter
-    const params = new URLSearchParams({ title: searchTitle, type: 'both' });
+    // Send skills for accurate matching, title as fallback
+    const allSkills = [...rd.skills.langs, ...rd.skills.frameworks, ...rd.skills.tools].filter(Boolean).slice(0, 6);
+    const params = new URLSearchParams({ title: searchTitle, skills: allSkills.join(','), type: 'both' });
     const r = await fetch(`${BASE}/real-jobs?${params}`);
     if (r.ok) {
       const data = await r.json();
