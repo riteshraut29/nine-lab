@@ -78,7 +78,8 @@
 
     /* ── Steps ── */
     .step { display: none; min-height: 100vh; flex-direction: column; }
-    .step.on { display: flex; }
+    .step.on { display: flex; animation: stepIn 0.28s cubic-bezier(0.16,1,0.3,1) both; }
+    @keyframes stepIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
 
     /* ── Nav ── */
     .nav {
@@ -207,14 +208,26 @@
     .pg-title { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 6px; }
     .pg-sub { font-size: 14px; color: var(--muted); margin-bottom: 24px; line-height: 1.6; }
     .drop-zone {
-      border: 2px dashed var(--border); border-radius: 14px;
-      padding: 52px 24px; text-align: center; cursor: pointer; transition: all 0.2s;
-      background: var(--surface);
+      border: 2px dashed var(--border); border-radius: 16px;
+      padding: 48px 24px; text-align: center; cursor: pointer;
+      transition: all 0.22s cubic-bezier(0.4,0,0.2,1);
+      background: var(--surface); position: relative; overflow: hidden;
     }
-    .drop-zone:hover, .drop-zone.over { border-color: var(--accent); background: var(--accent-light); }
-    .drop-ico { font-size: 42px; margin-bottom: 14px; }
+    .drop-zone::before {
+      content: ''; position: absolute; inset: 0; border-radius: 14px;
+      background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(37,99,235,0.05), transparent);
+      opacity: 0; transition: opacity 0.2s;
+    }
+    .drop-zone:hover, .drop-zone.over { border-color: var(--accent); background: var(--accent-light); transform: scale(1.005); box-shadow: 0 8px 32px rgba(37,99,235,0.1); }
+    .drop-zone:hover::before, .drop-zone.over::before { opacity: 1; }
+    .drop-zone.over { border-style: solid; }
+    .drop-ico { margin-bottom: 16px; display: flex; justify-content: center; }
+    .drop-ico svg { color: var(--subtle); transition: color 0.2s; }
+    .drop-zone:hover .drop-ico svg, .drop-zone.over .drop-ico svg { color: var(--accent); }
     .drop-t { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
     .drop-s { font-size: 13px; color: var(--muted); }
+    .drop-formats { display: inline-flex; gap: 6px; margin-top: 14px; }
+    .drop-fmt { font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 4px; background: var(--bg); border: 1px solid var(--border); color: var(--subtle); }
     .extracted-box {
       background: var(--accent-light); border-radius: 10px; padding: 14px; margin-top: 16px;
       max-height: 200px; overflow-y: auto; font-size: 12px; line-height: 1.7;
@@ -317,19 +330,33 @@
 
     /* ─────────────────── PROCESSING ─────────────────── */
     .proc-body {
-      flex: 1; display: flex; gap: 0; overflow: hidden; height: calc(100vh - 56px);
+      flex: 1; display: flex; gap: 0; overflow: hidden; height: calc(100vh - 60px);
     }
     /* Left panel — pipeline */
     .proc-left {
       flex: 1; display: flex; flex-direction: column; align-items: center;
       justify-content: center; padding: 40px 32px; overflow-y: auto;
     }
-    .proc-t { font-size: 24px; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 6px; text-align: center; }
-    .proc-s { font-size: 14px; color: var(--muted); margin-bottom: 28px; text-align: center; }
+    .proc-t { font-size: 26px; font-weight: 800; letter-spacing: -0.6px; margin-bottom: 6px; text-align: center; }
+    .proc-s { font-size: 14px; color: var(--muted); margin-bottom: 6px; text-align: center; }
     .prog-wrap { width: 100%; max-width: 480px; margin-bottom: 8px; }
     .prog-bar { width: 100%; height: 6px; background: var(--border); border-radius: 100px; overflow: hidden; }
-    .prog-fill { height: 100%; background: linear-gradient(90deg, #7C3AED, #A78BFA); border-radius: 100px; transition: width 0.6s cubic-bezier(0.4,0,0.2,1); width: 0%; }
+    .prog-fill {
+      height: 100%; background: linear-gradient(90deg, #2563EB, #60A5FA);
+      border-radius: 100px; transition: width 0.6s cubic-bezier(0.4,0,0.2,1); width: 0%;
+      position: relative; overflow: hidden;
+    }
+    .prog-fill::after {
+      content: ''; position: absolute; top: 0; left: -100%; width: 60%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+      animation: shimmer-bar 1.5s ease-in-out infinite;
+    }
+    @keyframes shimmer-bar { to { left: 200%; } }
     .prog-pct { font-size: 12px; color: var(--muted); text-align: right; margin-top: 6px; font-weight: 600; }
+    /* Ticker message */
+    .prog-msg { font-size: 13px; color: var(--muted); text-align: center; margin-bottom: 24px; min-height: 20px; }
+    .prog-msg.tick { animation: tickIn 0.3s cubic-bezier(0.16,1,0.3,1); }
+    @keyframes tickIn { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:translateY(0); } }
     .prog-msg { font-size: 13px; color: var(--muted); text-align: center; margin-bottom: 24px; min-height: 20px; }
 
     /* Pipeline steps (vertical) */
@@ -395,8 +422,8 @@
     /* ─────────────────── OUTPUT ─────────────────── */
     .out-hd {
       display: flex; align-items: center; justify-content: space-between;
-      padding: 14px 24px; background: var(--surface); border-bottom: 1px solid var(--border); flex-shrink: 0;
-      gap: 16px;
+      padding: 14px 24px; background: var(--surface); border-bottom: 1px solid var(--border);
+      flex-shrink: 0; gap: 16px; position: sticky; top: 0; z-index: 10;
     }
     .ats-badge { display: flex; align-items: center; gap: 14px; }
     .ats-score-ring {
@@ -422,8 +449,8 @@
     .prev-panel { flex: 1; background: #E8E8E8; overflow-y: auto; display: flex; flex-direction: column; align-items: center; padding: 24px; }
     .resume-paper {
       width: 100%; max-width: 660px; background: white; padding: 38px 44px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.12); border-radius: 3px;
-      font-size: 10px; line-height: 1.45; color: #111;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06), 0 12px 40px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.04);
+      border-radius: 4px; font-size: 10px; line-height: 1.45; color: #111;
     }
 
     /* Resume paper typography */
@@ -456,6 +483,29 @@
     .pdf-card-name { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
     .pdf-card-desc { font-size: 11px; color: var(--muted); margin-bottom: 12px; }
     .pdf-card-btns { display: flex; gap: 6px; }
+
+    /* ─── Micro-interactions ─── */
+    .btn:active:not(:disabled) { transform: translateY(0) scale(0.97) !important; box-shadow: none !important; }
+    .ac:active { transform: scale(0.98) !important; }
+    .entry { transition: box-shadow 0.15s, border-color 0.15s; }
+    .entry:focus-within { border-color: var(--accent-border); box-shadow: 0 0 0 3px rgba(37,99,235,0.06); }
+    .opp-card { transition: box-shadow 0.18s, transform 0.18s, border-color 0.18s; }
+    .opp-card:hover { box-shadow: 0 6px 24px rgba(0,0,0,0.1); transform: translateY(-2px); border-color: var(--accent-border); }
+    .fn-item { transition: background 0.12s, color 0.12s, padding-left 0.15s; }
+    .fn-item.on { padding-left: 20px; }
+    .tag { transition: background 0.12s, border-color 0.12s; }
+    .tag:hover { background: var(--accent-border); border-color: var(--accent); }
+    /* File info success state */
+    .file-info { display: none; align-items: center; gap: 10px; padding: 12px 14px; background: var(--green-bg); border: 1px solid #A7F3D0; border-radius: 10px; margin-top: 14px; font-size: 13px; animation: stepIn 0.25s ease; }
+    .file-info .ico { font-size: 20px; }
+    /* Job target screen upgrade */
+    .job-inner { max-width: 560px; margin: 0 auto; }
+    .job-tip { display: flex; align-items: flex-start; gap: 10px; padding: 12px 14px; background: var(--accent-light); border: 1px solid var(--accent-border); border-radius: 10px; margin-bottom: 20px; font-size: 12px; color: var(--accent); line-height: 1.5; }
+    .job-tip svg { flex-shrink: 0; margin-top: 1px; }
+    /* Skeleton loader */
+    .skel { background: linear-gradient(90deg, var(--border) 25%, var(--border-subtle) 50%, var(--border) 75%); background-size: 200% 100%; animation: skel-shimmer 1.4s ease-in-out infinite; border-radius: 6px; }
+    @keyframes skel-shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+    .opp-spinner .skel { height: 80px; margin-bottom: 10px; border-radius: 12px; }
 
     /* ── Misc ── */
     .divider { border: none; border-top: 1px solid var(--border); margin: 18px 0; }
@@ -574,14 +624,44 @@
     /* Responsive */
     @media (max-width: 900px) { .form-prev { display: none; } }
     @media (max-width: 768px) {
+      /* Nav */
+      .nav { padding: 0 16px; height: 52px; }
+      .nav-progress { display: none; }
+      /* Landing */
+      .land-body { padding: 40px 16px 60px; }
+      .land-h { letter-spacing: -1.5px; }
+      .land-sub { font-size: 15px; }
+      .land-cta { width: 100%; max-width: 360px; }
+      .testi-row { grid-template-columns: 1fr; }
+      .land-stats { gap: 24px; }
+      .ls-n { font-size: 20px; }
+      /* Form */
       .form-nav { display: none; }
-      .agents-grid { grid-template-columns: 1fr 1fr; }
+      .form-progress-bar { padding: 8px 16px 0; }
+      .form-body { padding: 20px 16px 80px; }
+      /* Output */
       .out-body { flex-direction: column; height: auto; }
       .edit-panel { width: 100%; border-right: none; border-bottom: 1px solid var(--border); }
-      .prev-panel { min-height: 480px; }
+      .prev-panel { min-height: 480px; padding: 16px; }
+      .out-hd { flex-wrap: wrap; gap: 10px; padding: 12px 16px; }
+      .out-acts { width: 100%; justify-content: flex-end; }
+      /* Grid fixes */
       .ac-grid { grid-template-columns: 1fr; }
       .r2 { grid-template-columns: 1fr; }
+      .r3 { grid-template-columns: 1fr; }
       .pdf-cards { grid-template-columns: 1fr; }
+      /* Upload */
+      .center-wrap { padding: 24px 16px; }
+      /* Job */
+      .job-body { padding: 24px 16px; }
+      /* Processing */
+      .proc-right { display: none; }
+      .proc-left { padding: 28px 16px; }
+    }
+    @media (max-width: 480px) {
+      .college-names { gap: 14px; }
+      .testi { padding: 14px; }
+      .trust-strip { gap: 8px; }
     }
   </style>
 </head>
@@ -722,9 +802,12 @@
         ondragleave="this.classList.remove('over')"
         ondrop="handleDrop(event)"
         onclick="document.getElementById('fileInput').click()">
-        <div class="drop-ico">📁</div>
-        <div class="drop-t">Drop your PDF here</div>
-        <div class="drop-s">or click to browse — max 10 MB</div>
+        <div class="drop-ico">
+          <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        </div>
+        <div class="drop-t">Drop your resume PDF here</div>
+        <div class="drop-s">or click to browse your files</div>
+        <div class="drop-formats"><span class="drop-fmt">PDF</span><span class="drop-fmt">Max 10 MB</span></div>
       </div>
       <input type="file" id="fileInput" accept=".pdf" style="display:none" onchange="handleFile(this.files[0])">
       <div class="file-info" id="fileInfo">
@@ -952,7 +1035,11 @@
   <div class="job-body">
     <div class="job-inner">
       <h2 class="pg-title" style="margin-bottom:4px;">Target Job</h2>
-      <p class="pg-sub">Tell the AI what role you're applying for so it can tailor everything perfectly.</p>
+      <p class="pg-sub">Tell the AI what role you're applying for so it can tailor your resume perfectly.</p>
+      <div class="job-tip">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        Paste the full job description for the best ATS match. The more detail you give, the higher your score.
+      </div>
       <div class="err" id="jobErr"></div>
       <div class="fg"><label class="lbl">Company Name</label><input type="text" id="jCompany" placeholder="Google, Infosys, Swiggy, JPMorgan…"></div>
       <div class="fg"><label class="lbl">Job Title / Role</label><input type="text" id="jTitle" placeholder="Software Development Engineer, Data Analyst…"></div>
@@ -1745,6 +1832,42 @@ function buildPlainResume(d) {
 }
 
 // ── Polling ───────────────────────────────────────────────────────────────────
+const _tickerMsgs = [
+  'Reading your job description…',
+  'Extracting required ATS keywords…',
+  'Matching your skills to the JD…',
+  'Analysing section completeness…',
+  'Scoring keyword density…',
+  'Rewriting experience bullets…',
+  'Strengthening action verbs…',
+  'Injecting missing JD keywords…',
+  'Adding measurable impact metrics…',
+  'Formatting for ATS parsers…',
+  'Checking resume length & structure…',
+  'Almost there — final polish…'
+];
+let _tickerTimer = null, _tickerIdx = 0;
+
+function startTicker() {
+  stopTicker();
+  _tickerIdx = 0;
+  const el = document.getElementById('progMsg');
+  const tick = () => {
+    if (!el) return;
+    el.classList.remove('tick');
+    void el.offsetWidth; // reflow to restart animation
+    el.classList.add('tick');
+    el.textContent = _tickerMsgs[_tickerIdx % _tickerMsgs.length];
+    _tickerIdx++;
+    _tickerTimer = setTimeout(tick, 2800);
+  };
+  tick();
+}
+
+function stopTicker() {
+  if (_tickerTimer) { clearTimeout(_tickerTimer); _tickerTimer = null; }
+}
+
 function resetAgents() {
   _logStart = Date.now();
   _lastStage = '';
@@ -1754,10 +1877,10 @@ function resetAgents() {
   }
   document.getElementById('progFill').style.width = '0%';
   document.getElementById('progPct').textContent = '0%';
-  document.getElementById('progMsg').textContent = 'Initializing…';
   document.getElementById('logBody').innerHTML = '';
   addLog('Pipeline starting…', 'head');
   addLog('Sending your profile to AI', 'info');
+  startTicker();
 }
 
 let _logStart = Date.now();
@@ -1834,6 +1957,7 @@ function setAg(i, cls, msg) {
 }
 
 function handleDone(data) {
+  stopTicker();
   atsScores.before = data.ats_before || 0;
   atsScores.after = data.ats_after || 0;
   generatedFiles = data.files || {};
