@@ -484,6 +484,61 @@
     .pdf-card-desc { font-size: 11px; color: var(--muted); margin-bottom: 12px; }
     .pdf-card-btns { display: flex; gap: 6px; }
 
+    /* ══════ FEATURE: JD Keyword Detector ══════ */
+    .jd-kw-area {
+      margin-top: 10px; min-height: 0; transition: min-height 0.3s;
+    }
+    .jd-kw-label {
+      font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase;
+      letter-spacing: 0.8px; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;
+    }
+    .jd-kw-label .kw-count {
+      background: var(--accent); color: #fff; font-size: 10px; padding: 1px 6px;
+      border-radius: 100px; font-weight: 700;
+    }
+    .jd-kw-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+    .jd-chip {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 4px 10px; border-radius: 100px;
+      font-size: 12px; font-weight: 500; cursor: default;
+      border: 1.5px solid var(--accent-border);
+      background: var(--accent-light); color: var(--accent);
+      animation: chipPop 0.35s cubic-bezier(0.34,1.56,0.64,1) both;
+      animation-delay: var(--d, 0ms);
+    }
+    @keyframes chipPop {
+      from { opacity:0; transform:scale(0.5) translateY(6px); }
+      to   { opacity:1; transform:scale(1) translateY(0); }
+    }
+    .jd-chip.tech   { background:#EFF6FF; border-color:#BFDBFE; color:#1D4ED8; }
+    .jd-chip.exp    { background:#ECFDF5; border-color:#A7F3D0; color:#065F46; }
+    .jd-chip.skill  { background:#F5F3FF; border-color:#DDD6FE; color:#5B21B6; }
+    .jd-chip.soft   { background:#FFFBEB; border-color:#FDE68A; color:#92400E; }
+
+    /* ══════ FEATURE: ATS SVG Ring ══════ */
+    .ats-ring-wrap {
+      position: relative; width: 68px; height: 68px; flex-shrink: 0;
+    }
+    .ats-ring-svg { position: absolute; inset: 0; transform: rotate(-90deg); }
+    .ats-ring-bg   { stroke: var(--border); }
+    .ats-ring-fill { stroke: var(--green); stroke-linecap: round; transition: stroke-dashoffset 1.2s cubic-bezier(0.4,0,0.2,1), stroke 0.4s; }
+    .ats-ring-fill.mid { stroke: var(--amber); }
+    .ats-ring-fill.lo  { stroke: var(--red); }
+    .ats-ring-inner {
+      position: absolute; inset: 0; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+    }
+    .ats-num { font-size: 19px; font-weight: 800; line-height: 1; }
+    .ats-num.hi  { color: var(--green); }
+    .ats-num.mid { color: var(--amber); }
+    .ats-num.lo  { color: var(--red); }
+    .ats-unit { font-size: 9px; font-weight: 600; color: var(--subtle); margin-top: 1px; }
+
+    /* ══════ FEATURE: Confetti ══════ */
+    .confetti-canvas {
+      position: fixed; inset: 0; pointer-events: none; z-index: 9998;
+    }
+
     /* ─── Micro-interactions ─── */
     .btn:active:not(:disabled) { transform: translateY(0) scale(0.97) !important; box-shadow: none !important; }
     .ac:active { transform: scale(0.98) !important; }
@@ -1045,8 +1100,15 @@
       <div class="fg"><label class="lbl">Job Title / Role</label><input type="text" id="jTitle" placeholder="Software Development Engineer, Data Analyst…"></div>
       <div class="fg">
         <label class="lbl">Job Description <small>(paste from the job listing)</small></label>
-        <textarea id="jJD" rows="10" placeholder="Paste the full JD here. The AI will extract key skills, requirements, and ATS keywords automatically…"></textarea>
-        <div class="fh">Longer JD = better ATS match. Paste as much as you can.</div>
+        <textarea id="jJD" rows="8" placeholder="Paste the full JD here. Keywords will appear instantly below…" oninput="detectJDKeywords()"></textarea>
+        <div class="jd-kw-area" id="jdKwArea" style="display:none">
+          <div class="jd-kw-label">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+            Detected keywords <span class="kw-count" id="kwCount">0</span>
+          </div>
+          <div class="jd-kw-chips" id="jdKwChips"></div>
+        </div>
+        <div class="fh" style="margin-top:6px">Longer JD = better ATS match. Paste as much as you can.</div>
       </div>
       <div style="display:flex;gap:10px;justify-content:space-between;margin-top:8px;">
         <button class="btn btn-out" onclick="goBackFromJob()">← Back</button>
@@ -1138,9 +1200,16 @@
   <!-- ATS Header -->
   <div class="out-hd">
     <div class="ats-badge">
-      <div class="ats-score-ring hi" id="atsRing">
-        <div class="ats-num hi" id="atsScore">--</div>
-        <div class="ats-unit">/100</div>
+      <div class="ats-ring-wrap">
+        <svg class="ats-ring-svg" viewBox="0 0 36 36" width="68" height="68">
+          <circle class="ats-ring-bg"   cx="18" cy="18" r="15.5" fill="none" stroke-width="2.4"/>
+          <circle class="ats-ring-fill hi" id="atsRingFill" cx="18" cy="18" r="15.5" fill="none" stroke-width="2.4"
+            stroke-dasharray="97.4 97.4" stroke-dashoffset="97.4"/>
+        </svg>
+        <div class="ats-ring-inner">
+          <div class="ats-num hi" id="atsScore">--</div>
+          <div class="ats-unit">/100</div>
+        </div>
       </div>
       <div class="ats-info">
         <div class="ats-lbl">ATS Score <span id="atsBefore" style="font-size:11px;color:var(--muted);font-weight:400"></span></div>
@@ -2078,14 +2147,17 @@ function renderOutput() {
   // ATS scores
   const after = atsScores.after;
   const before = atsScores.before;
-  const grade = after >= 80 ? 'hi' : after >= 60 ? 'mid' : 'lo';
+  document.getElementById('atsBefore').textContent = before ? `(was ${before}%)` : '';
+  document.getElementById('atsImp').textContent = after > before ? `↑ +${after - before} pts improvement` : '';
+  // Reset ring to empty, then animate after screen transition settles
+  const ringFill = document.getElementById('atsRingFill');
+  if (ringFill) { ringFill.style.strokeDashoffset = '97.4'; ringFill.style.transition = 'none'; }
   const scoreEl = document.getElementById('atsScore');
-  scoreEl.textContent = after;
-  scoreEl.className = 'ats-num ' + grade;
-  const ring = document.getElementById('atsRing');
-  if (ring) ring.className = 'ats-score-ring ' + grade;
-  document.getElementById('atsBefore').textContent = `(was ${before}%)`;
-  document.getElementById('atsImp').textContent = after > before ? `↑ +${after - before} points improvement` : '';
+  if (scoreEl) { scoreEl.textContent = '0'; scoreEl.className = 'ats-num'; }
+  setTimeout(() => {
+    if (ringFill) ringFill.style.transition = '';
+    animateATS(after);
+  }, 350);
 
   // Sync editor fields
   const p = rd.personal;
@@ -2513,6 +2585,162 @@ function signOut() {
     if (u && localStorage.getItem('nl_token')) updateNavAuth(u);
   } catch(e) {}
 })();
+
+// ══════════════════════════════════════════════════
+// FEATURE 1 — JD Keyword Detector
+// ══════════════════════════════════════════════════
+const JD_TECH = new Set([
+  'python','java','javascript','typescript','c++','c#','go','rust','kotlin','swift',
+  'react','angular','vue','nextjs','nodejs','django','flask','spring','fastapi','express',
+  'sql','mysql','postgresql','mongodb','redis','elasticsearch','firebase','supabase',
+  'aws','azure','gcp','docker','kubernetes','terraform','jenkins','git','github','ci/cd',
+  'machine learning','deep learning','nlp','llm','pytorch','tensorflow','scikit-learn',
+  'rest','graphql','microservices','agile','scrum','jira','figma','linux','bash',
+  'html','css','tailwind','bootstrap','redux','flask','pandas','numpy','spark','kafka'
+]);
+
+let _kwDebounce = null;
+function detectJDKeywords() {
+  clearTimeout(_kwDebounce);
+  _kwDebounce = setTimeout(() => {
+    const text = document.getElementById('jJD').value.toLowerCase();
+    if (text.length < 30) {
+      document.getElementById('jdKwArea').style.display = 'none';
+      return;
+    }
+
+    const found = new Map(); // keyword → type
+
+    // Tech keywords
+    JD_TECH.forEach(kw => {
+      if (text.includes(kw)) found.set(kw, 'tech');
+    });
+
+    // Years of experience  e.g. "2+ years", "3-5 years"
+    const expMatches = text.match(/\d[\d\-+]*\s*(?:\+\s*)?years?(?:\s+of)?(?:\s+experience)?/gi) || [];
+    expMatches.forEach(m => found.set(m.trim().replace(/\s+/g,' '), 'exp'));
+
+    // Degree requirements
+    const degreeRx = /\b(b\.?tech|m\.?tech|b\.?e|mca|bca|b\.?sc|m\.?sc|bachelor|master|phd)\b/gi;
+    let dm;
+    while ((dm = degreeRx.exec(text)) !== null) found.set(dm[0].toUpperCase(), 'skill');
+
+    // Soft skills
+    ['communication','leadership','teamwork','problem.solving','analytical','attention to detail',
+     'time management','critical thinking','collaboration','ownership'].forEach(s => {
+      if (text.includes(s)) found.set(s.replace('.',' '), 'soft');
+    });
+
+    // Salary / CTC
+    const ctcMatch = text.match(/(?:ctc|lpa|lakh|salary)[^.]{0,40}/i);
+    if (ctcMatch) found.set(ctcMatch[0].trim().slice(0,30), 'exp');
+
+    const chips = document.getElementById('jdKwChips');
+    const area  = document.getElementById('jdKwArea');
+    const count = document.getElementById('kwCount');
+
+    if (found.size === 0) { area.style.display = 'none'; return; }
+
+    area.style.display = 'block';
+    count.textContent  = found.size;
+    chips.innerHTML    = '';
+    let i = 0;
+    found.forEach((type, kw) => {
+      const el = document.createElement('span');
+      el.className = `jd-chip ${type}`;
+      el.style.setProperty('--d', (i * 35) + 'ms');
+      el.textContent = kw;
+      chips.appendChild(el);
+      i++;
+    });
+  }, 280);
+}
+
+// ══════════════════════════════════════════════════
+// FEATURE 2 — ATS Count-Up + SVG Ring Animation
+// ══════════════════════════════════════════════════
+function animateATS(finalScore) {
+  const scoreEl  = document.getElementById('atsScore');
+  const ringFill = document.getElementById('atsRingFill');
+  const grade    = finalScore >= 80 ? 'hi' : finalScore >= 60 ? 'mid' : 'lo';
+  const CIRCUM   = 97.4; // 2π × 15.5
+
+  // Set ring colour
+  ringFill.className = `ats-ring-fill ${grade}`;
+
+  // Count-up number
+  const duration = 1400;
+  const start    = performance.now();
+  function step(now) {
+    const p   = Math.min((now - start) / duration, 1);
+    const ease = 1 - Math.pow(1 - p, 3); // ease-out cubic
+    const cur  = Math.round(ease * finalScore);
+
+    scoreEl.textContent = cur;
+    scoreEl.className   = 'ats-num ' + (cur >= 80 ? 'hi' : cur >= 60 ? 'mid' : 'lo');
+
+    // SVG ring: dashoffset goes from CIRCUM (empty) → CIRCUM*(1-score/100)
+    const offset = CIRCUM * (1 - (ease * finalScore / 100));
+    ringFill.style.strokeDashoffset = offset;
+
+    if (p < 1) requestAnimationFrame(step);
+    else if (finalScore >= 80) setTimeout(fireConfetti, 200);
+  }
+  requestAnimationFrame(step);
+}
+
+// ══════════════════════════════════════════════════
+// FEATURE 3 — Confetti Burst
+// ══════════════════════════════════════════════════
+function fireConfetti() {
+  const canvas = document.createElement('canvas');
+  canvas.className = 'confetti-canvas';
+  canvas.width  = window.innerWidth;
+  canvas.height = window.innerHeight;
+  document.body.appendChild(canvas);
+  const ctx = canvas.getContext('2d');
+
+  const COLORS = ['#2563EB','#3B82F6','#60A5FA','#059669','#34D399',
+                  '#FBBF24','#F59E0B','#7C3AED','#A78BFA','#EC4899'];
+  const pieces = Array.from({length: 120}, () => ({
+    x:   Math.random() * canvas.width,
+    y:   -10 - Math.random() * 120,
+    w:   6 + Math.random() * 8,
+    h:   3 + Math.random() * 5,
+    r:   Math.random() * Math.PI * 2,
+    vx:  (Math.random() - 0.5) * 3,
+    vy:  2.5 + Math.random() * 3.5,
+    vr:  (Math.random() - 0.5) * 0.18,
+    color: COLORS[Math.floor(Math.random() * COLORS.length)],
+    opacity: 1
+  }));
+
+  let frame = 0;
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    let alive = false;
+    pieces.forEach(p => {
+      p.x  += p.vx;
+      p.y  += p.vy;
+      p.vy += 0.08; // gravity
+      p.r  += p.vr;
+      if (frame > 90) p.opacity -= 0.018;
+      if (p.opacity <= 0 || p.y > canvas.height) return;
+      alive = true;
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, p.opacity);
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.r);
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
+      ctx.restore();
+    });
+    frame++;
+    if (alive) requestAnimationFrame(draw);
+    else canvas.remove();
+  }
+  requestAnimationFrame(draw);
+}
 </script>
 </body>
 </html>
