@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Nine Lab — Resume Builder</title>
+  <title>Nine Lab — AI Resume Builder</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%232563EB'/><text x='50%' y='54%' dominant-baseline='middle' text-anchor='middle' font-family='system-ui,sans-serif' font-weight='800' font-size='16' fill='white'>9L</text></svg>">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -90,11 +91,13 @@
     }
     .logo { font-size: 18px; font-weight: 800; letter-spacing: -0.8px; color: var(--text); cursor: pointer; }
     .logo em { font-style: normal; color: var(--accent); }
-    /* Progress track — thin bar */
+    /* Progress track — thin bar + step label */
+    .nav-progress { display: flex; flex-direction: column; align-items: center; gap: 5px; }
     .pills { display: flex; align-items: center; gap: 4px; }
     .pill { width: 24px; height: 3px; border-radius: 100px; background: var(--border); transition: all 0.3s cubic-bezier(0.4,0,0.2,1); }
     .pill.on { background: var(--accent); width: 32px; }
     .pill.done { background: #22c55e; }
+    .step-label { font-size: 11px; color: var(--subtle); font-weight: 500; letter-spacing: 0.02em; }
 
     /* ─────────────────── LANDING ─────────────────── */
     #sLand { background: #fff; }
@@ -126,6 +129,15 @@
       font-size: 16px; color: var(--muted); line-height: 1.75; max-width: 480px; margin: 0 auto 40px;
       animation: hero-in 0.6s 0.15s cubic-bezier(0.16,1,0.3,1) both;
     }
+    /* Primary CTA */
+    .land-cta { font-size: 16px; padding: 14px 32px; border-radius: 10px; margin-bottom: 10px; animation: hero-in 0.6s 0.22s cubic-bezier(0.16,1,0.3,1) both; }
+    .land-alt { font-size: 13px; color: var(--muted); margin-bottom: 36px; animation: hero-in 0.6s 0.28s cubic-bezier(0.16,1,0.3,1) both; }
+    .land-alt:hover { color: var(--accent); background: none; }
+    /* Better avatar images */
+    .trust-av-img { width: 32px; height: 32px; border-radius: 50%; border: 2px solid #fff; margin-left: -9px; background: var(--border); }
+    .trust-av-img:first-child { margin-left: 0; }
+    .testi-av-img { width: 32px; height: 32px; border-radius: 50%; background: var(--border); flex-shrink: 0; }
+    .testi-stars { font-size: 13px; color: #FBBF24; margin-bottom: 8px; letter-spacing: 2px; }
     /* CTA action cards */
     .ac-grid {
       display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
@@ -290,6 +302,15 @@
       display: flex; align-items: center; justify-content: space-between; z-index: 50;
     }
 
+    /* ── Form section progress bar ── */
+    .form-progress-bar {
+      display: flex; align-items: center; gap: 12px; padding: 10px 28px 0;
+      flex-shrink: 0;
+    }
+    .form-prog-track { flex: 1; height: 4px; background: var(--border); border-radius: 100px; overflow: hidden; }
+    .form-prog-fill { height: 100%; background: var(--accent); border-radius: 100px; transition: width 0.4s cubic-bezier(0.4,0,0.2,1); }
+    .form-prog-label { font-size: 11px; color: var(--muted); font-weight: 500; white-space: nowrap; }
+
     /* ─────────────────── JOB TARGET ─────────────────── */
     .job-body { flex: 1; padding: 40px 24px; }
     .job-inner { max-width: 580px; margin: 0 auto; }
@@ -374,16 +395,27 @@
     /* ─────────────────── OUTPUT ─────────────────── */
     .out-hd {
       display: flex; align-items: center; justify-content: space-between;
-      padding: 12px 24px; background: var(--surface); border-bottom: 1px solid var(--border); flex-shrink: 0;
+      padding: 14px 24px; background: var(--surface); border-bottom: 1px solid var(--border); flex-shrink: 0;
+      gap: 16px;
     }
-    .ats-badge { display: flex; align-items: center; gap: 12px; }
-    .ats-num { font-size: 26px; font-weight: 800; }
+    .ats-badge { display: flex; align-items: center; gap: 14px; }
+    .ats-score-ring {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      width: 58px; height: 58px; border-radius: 50%; flex-shrink: 0;
+      border: 3px solid var(--border); background: var(--bg);
+    }
+    .ats-score-ring.hi { border-color: var(--green); background: var(--green-bg); }
+    .ats-score-ring.mid { border-color: var(--amber); background: #FFFBEB; }
+    .ats-score-ring.lo { border-color: var(--red); background: #FEF2F2; }
+    .ats-num { font-size: 20px; font-weight: 800; line-height: 1; }
     .ats-num.hi { color: var(--green); }
     .ats-num.mid { color: var(--amber); }
     .ats-num.lo { color: var(--red); }
-    .ats-info { line-height: 1.4; }
-    .ats-lbl { font-size: 12px; color: var(--muted); }
-    .ats-imp { font-size: 12px; font-weight: 600; color: var(--green); }
+    .ats-score-ring .ats-unit { font-size: 9px; font-weight: 600; color: var(--subtle); }
+    .ats-info { line-height: 1.5; }
+    .ats-lbl { font-size: 13px; font-weight: 700; color: var(--text); }
+    .ats-sub { font-size: 11px; color: var(--muted); }
+    .ats-imp { font-size: 12px; font-weight: 600; color: var(--green); margin-top: 1px; }
     .out-acts { display: flex; gap: 8px; }
     .out-body { flex: 1; display: flex; overflow: hidden; height: calc(100vh - 113px); }
     .edit-panel { width: 44%; border-right: 1px solid var(--border); overflow-y: auto; padding: 20px 22px 80px; }
@@ -559,45 +591,57 @@
 <div id="sLand" class="step on">
   <nav class="nav">
     <span class="logo">Nine<em>Lab</em></span>
-    <div class="pills">
-      <div class="pill on" id="p0"></div>
-      <div class="pill" id="p1"></div>
-      <div class="pill" id="p2"></div>
-      <div class="pill" id="p3"></div>
+    <div class="nav-progress">
+      <div class="pills">
+        <div class="pill on" id="p0"></div>
+        <div class="pill" id="p1"></div>
+        <div class="pill" id="p2"></div>
+        <div class="pill" id="p3"></div>
+      </div>
+      <span class="step-label">Step 1 of 4 — Start</span>
     </div>
     <div id="navAuthArea">
       <button class="btn btn-ghost btn-sm" onclick="goTo('sAuth')">Sign In</button>
     </div>
   </nav>
   <div class="land-body">
-    <div class="land-badge">
-      <span class="dot"></span>
-      14,200+ resumes built this month
-    </div>
+    <div class="land-badge"><span class="dot"></span>14,200+ resumes built this month</div>
     <h1 class="land-h">Get hired faster with<br><em>AI-optimized</em> resumes</h1>
     <p class="land-sub">Paste your job description. Nine Lab reads the JD, matches ATS keywords, and rewrites your resume for that specific role — in under 60 seconds.</p>
 
+    <!-- Primary CTA -->
+    <button class="btn btn-dark btn-lg land-cta" onclick="goTo('sUpload')">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
+      Get Started Free
+    </button>
+    <button class="btn btn-ghost btn-sm land-alt" onclick="goTo('sForm'); setFormSec('personal')">Fill manually instead →</button>
+
+    <!-- Secondary option cards -->
     <div class="ac-grid">
       <div class="ac" onclick="goTo('sUpload')">
-        <div class="ac-ico">📄</div>
+        <div class="ac-ico">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        </div>
         <div class="ac-t">Upload Resume</div>
-        <div class="ac-d">Upload your existing PDF and we'll auto-fill everything.</div>
+        <div class="ac-d">Upload your existing PDF — we auto-fill everything for you.</div>
       </div>
       <div class="ac" onclick="goTo('sForm'); setFormSec('personal')">
-        <div class="ac-ico">✍️</div>
+        <div class="ac-ico">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </div>
         <div class="ac-t">Fill Manually</div>
-        <div class="ac-d">Interactive form with smart suggestions — under 3 minutes.</div>
+        <div class="ac-d">Smart form with examples — takes under 3 minutes.</div>
       </div>
     </div>
 
-    <!-- Social proof avatars -->
+    <!-- Trust strip with better avatars -->
     <div class="trust-strip">
       <div class="trust-avatars">
-        <div class="trust-av" style="background:#2563EB">RK</div>
-        <div class="trust-av" style="background:#7C3AED">PS</div>
-        <div class="trust-av" style="background:#059669">AM</div>
-        <div class="trust-av" style="background:#D97706">NS</div>
-        <div class="trust-av" style="background:#DC2626">VT</div>
+        <img class="trust-av-img" src="https://api.dicebear.com/7.x/avataaars/svg?seed=Rahul&backgroundColor=b6e3f4" alt="user">
+        <img class="trust-av-img" src="https://api.dicebear.com/7.x/avataaars/svg?seed=Priya&backgroundColor=ffd5dc" alt="user">
+        <img class="trust-av-img" src="https://api.dicebear.com/7.x/avataaars/svg?seed=Arjun&backgroundColor=c0aede" alt="user">
+        <img class="trust-av-img" src="https://api.dicebear.com/7.x/avataaars/svg?seed=Neha&backgroundColor=d1f4cc" alt="user">
+        <img class="trust-av-img" src="https://api.dicebear.com/7.x/avataaars/svg?seed=Vikram&backgroundColor=ffdfbf" alt="user">
       </div>
       <div class="trust-label"><strong>14,200+ students</strong> already landed interviews with Nine Lab</div>
     </div>
@@ -605,26 +649,26 @@
     <!-- Testimonials -->
     <div class="testi-row">
       <div class="testi">
-        <div class="testi-stars">⭐⭐⭐⭐⭐</div>
-        <div class="testi-q">"Got interview calls from TCS, Wipro and Infosys within a week. The ATS score jumped from 54 to 91 after using Nine Lab."</div>
+        <div class="testi-stars">★★★★★</div>
+        <div class="testi-q">"ATS score jumped from 54 to 91. Got interview calls from TCS, Wipro and Infosys within a week."</div>
         <div class="testi-author">
-          <div class="testi-av" style="background:#2563EB">RK</div>
+          <img class="testi-av-img" src="https://api.dicebear.com/7.x/avataaars/svg?seed=Rahul&backgroundColor=b6e3f4" alt="Rahul">
           <div><div class="testi-name">Rahul Kapse</div><div class="testi-role">MCA Final Year · Nagpur</div></div>
         </div>
       </div>
       <div class="testi">
-        <div class="testi-stars">⭐⭐⭐⭐⭐</div>
-        <div class="testi-q">"I was applying for 2 months with no replies. Used Nine Lab once — got 3 interview calls in 4 days. Honestly unbelievable."</div>
+        <div class="testi-stars">★★★★★</div>
+        <div class="testi-q">"Was applying for 2 months with zero replies. Used Nine Lab once — got 3 interview calls in 4 days."</div>
         <div class="testi-author">
-          <div class="testi-av" style="background:#7C3AED">PS</div>
+          <img class="testi-av-img" src="https://api.dicebear.com/7.x/avataaars/svg?seed=Priya&backgroundColor=ffd5dc" alt="Priya">
           <div><div class="testi-name">Priya Sharma</div><div class="testi-role">B.Tech CSE · Pune</div></div>
         </div>
       </div>
       <div class="testi">
-        <div class="testi-stars">⭐⭐⭐⭐⭐</div>
-        <div class="testi-q">"The resume it wrote was better than what I made in 2 hours. Keywords matched perfectly. Placed at Accenture as SDE."</div>
+        <div class="testi-stars">★★★★★</div>
+        <div class="testi-q">"Keywords matched perfectly. Resume it wrote was better than what I made in 2 hours. Placed at Accenture."</div>
         <div class="testi-author">
-          <div class="testi-av" style="background:#059669">AM</div>
+          <img class="testi-av-img" src="https://api.dicebear.com/7.x/avataaars/svg?seed=Arjun&backgroundColor=c0aede" alt="Arjun">
           <div><div class="testi-name">Arjun Mehta</div><div class="testi-role">BCA Graduate · Mumbai</div></div>
         </div>
       </div>
@@ -657,11 +701,14 @@
 <div id="sUpload" class="step">
   <nav class="nav">
     <span class="logo" onclick="goTo('sLand')">Nine<em>Lab</em></span>
-    <div class="pills">
-      <div class="pill done"></div>
-      <div class="pill on"></div>
-      <div class="pill"></div>
-      <div class="pill"></div>
+    <div class="nav-progress">
+      <div class="pills">
+        <div class="pill done"></div>
+        <div class="pill on"></div>
+        <div class="pill"></div>
+        <div class="pill"></div>
+      </div>
+      <span class="step-label">Step 2 of 4 — Upload Resume</span>
     </div>
     <button class="btn btn-ghost btn-sm" onclick="goTo('sForm'); setFormSec('personal')">Fill manually instead</button>
   </nav>
@@ -697,26 +744,57 @@
 <div id="sForm" class="step">
   <nav class="nav" style="position:sticky;top:0;z-index:200;">
     <span class="logo" onclick="goTo('sLand')">Nine<em>Lab</em></span>
-    <div class="pills">
-      <div class="pill done"></div>
-      <div class="pill on"></div>
-      <div class="pill"></div>
-      <div class="pill"></div>
+    <div class="nav-progress">
+      <div class="pills">
+        <div class="pill done"></div>
+        <div class="pill on"></div>
+        <div class="pill"></div>
+        <div class="pill"></div>
+      </div>
+      <span class="step-label">Step 2 of 4 — Your Details</span>
     </div>
     <button class="btn btn-dark btn-sm" onclick="goToJob()">Next: Target Job →</button>
   </nav>
+  <div class="form-progress-bar">
+    <div class="form-prog-track"><div class="form-prog-fill" id="formProgFill" style="width:14%"></div></div>
+    <span class="form-prog-label" id="formProgLabel">1 of 7 sections</span>
+  </div>
   <div class="form-layout">
     <!-- Sidebar nav -->
     <div class="form-nav">
       <div class="fn-grp">
-        <div class="fn-label">Your Info</div>
-        <button class="fn-item on" id="fnPersonal" onclick="setFormSec('personal')"><span class="ico">👤</span> Personal<span class="fn-tick">✓</span></button>
-        <button class="fn-item" id="fnSummary" onclick="setFormSec('summary')"><span class="ico">📝</span> Summary<span class="fn-tick">✓</span></button>
-        <button class="fn-item" id="fnExp" onclick="setFormSec('exp')"><span class="ico">💼</span> Experience<span class="fn-tick">✓</span></button>
-        <button class="fn-item" id="fnEdu" onclick="setFormSec('edu')"><span class="ico">🎓</span> Education<span class="fn-tick">✓</span></button>
-        <button class="fn-item" id="fnSkills" onclick="setFormSec('skills')"><span class="ico">🛠</span> Skills<span class="fn-tick">✓</span></button>
-        <button class="fn-item" id="fnProj" onclick="setFormSec('proj')"><span class="ico">🚀</span> Projects<span class="fn-tick">✓</span></button>
-        <button class="fn-item" id="fnMore" onclick="setFormSec('more')"><span class="ico">🏆</span> More<span class="fn-tick">✓</span></button>
+        <div class="fn-label">Required</div>
+        <button class="fn-item on" id="fnPersonal" onclick="setFormSec('personal')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+          Personal<span class="fn-tick">✓</span>
+        </button>
+        <button class="fn-item" id="fnSummary" onclick="setFormSec('summary')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="17" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="17" y1="18" x2="3" y2="18"/></svg>
+          Summary<span class="fn-tick">✓</span>
+        </button>
+        <button class="fn-item" id="fnExp" onclick="setFormSec('exp')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+          Experience<span class="fn-tick">✓</span>
+        </button>
+        <button class="fn-item" id="fnEdu" onclick="setFormSec('edu')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+          Education<span class="fn-tick">✓</span>
+        </button>
+      </div>
+      <div class="fn-grp">
+        <div class="fn-label">Optional</div>
+        <button class="fn-item" id="fnSkills" onclick="setFormSec('skills')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+          Skills<span class="fn-tick">✓</span>
+        </button>
+        <button class="fn-item" id="fnProj" onclick="setFormSec('proj')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          Projects<span class="fn-tick">✓</span>
+        </button>
+        <button class="fn-item" id="fnMore" onclick="setFormSec('more')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
+          Achievements<span class="fn-tick">✓</span>
+        </button>
       </div>
     </div>
 
@@ -860,11 +938,14 @@
 <div id="sJob" class="step">
   <nav class="nav">
     <span class="logo" onclick="goTo('sLand')">Nine<em>Lab</em></span>
-    <div class="pills">
-      <div class="pill done"></div>
-      <div class="pill done"></div>
-      <div class="pill on"></div>
-      <div class="pill"></div>
+    <div class="nav-progress">
+      <div class="pills">
+        <div class="pill done"></div>
+        <div class="pill done"></div>
+        <div class="pill on"></div>
+        <div class="pill"></div>
+      </div>
+      <span class="step-label">Step 3 of 4 — Target Job</span>
     </div>
     <div></div>
   </nav>
@@ -894,11 +975,14 @@
 <div id="sProc" class="step">
   <nav class="nav">
     <span class="logo">Nine<em>Lab</em></span>
-    <div class="pills">
-      <div class="pill done"></div>
-      <div class="pill done"></div>
-      <div class="pill done"></div>
-      <div class="pill on"></div>
+    <div class="nav-progress">
+      <div class="pills">
+        <div class="pill done"></div>
+        <div class="pill done"></div>
+        <div class="pill done"></div>
+        <div class="pill on"></div>
+      </div>
+      <span class="step-label">Step 4 of 4 — Generating</span>
     </div>
     <div></div>
   </nav>
@@ -907,6 +991,10 @@
     <div class="proc-left">
       <h2 class="proc-t">Building your resume…</h2>
       <p class="proc-s" id="procSub">Multi-agent AI pipeline running</p>
+      <div style="display:flex;align-items:center;gap:6px;justify-content:center;margin-bottom:16px;">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <span style="font-size:12px;color:var(--subtle)">Usually takes 20–40 seconds</span>
+      </div>
       <div class="prog-wrap">
         <div class="prog-bar"><div class="prog-fill" id="progFill"></div></div>
         <div class="prog-pct" id="progPct">0%</div>
@@ -951,8 +1039,11 @@
 <div id="sOut" class="step">
   <nav class="nav">
     <span class="logo" onclick="goTo('sLand')">Nine<em>Lab</em></span>
-    <div class="pills">
-      <div class="pill done"></div><div class="pill done"></div><div class="pill done"></div><div class="pill done"></div>
+    <div class="nav-progress">
+      <div class="pills">
+        <div class="pill done"></div><div class="pill done"></div><div class="pill done"></div><div class="pill done"></div>
+      </div>
+      <span class="step-label">Done — Your resume is ready</span>
     </div>
     <button class="btn btn-ghost btn-sm" onclick="goTo('sLand')">Start Over</button>
   </nav>
@@ -960,14 +1051,19 @@
   <!-- ATS Header -->
   <div class="out-hd">
     <div class="ats-badge">
-      <div class="ats-num hi" id="atsScore">--</div>
+      <div class="ats-score-ring hi" id="atsRing">
+        <div class="ats-num hi" id="atsScore">--</div>
+        <div class="ats-unit">/100</div>
+      </div>
       <div class="ats-info">
-        <div class="ats-lbl">ATS Score <span id="atsBefore" style="font-size:11px;color:var(--muted)"></span></div>
+        <div class="ats-lbl">ATS Score <span id="atsBefore" style="font-size:11px;color:var(--muted);font-weight:400"></span></div>
+        <div class="ats-sub">Keyword &amp; format match</div>
         <div class="ats-imp" id="atsImp"></div>
       </div>
     </div>
     <div class="out-acts">
-      <button class="btn btn-dark btn-sm" onclick="printResume()">⬇ Download / Print</button>
+      <button class="btn btn-out btn-sm" onclick="goTo('sLand')">← Start Over</button>
+      <button class="btn btn-dark btn-sm" onclick="printResume()">⬇ Download PDF</button>
     </div>
   </div>
 
@@ -1226,6 +1322,31 @@ function setFormSec(sec) {
 }
 function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
 
+function updateFormProgress() {
+  const checks = {
+    Personal: () => rd.personal.name && rd.personal.email,
+    Summary:  () => rd.summary && rd.summary.length > 20,
+    Exp:      () => rd.experience && rd.experience.length > 0,
+    Edu:      () => rd.education && rd.education.length > 0,
+    Skills:   () => (rd.skills?.languages?.length || 0) + (rd.skills?.frameworks?.length || 0) + (rd.skills?.tools?.length || 0) > 0,
+    Proj:     () => rd.projects && rd.projects.length > 0,
+    More:     () => rd.achievements?.length > 0 || rd.certifications?.length > 0
+  };
+  let filled = 0;
+  const total = Object.keys(checks).length;
+  for (const [key, check] of Object.entries(checks)) {
+    const el = document.getElementById('fn' + key);
+    if (!el) continue;
+    if (check()) { el.classList.add('filled'); filled++; }
+    else          { el.classList.remove('filled'); }
+  }
+  const pct = Math.round((filled / total) * 100);
+  const fill = document.getElementById('formProgFill');
+  const lbl  = document.getElementById('formProgLabel');
+  if (fill) fill.style.width = pct + '%';
+  if (lbl)  lbl.textContent  = filled + ' of ' + total + ' sections filled';
+}
+
 // ── Upload ────────────────────────────────────────────────────────────────────
 function handleDrop(e) {
   e.preventDefault();
@@ -1444,6 +1565,7 @@ function rp() {
   if (paper) paper.innerHTML = buildResumeHTML(rd, false);
   const rPaper = document.getElementById('resumePaper');
   if (rPaper) rPaper.innerHTML = buildResumeHTML(rd, true);
+  updateFormProgress();
 }
 
 function buildResumeHTML(d, full) {
@@ -1832,11 +1954,14 @@ function renderOutput() {
   // ATS scores
   const after = atsScores.after;
   const before = atsScores.before;
+  const grade = after >= 80 ? 'hi' : after >= 60 ? 'mid' : 'lo';
   const scoreEl = document.getElementById('atsScore');
-  scoreEl.textContent = after + '%';
-  scoreEl.className = 'ats-num ' + (after >= 80 ? 'hi' : after >= 60 ? 'mid' : 'lo');
+  scoreEl.textContent = after;
+  scoreEl.className = 'ats-num ' + grade;
+  const ring = document.getElementById('atsRing');
+  if (ring) ring.className = 'ats-score-ring ' + grade;
   document.getElementById('atsBefore').textContent = `(was ${before}%)`;
-  document.getElementById('atsImp').textContent = `+${after - before} points improvement`;
+  document.getElementById('atsImp').textContent = after > before ? `↑ +${after - before} points improvement` : '';
 
   // Sync editor fields
   const p = rd.personal;
