@@ -2462,6 +2462,82 @@ RULES:
     return JSONResponse({"reply": reply or "Sorry, could not get a response. Please try again."})
 
 
+# ── Nine Lab AI Agent ─────────────────────────────────────────────────────────
+class AgentRequest(BaseModel):
+    message: str
+    history: list = []
+    context: dict = {}
+
+@app.post("/ninelab/agent")
+async def ninelab_agent(req: AgentRequest):
+    message = req.message.strip()[:1200]
+    history = req.history[-8:]
+    context = req.context or {}
+
+    history_text = ""
+    for h in history:
+        role = "User" if h.get("role") == "user" else "Assistant"
+        history_text += f"{role}: {h.get('content','')}\n"
+
+    system = """You are Nine Lab AI — an intelligent career assistant embedded in the Nine Lab resume builder app.
+You help users build ATS-optimized resumes, find jobs, manage their profile, and advance their careers.
+
+You have control over the app UI. Respond ONLY with valid JSON — no markdown, no explanation outside JSON.
+
+AVAILABLE ACTIONS:
+- "build_resume"   → Open resume builder. params: {title, company, jd}
+- "show_dashboard" → Go to home dashboard. params: {}
+- "show_resumes"   → Show saved resumes list. params: {}
+- "show_profile"   → Open profile editor. params: {}
+- "find_jobs"      → Open jobs page. params: {query}
+- "open_upload"    → Open PDF upload screen. params: {}
+- "none"           → Just chat, no navigation. params: {}
+
+INTENT MAPPING:
+- "build resume / make resume / create resume for X at Y" → build_resume
+- "find jobs / search jobs / show jobs" → find_jobs
+- "my resumes / saved resumes / resume list" → show_resumes
+- "my profile / update info / edit profile" → show_profile
+- "home / dashboard / go back" → show_dashboard
+- "upload resume / upload pdf" → open_upload
+- greeting / question / anything else → none
+
+RULES:
+- Message must be friendly, concise, max 2 sentences. Use emojis sparingly (1 max).
+- NEVER break JSON format. Output must parse with json.loads().
+- If user asks to build resume, extract title and company from their message if mentioned.
+
+Respond exactly like:
+{"message": "...", "action": "...", "params": {...}}"""
+
+    user_prompt = f"""{history_text}User: {message}
+
+JSON response:"""
+
+    loop = asyncio.get_event_loop()
+    raw = await loop.run_in_executor(
+        executor,
+        lambda: gemini_call(user_prompt, retries=2, temperature=0.3, system_prompt=system)
+    )
+
+    try:
+        clean = re.sub(r'```(?:json)?\n?|```', '', raw or '').strip()
+        # Find first { ... } block
+        m = re.search(r'\{.*\}', clean, re.DOTALL)
+        data = json.loads(m.group(0) if m else clean)
+        data.setdefault("message", raw or "I'm here to help!")
+        data.setdefault("action", "none")
+        data.setdefault("params", {})
+    except Exception:
+        data = {
+            "message": raw or "I'm here to help! Try asking me to build a resume or find jobs.",
+            "action": "none",
+            "params": {}
+        }
+
+    return JSONResponse(data)
+
+
 @app.get("/", response_class=RedirectResponse)
 async def root_redirect():
     return RedirectResponse(url="/ninelab/", status_code=302)

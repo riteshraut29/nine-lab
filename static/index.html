@@ -665,6 +665,152 @@
     .nav-user { display: flex; align-items: center; gap: 8px; }
     .nav-user-name { font-size: 13px; font-weight: 500; color: var(--text); }
 
+    /* ══════════════════════════════════════════
+       APP SHELL — Sidebar + Workspace + Chat
+       ══════════════════════════════════════════ */
+    body.app-mode { overflow: hidden; height: 100vh; }
+    #appShell { display: flex; height: 100vh; overflow: hidden; }
+
+    /* ── Sidebar ── */
+    #appSidebar {
+      width: 220px; flex-shrink: 0; background: #0F172A;
+      display: flex; flex-direction: column; overflow: hidden;
+      border-right: 1px solid rgba(255,255,255,0.06);
+    }
+    .sb-top { flex-shrink: 0; }
+    .sb-logo-row { padding: 18px 18px 14px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+    .sb-logo-txt { font-size: 17px; font-weight: 800; letter-spacing: -0.6px; color: #F8FAFC; }
+    .sb-logo-txt em { font-style: normal; color: #60A5FA; }
+    .sb-logo-badge { font-size: 9px; font-weight: 700; background: #2563EB; color: white; padding: 2px 6px; border-radius: 4px; letter-spacing: 0.5px; }
+    .sb-user-row { padding: 12px 16px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid rgba(255,255,255,0.06); cursor: pointer; }
+    .sb-user-row:hover { background: rgba(255,255,255,0.04); }
+    .sb-avatar { width: 30px; height: 30px; border-radius: 50%; background: #2563EB; color: white; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; }
+    .sb-user-name { font-size: 13px; font-weight: 600; color: #E2E8F0; }
+    .sb-user-sub  { font-size: 10px; color: #475569; }
+    .sb-nav { flex: 1; padding: 10px 8px; overflow-y: auto; }
+    .sb-section-lbl { font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #334155; padding: 10px 10px 5px; }
+    .sb-item {
+      display: flex; align-items: center; gap: 9px; width: 100%;
+      padding: 9px 10px; border-radius: 8px; border: none; background: none;
+      font-family: inherit; font-size: 13px; font-weight: 500; color: #64748B;
+      cursor: pointer; transition: all 0.12s; text-align: left; margin-bottom: 1px;
+    }
+    .sb-item:hover { background: rgba(255,255,255,0.06); color: #CBD5E1; }
+    .sb-item.on    { background: rgba(37,99,235,0.18); color: #93C5FD; }
+    .sb-item svg   { flex-shrink: 0; opacity: 0.7; }
+    .sb-item.on svg { opacity: 1; }
+    .sb-badge { margin-left: auto; background: #1D4ED8; color: white; font-size: 10px; font-weight: 700; padding: 1px 7px; border-radius: 100px; }
+    .sb-bottom { padding: 12px 10px; border-top: 1px solid rgba(255,255,255,0.06); flex-shrink: 0; }
+    .sb-new-btn { width: 100%; padding: 9px 14px; background: #2563EB; color: white; border: none; border-radius: 8px; font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 7px; transition: background 0.15s; }
+    .sb-new-btn:hover { background: #1D4ED8; }
+
+    /* ── App Main ── */
+    #appMain { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: var(--bg); min-width: 0; }
+    #appHeader { height: 52px; flex-shrink: 0; background: rgba(255,255,255,0.92); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; gap: 16px; }
+    #appBreadcrumb { font-size: 14px; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 6px; letter-spacing: -0.2px; }
+    #appBreadcrumb .bc-sep { color: var(--subtle); font-weight: 400; }
+    #appPageName { color: var(--muted); font-weight: 500; }
+    .app-hd-right { display: flex; align-items: center; gap: 8px; }
+
+    /* ── Workspace ── */
+    #appWorkspace { flex: 1; overflow: hidden; position: relative; }
+    .pg { display: none; height: 100%; flex-direction: column; overflow-y: auto; }
+    .pg.on { display: flex; animation: stepIn 0.25s cubic-bezier(0.16,1,0.3,1) both; }
+    /* pgBuilder contains existing step screens */
+    #pgBuilder { display: none; height: 100%; flex-direction: column; overflow-y: auto; }
+    #pgBuilder.on { display: flex; }
+    #pgBuilder .step { min-height: 0; flex-shrink: 0; }
+    #pgBuilder .step.on { flex: 1; min-height: calc(100vh - 52px); }
+    #pgBuilder .nav { display: none !important; }
+
+    /* ── Chat Panel ── */
+    #chatPanel { width: 320px; flex-shrink: 0; border-left: 1px solid var(--border); background: var(--surface); display: flex; flex-direction: column; overflow: hidden; }
+    #chatPanelHd { height: 52px; flex-shrink: 0; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 14px; gap: 10px; }
+    .cp-title { font-size: 13px; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 7px; }
+    .cp-dot { width: 7px; height: 7px; border-radius: 50%; background: #22c55e; box-shadow: 0 0 0 3px rgba(34,197,94,0.15); animation: pulse-dot 2s ease-in-out infinite; }
+    #chatMsgs { flex: 1; overflow-y: auto; padding: 14px 12px; display: flex; flex-direction: column; gap: 10px; }
+    #chatMsgs::-webkit-scrollbar { width: 3px; }
+    #chatMsgs::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+    .cmsg { display: flex; gap: 8px; align-items: flex-end; animation: stepIn 0.2s ease; }
+    .cmsg.user { flex-direction: row-reverse; }
+    .cmsg-av { width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; }
+    .cmsg.user .cmsg-av { background: #2563EB; color: white; }
+    .cmsg.ai   .cmsg-av { background: var(--accent-light); color: #2563EB; border: 1px solid var(--accent-border); font-size: 10px; }
+    .cmsg-bubble { max-width: 84%; padding: 9px 12px; border-radius: 14px; font-size: 13px; line-height: 1.55; }
+    .cmsg.user .cmsg-bubble { background: #2563EB; color: white; border-radius: 14px 14px 4px 14px; }
+    .cmsg.ai   .cmsg-bubble { background: var(--bg); border: 1px solid var(--border); color: var(--text); border-radius: 14px 14px 14px 4px; }
+    .cmsg-bubble.typing { display: flex; align-items: center; gap: 4px; padding: 12px 14px; }
+    .t-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--subtle); animation: typing-bounce 1.2s ease-in-out infinite; }
+    .t-dot:nth-child(2) { animation-delay: 0.18s; }
+    .t-dot:nth-child(3) { animation-delay: 0.36s; }
+    @keyframes typing-bounce { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-5px)} }
+    .cmsg-action { margin-top: 7px; }
+    .cmsg-btn { display: inline-flex; align-items: center; gap: 5px; padding: 5px 12px; background: white; border: 1.5px solid var(--accent-border); border-radius: 100px; font-size: 11px; font-weight: 600; color: var(--accent); cursor: pointer; transition: all 0.12s; font-family: inherit; }
+    .cmsg-btn:hover { background: var(--accent-light); }
+    .chat-sugs { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 12px 10px; flex-shrink: 0; }
+    .chat-sug { padding: 6px 12px; background: var(--bg); border: 1.5px solid var(--border); border-radius: 100px; font-size: 12px; font-weight: 500; color: var(--muted); cursor: pointer; transition: all 0.12s; font-family: inherit; white-space: nowrap; }
+    .chat-sug:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+    #chatInputWrap { padding: 10px 12px; border-top: 1px solid var(--border); flex-shrink: 0; }
+    .chat-row { display: flex; gap: 8px; align-items: flex-end; background: var(--bg); border: 1.5px solid var(--border); border-radius: 12px; padding: 8px 8px 8px 12px; transition: border-color 0.15s, box-shadow 0.15s; }
+    .chat-row:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+    #chatIn { flex: 1; border: none; background: none; font-family: inherit; font-size: 13px; color: var(--text); outline: none; resize: none; max-height: 90px; line-height: 1.5; padding: 0; }
+    #chatIn::placeholder { color: var(--subtle); }
+    #chatSend { width: 30px; height: 30px; border-radius: 7px; border: none; background: #2563EB; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: background 0.12s; }
+    #chatSend:hover { background: #1D4ED8; }
+    #chatSend:disabled { background: var(--border); cursor: not-allowed; }
+
+    /* ── Dashboard Page ── */
+    .pg-greeting { padding: 28px 28px 16px; }
+    .pg-greeting h2 { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; color: var(--text); margin-bottom: 4px; }
+    .pg-greeting p  { font-size: 14px; color: var(--muted); }
+    .pg-section { padding: 0 28px 20px; }
+    .pg-section-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--subtle); margin-bottom: 12px; }
+    .dash-actions { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; }
+    .dash-ac { background: white; border: 1.5px solid var(--border); border-radius: 14px; padding: 18px 16px; cursor: pointer; transition: all 0.18s; }
+    .dash-ac:hover { border-color: var(--accent); box-shadow: 0 4px 16px rgba(37,99,235,0.1); transform: translateY(-2px); }
+    .dash-ac-ico { width: 38px; height: 38px; border-radius: 9px; background: var(--accent-light); border: 1px solid var(--accent-border); display: flex; align-items: center; justify-content: center; margin-bottom: 11px; }
+    .dash-ac-t { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 3px; }
+    .dash-ac-d { font-size: 11px; color: var(--muted); line-height: 1.4; }
+    .dash-stats-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; }
+    .dash-stat { background: white; border: 1.5px solid var(--border); border-radius: 12px; padding: 16px; }
+    .dash-stat-n { font-size: 24px; font-weight: 800; letter-spacing: -1px; color: var(--text); }
+    .dash-stat-l { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .dash-resume-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(200px,1fr)); gap: 10px; }
+    .dash-rc { background: white; border: 1.5px solid var(--border); border-radius: 12px; padding: 15px; cursor: pointer; transition: all 0.15s; }
+    .dash-rc:hover { border-color: var(--accent); transform: translateY(-1px); box-shadow: 0 4px 14px rgba(37,99,235,0.08); }
+    .dash-rc-title { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .dash-rc-company { font-size: 11px; color: var(--muted); margin-bottom: 10px; }
+    .ats-pill { display: inline-flex; align-items: center; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 100px; }
+    .ats-pill.hi  { background: var(--green-bg); color: var(--green); }
+    .ats-pill.mid { background: #FFFBEB; color: var(--amber); }
+    .ats-pill.lo  { background: #FEF2F2; color: var(--red); }
+    .pg-empty { padding: 28px; text-align: center; border: 2px dashed var(--border); border-radius: 12px; color: var(--muted); font-size: 13px; line-height: 1.6; }
+
+    /* ── Resumes / Profile Pages ── */
+    .page-hd { padding: 24px 28px 0; margin-bottom: 20px; }
+    .page-hd h2 { font-size: 20px; font-weight: 800; letter-spacing: -0.4px; color: var(--text); margin-bottom: 4px; }
+    .page-hd p  { font-size: 13px; color: var(--muted); }
+    .page-bd { padding: 0 28px 40px; flex: 1; }
+    .res-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(210px,1fr)); gap: 12px; }
+    .res-card { background: white; border: 1.5px solid var(--border); border-radius: 14px; padding: 18px; cursor: pointer; transition: all 0.18s; }
+    .res-card:hover { border-color: var(--accent); box-shadow: 0 6px 20px rgba(37,99,235,0.1); transform: translateY(-2px); }
+    .res-card-ico { width: 38px; height: 38px; border-radius: 9px; background: var(--accent-light); border: 1px solid var(--accent-border); display: flex; align-items: center; justify-content: center; margin-bottom: 12px; }
+    .res-card-title { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .res-card-co { font-size: 11px; color: var(--muted); margin-bottom: 10px; }
+    .res-card-foot { display: flex; align-items: center; justify-content: space-between; }
+    .res-card-date { font-size: 10px; color: var(--subtle); }
+    .res-del { background: none; border: none; cursor: pointer; color: var(--subtle); padding: 3px; border-radius: 4px; font-size: 14px; transition: color 0.1s; }
+    .res-del:hover { color: var(--red); }
+
+    /* ── Auth as modal overlay ── */
+    #sAuth { position: fixed !important; inset: 0; z-index: 9000; display: none; align-items: center; justify-content: center; background: rgba(15,23,42,0.6); backdrop-filter: blur(6px); min-height: 0 !important; }
+    #sAuth.on { display: flex !important; }
+    #sAuth .auth-body { max-width: 680px; width: 92vw; border-radius: 20px; overflow: hidden; box-shadow: 0 24px 80px rgba(0,0,0,0.3); max-height: 90vh; overflow-y: auto; }
+
+    /* Mobile */
+    @media(max-width:1024px) { #chatPanel { display: none; } }
+    @media(max-width:768px)  { #appSidebar { display: none; } }
+
     /* Print */
     @page { size: A4; margin: 12mm; }
     @media print {
@@ -831,6 +977,174 @@
     </div>
   </div>
 </div>
+
+<!-- ══════════════════════════════════════════════
+     APP SHELL  (hidden until login)
+══════════════════════════════════════════════ -->
+<div id="appShell" style="display:none">
+
+  <!-- ── SIDEBAR ── -->
+  <aside id="appSidebar">
+    <div class="sb-top">
+      <div class="sb-logo-row">
+        <span class="sb-logo-txt">Nine<em>Lab</em></span>
+        <span class="sb-logo-badge">AI</span>
+      </div>
+      <div class="sb-user-row" onclick="goPage('profile')">
+        <div class="sb-avatar" id="sbAvatar">?</div>
+        <div>
+          <div class="sb-user-name" id="sbName">Guest</div>
+          <div class="sb-user-sub">Free plan</div>
+        </div>
+      </div>
+    </div>
+    <nav class="sb-nav">
+      <div class="sb-section-lbl">Menu</div>
+      <button class="sb-item on" id="sbDash" onclick="goPage('dash')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        Dashboard
+      </button>
+      <button class="sb-item" id="sbBuilder" onclick="goPage('builder')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        Resume Builder
+      </button>
+      <button class="sb-item" id="sbResumes" onclick="goPage('resumes')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+        My Resumes
+        <span class="sb-badge" id="sbResumeCount" style="display:none">0</span>
+      </button>
+      <button class="sb-item" id="sbJobs" onclick="goPage('jobs')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+        Find Jobs
+      </button>
+      <button class="sb-item" id="sbProfile" onclick="goPage('profile')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        Profile
+      </button>
+    </nav>
+    <div class="sb-bottom">
+      <button class="sb-new-btn" onclick="goPage('builder')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        New Resume
+      </button>
+    </div>
+  </aside>
+
+  <!-- ── MAIN AREA ── -->
+  <div id="appMain">
+    <header id="appHeader">
+      <div id="appBreadcrumb">
+        Nine<em>Lab</em>
+        <span class="bc-sep">›</span>
+        <span id="appPageName">Dashboard</span>
+      </div>
+      <div class="app-hd-right">
+        <button class="btn btn-ghost btn-sm" id="chatToggleBtn" onclick="toggleChat()" style="display:flex;align-items:center;gap:6px;font-size:12px">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          AI Chat
+        </button>
+        <button class="btn btn-ghost btn-sm" onclick="appSignOut()" style="font-size:12px">Sign out</button>
+      </div>
+    </header>
+
+    <div id="appWorkspace">
+
+      <!-- ─── DASHBOARD PAGE ─── -->
+      <div id="pgDash" class="pg on">
+        <div class="pg-greeting">
+          <h2 id="dashGreeting">Good morning! 👋</h2>
+          <p>What would you like to do today?</p>
+        </div>
+        <div class="pg-section">
+          <div class="pg-section-title">Quick Actions</div>
+          <div class="dash-actions">
+            <div class="dash-ac" onclick="goPage('builder')">
+              <div class="dash-ac-ico">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              </div>
+              <div class="dash-ac-t">Build Resume</div>
+              <div class="dash-ac-d">Upload PDF or fill manually</div>
+            </div>
+            <div class="dash-ac" onclick="goPage('jobs')">
+              <div class="dash-ac-ico">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+              </div>
+              <div class="dash-ac-t">Find Jobs</div>
+              <div class="dash-ac-d">Browse open roles for you</div>
+            </div>
+            <div class="dash-ac" onclick="goPage('resumes')">
+              <div class="dash-ac-ico">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+              </div>
+              <div class="dash-ac-t">My Resumes</div>
+              <div class="dash-ac-d">View &amp; manage saved resumes</div>
+            </div>
+          </div>
+        </div>
+        <div class="pg-section">
+          <div class="pg-section-title">Overview</div>
+          <div class="dash-stats-row">
+            <div class="dash-stat">
+              <div class="dash-stat-n" id="statTotal">0</div>
+              <div class="dash-stat-l">Resumes Built</div>
+            </div>
+            <div class="dash-stat">
+              <div class="dash-stat-n" id="statBest">—</div>
+              <div class="dash-stat-l">Best ATS Score</div>
+            </div>
+            <div class="dash-stat">
+              <div class="dash-stat-n" id="statLast">—</div>
+              <div class="dash-stat-l">Last Updated</div>
+            </div>
+          </div>
+        </div>
+        <div class="pg-section">
+          <div class="pg-section-title">Recent Resumes</div>
+          <div id="dashRecentList">
+            <div class="pg-empty">No resumes yet. Build your first one in under 60 seconds.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─── RESUMES PAGE ─── -->
+      <div id="pgResumes" class="pg">
+        <div class="page-hd">
+          <h2>My Resumes</h2>
+          <p>All your saved resumes in one place</p>
+        </div>
+        <div class="page-bd">
+          <div id="resumeList">
+            <div class="pg-empty">No resumes saved yet. <a href="#" onclick="goPage('builder')" style="color:var(--accent)">Build one now →</a></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─── PROFILE PAGE ─── -->
+      <div id="pgProfile" class="pg">
+        <div class="page-hd">
+          <h2>Profile</h2>
+          <p>Your account &amp; preferences</p>
+        </div>
+        <div class="page-bd" id="profileContent">
+          <div class="pg-empty">Loading…</div>
+        </div>
+      </div>
+
+      <!-- ─── JOBS PAGE ─── -->
+      <div id="pgJobs" class="pg">
+        <div class="page-hd">
+          <h2>Find Jobs</h2>
+          <p>Curated openings matching your profile</p>
+        </div>
+        <div class="page-bd">
+          <div id="pgJobsList">
+            <div class="pg-empty">Build a resume first, then we'll suggest matching jobs.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─── BUILDER PAGE  (wraps existing step screens) ─── -->
+      <div id="pgBuilder" class="pg">
 
 <!-- ══════════════ STEP: UPLOAD ══════════════ -->
 <div id="sUpload" class="step">
@@ -1319,7 +1633,40 @@
     <div id="oppInternships" style="display:none;"><div class="opp-spinner"><div class="spinner"></div> Searching internships…</div></div>
     <div id="oppFreelancing" style="display:none;"></div>
   </div>
-</div>
+</div><!-- /sOut -->
+
+      </div><!-- /pgBuilder -->
+    </div><!-- /appWorkspace -->
+  </div><!-- /appMain -->
+
+  <!-- ── CHAT PANEL ── -->
+  <div id="chatPanel">
+    <div id="chatPanelHd">
+      <div class="cp-title">
+        <div class="cp-dot"></div>
+        AI Assistant
+      </div>
+      <button onclick="toggleChat()" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:20px;padding:4px 6px;line-height:1;border-radius:6px" title="Close">×</button>
+    </div>
+    <div id="chatMsgs"></div>
+    <div class="chat-sugs" id="chatSugs">
+      <button class="chat-sug" onclick="sendAgentChat('Build me a resume')">Build resume</button>
+      <button class="chat-sug" onclick="sendAgentChat('Show my saved resumes')">My resumes</button>
+      <button class="chat-sug" onclick="sendAgentChat('Find jobs for me')">Find jobs</button>
+      <button class="chat-sug" onclick="sendAgentChat('Show my profile')">My profile</button>
+    </div>
+    <div id="chatInputWrap">
+      <div class="chat-row">
+        <textarea id="chatIn" placeholder="Ask me anything…" rows="1"
+          onkeydown="agentChatKey(event)" oninput="agentAutoGrow(this)"></textarea>
+        <button id="chatSend" onclick="sendAgentChat()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /appShell -->
 
 
 <!-- ══════════════ STEP: AUTH ══════════════ -->
@@ -2158,6 +2505,11 @@ function renderOutput() {
     if (ringFill) ringFill.style.transition = '';
     animateATS(after);
   }, 350);
+  // Auto-save resume to localStorage for the agent dashboard
+  setTimeout(() => {
+    agentSaveResume({ personal: rd.personal, jd, resume: rd, ats: after });
+    agentRefreshDashboard();
+  }, 2000);
 
   // Sync editor fields
   const p = rd.personal;
@@ -2544,7 +2896,8 @@ async function submitAuth() {
 
     okEl.textContent = authMode === 'register' ? '✓ Account created! Redirecting…' : '✓ Signed in!';
     okEl.classList.add('on');
-    setTimeout(() => goTo('sLand'), 900);
+    window._nlUser = data.user || {};
+    setTimeout(() => enterAppMode(), 900);
   } catch(e) {
     errEl.textContent = 'Network error — please try again.';
     errEl.classList.add('on');
@@ -2575,8 +2928,11 @@ function signOut() {
   localStorage.removeItem('nl_token');
   localStorage.removeItem('nl_refresh');
   localStorage.removeItem('nl_user');
+  window._nlUser = null;
   updateNavAuth(null);
+  exitAppMode();
 }
+function appSignOut() { signOut(); }
 
 // Restore session on load
 (function restoreSession() {
@@ -2741,6 +3097,488 @@ function fireConfetti() {
   }
   requestAnimationFrame(draw);
 }
+
+// ════════════════════════════════════════════════════════════
+//  AGENT APP SHELL — Chat · Routing · Resume Vault · Pages
+// ════════════════════════════════════════════════════════════
+
+/* ── State ── */
+let agentHistory = [];
+const AGENT_PAGES = {
+  dash:     'Dashboard',
+  builder:  'Resume Builder',
+  resumes:  'My Resumes',
+  jobs:     'Find Jobs',
+  profile:  'Profile'
+};
+
+/* ── Enter / Exit App Mode ── */
+function enterAppMode() {
+  document.body.classList.add('app-mode');
+  const shell = document.getElementById('appShell');
+  if (shell) shell.style.display = 'flex';
+  // Hide landing/auth steps
+  document.querySelectorAll('.step').forEach(s => s.classList.remove('on'));
+  agentRefreshSidebarUser();
+  agentRefreshDashboard();
+  updateSidebarResumeCount();
+  // Welcome message (once)
+  if (agentHistory.length === 0) {
+    const u = window._nlUser;
+    const name = u?.full_name?.split(' ')[0] || u?.name?.split(' ')[0] || '';
+    appendAgentAIMsg(
+      `Hey${name ? ' ' + name : ''}! 👋 I'm your AI assistant. Tell me what you need — I can build resumes, find jobs, or navigate anywhere in the app.`
+    );
+  }
+}
+
+function exitAppMode() {
+  document.body.classList.remove('app-mode');
+  const shell = document.getElementById('appShell');
+  if (shell) shell.style.display = 'none';
+  goTo('sLand');
+}
+
+/* ── Page Routing ── */
+function goPage(page) {
+  // Sidebar active state
+  document.querySelectorAll('.sb-item').forEach(el => el.classList.remove('on'));
+  const sbMap = { dash:'sbDash', builder:'sbBuilder', resumes:'sbResumes', jobs:'sbJobs', profile:'sbProfile' };
+  const sbEl = document.getElementById(sbMap[page] || '');
+  if (sbEl) sbEl.classList.add('on');
+
+  // Hide all pages
+  ['pgDash','pgResumes','pgProfile','pgJobs','pgBuilder'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.remove('on');
+  });
+
+  // Show target page
+  const pgMap = { dash:'pgDash', resumes:'pgResumes', profile:'pgProfile', jobs:'pgJobs', builder:'pgBuilder' };
+  const targetId = pgMap[page];
+  if (targetId) {
+    const el = document.getElementById(targetId);
+    if (el) el.classList.add('on');
+  }
+
+  // Update header breadcrumb
+  const pageNameEl = document.getElementById('appPageName');
+  if (pageNameEl) pageNameEl.textContent = AGENT_PAGES[page] || page;
+
+  // Builder defaults to upload screen
+  if (page === 'builder') {
+    document.querySelectorAll('#pgBuilder .step').forEach(s => s.classList.remove('on'));
+    const up = document.getElementById('sUpload');
+    if (up) up.classList.add('on');
+  }
+
+  // Load page-specific data
+  if (page === 'resumes') agentRenderResumeList();
+  if (page === 'profile') agentRenderProfile();
+  if (page === 'jobs')    agentRenderJobs();
+}
+
+/* ── Toggle Chat Panel ── */
+function toggleChat() {
+  const panel = document.getElementById('chatPanel');
+  if (!panel) return;
+  const hidden = (panel.style.display === 'none');
+  panel.style.display = hidden ? 'flex' : 'none';
+}
+
+/* ── Sidebar: update user info ── */
+function agentRefreshSidebarUser() {
+  const user = window._nlUser || {};
+  const av   = document.getElementById('sbAvatar');
+  const nm   = document.getElementById('sbName');
+  const initial = ((user.full_name || user.name || user.email || 'U')[0] || 'U').toUpperCase();
+  if (av) av.textContent = initial;
+  if (nm) nm.textContent = user.full_name || user.name || (user.email ? user.email.split('@')[0] : 'User');
+}
+
+/* ── Resume Vault (localStorage) ── */
+function agentGetResumes() {
+  try { return JSON.parse(localStorage.getItem('nl_resumes') || '[]'); }
+  catch { return []; }
+}
+
+function agentSaveResume(data) {
+  const resumes = agentGetResumes();
+  const name    = data.personal?.name || data.resume?.personal?.name || 'Resume';
+  const co      = data.jd?.company || '';
+  const jobT    = data.jd?.title || '';
+  const ats     = data.ats || 0;
+  const entry = {
+    id: Date.now(),
+    title: name + (jobT ? ' — ' + jobT : '') + ' Resume',
+    company: co,
+    jobTitle: jobT,
+    ats,
+    savedAt: new Date().toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}),
+    data
+  };
+  resumes.unshift(entry);
+  if (resumes.length > 20) resumes.pop();
+  localStorage.setItem('nl_resumes', JSON.stringify(resumes));
+  updateSidebarResumeCount();
+}
+
+function updateSidebarResumeCount() {
+  const n     = agentGetResumes().length;
+  const badge = document.getElementById('sbResumeCount');
+  if (!badge) return;
+  badge.textContent    = n;
+  badge.style.display  = n > 0 ? '' : 'none';
+}
+
+/* ── Dashboard ── */
+function agentRefreshDashboard() {
+  const resumes = agentGetResumes();
+
+  // Stats
+  const totalEl = document.getElementById('statTotal');
+  const bestEl  = document.getElementById('statBest');
+  const lastEl  = document.getElementById('statLast');
+  if (totalEl) totalEl.textContent = resumes.length;
+  if (bestEl) {
+    const top = resumes.reduce((mx, r) => Math.max(mx, r.ats || 0), 0);
+    bestEl.textContent = top ? top + '/100' : '—';
+  }
+  if (lastEl) lastEl.textContent = resumes.length ? resumes[0].savedAt : '—';
+
+  // Greeting
+  const hour  = new Date().getHours();
+  const greet = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+  const u     = window._nlUser || {};
+  const fname = (u.full_name || u.name || '').split(' ')[0];
+  const greetEl = document.getElementById('dashGreeting');
+  if (greetEl) greetEl.textContent = `${greet}${fname ? ', ' + fname : ''}! 👋`;
+
+  // Recent resumes grid
+  const recentEl = document.getElementById('dashRecentList');
+  if (!recentEl) return;
+  if (!resumes.length) {
+    recentEl.innerHTML = `<div class="pg-empty">No resumes yet. Build your first one in under 60 seconds.</div>`;
+    return;
+  }
+  recentEl.innerHTML = `<div class="dash-resume-grid">${resumes.slice(0,4).map((r,i) => `
+    <div class="dash-rc" onclick="agentLoadResume(${i})">
+      <div class="dash-rc-title">${agentEsc(r.title)}</div>
+      <div class="dash-rc-company">${agentEsc(r.company || 'No company')}</div>
+      ${r.ats ? `<span class="ats-pill ${r.ats>=80?'hi':r.ats>=60?'mid':'lo'}">${r.ats}/100</span>` : ''}
+    </div>`).join('')}</div>`;
+  updateSidebarResumeCount();
+}
+
+/* ── Resumes Page ── */
+function agentRenderResumeList() {
+  const resumes   = agentGetResumes();
+  const container = document.getElementById('resumeList');
+  if (!container) return;
+  if (!resumes.length) {
+    container.innerHTML = `<div class="pg-empty">No resumes saved yet.<br>
+      <a href="#" onclick="goPage('builder')" style="color:var(--accent)">Build your first resume →</a></div>`;
+    return;
+  }
+  container.innerHTML = `<div class="res-grid">${resumes.map((r,i) => `
+    <div class="res-card" onclick="agentLoadResume(${i})">
+      <div class="res-card-ico">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+        </svg>
+      </div>
+      <div class="res-card-title">${agentEsc(r.title)}</div>
+      <div class="res-card-co">${agentEsc(r.company || 'No company')}</div>
+      <div class="res-card-foot">
+        <span class="res-card-date">${agentEsc(r.savedAt)}</span>
+        ${r.ats ? `<span class="ats-pill ${r.ats>=80?'hi':r.ats>=60?'mid':'lo'}">${r.ats}/100</span>` : '<span></span>'}
+        <button class="res-del" onclick="event.stopPropagation();agentDeleteResume(${i})" title="Delete">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="3 6 5 6 21 6"/>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+          </svg>
+        </button>
+      </div>
+    </div>`).join('')}</div>`;
+}
+
+function agentLoadResume(idx) {
+  const resumes = agentGetResumes();
+  if (!resumes[idx]) return;
+  const r = resumes[idx];
+  if (r.data) {
+    if (r.data.resume)  Object.assign(rd, r.data.resume);
+    else                Object.assign(rd, r.data);
+    if (r.data.jd)      Object.assign(jd, r.data.jd);
+    if (r.data.personal) Object.assign(rd.personal, r.data.personal);
+  }
+  goPage('builder');
+  goTo('sOut');
+  renderOutput();
+  appendAgentAIMsg(`Loaded "${agentEsc(r.title)}". You can view it in the builder. Want me to improve it?`);
+}
+
+function agentDeleteResume(idx) {
+  if (!confirm('Delete this resume?')) return;
+  const resumes = agentGetResumes();
+  resumes.splice(idx, 1);
+  localStorage.setItem('nl_resumes', JSON.stringify(resumes));
+  agentRenderResumeList();
+  updateSidebarResumeCount();
+  agentRefreshDashboard();
+}
+
+/* ── Profile Page ── */
+function agentRenderProfile() {
+  const user = window._nlUser || JSON.parse(localStorage.getItem('nl_user') || 'null');
+  const el   = document.getElementById('profileContent');
+  if (!el) return;
+  if (!user) {
+    el.innerHTML = `<div class="pg-empty">Not signed in.
+      <button class="btn btn-dark btn-sm" style="margin-top:12px" onclick="goTo('sAuth')">Sign In</button></div>`;
+    return;
+  }
+  const initial = ((user.full_name || user.name || user.email || 'U')[0] || 'U').toUpperCase();
+  const resumes = agentGetResumes();
+  const topAts  = resumes.reduce((mx,r)=>Math.max(mx,r.ats||0),0);
+  el.innerHTML = `
+    <div style="max-width:480px">
+      <div style="display:flex;align-items:center;gap:16px;padding:20px;background:white;
+            border:1.5px solid var(--border);border-radius:16px;margin-bottom:16px">
+        <div style="width:56px;height:56px;border-radius:50%;background:#2563EB;color:white;
+              display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;flex-shrink:0">
+          ${initial}
+        </div>
+        <div>
+          <div style="font-size:16px;font-weight:700;color:var(--text)">${agentEsc(user.full_name||user.name||'User')}</div>
+          <div style="font-size:13px;color:var(--muted)">${agentEsc(user.email||'')}</div>
+          <div style="font-size:11px;color:var(--subtle);margin-top:3px">Free plan · Nine Lab</div>
+        </div>
+      </div>
+      <div style="padding:20px;background:white;border:1.5px solid var(--border);border-radius:16px;margin-bottom:16px">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;
+              color:var(--subtle);margin-bottom:12px">Resume Stats</div>
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px">
+          <div style="padding:14px;background:var(--bg);border-radius:10px;text-align:center">
+            <div style="font-size:22px;font-weight:800;color:var(--text)">${resumes.length}</div>
+            <div style="font-size:11px;color:var(--muted)">Resumes Built</div>
+          </div>
+          <div style="padding:14px;background:var(--bg);border-radius:10px;text-align:center">
+            <div style="font-size:22px;font-weight:800;color:var(--text)">${topAts||'—'}</div>
+            <div style="font-size:11px;color:var(--muted)">Best ATS Score</div>
+          </div>
+        </div>
+      </div>
+      <button class="btn btn-out" onclick="appSignOut()" style="width:100%">Sign Out</button>
+    </div>`;
+}
+
+/* ── Jobs Page ── */
+function agentRenderJobs() {
+  const el      = document.getElementById('pgJobsList');
+  if (!el) return;
+  const resumes = agentGetResumes();
+  if (!resumes.length) {
+    el.innerHTML = `<div class="pg-empty">Build a resume first, then we'll suggest matching jobs.</div>`;
+    return;
+  }
+  const query = resumes[0].jobTitle || resumes[0].title || 'software developer';
+  el.innerHTML = `<p style="font-size:13px;color:var(--muted);margin-bottom:16px">
+    Jobs matching: <strong>${agentEsc(query)}</strong></p>
+    <div id="pgJobsInner"><div class="opp-spinner"><div class="spinner"></div> Searching…</div></div>`;
+  fetch(`${BASE}/real-jobs?title=${encodeURIComponent(query)}&location=India`)
+    .then(r => r.json())
+    .then(data => {
+      const inner = document.getElementById('pgJobsInner');
+      if (!inner) return;
+      if (!data.jobs || !data.jobs.length) {
+        inner.innerHTML = `<div class="pg-empty">No jobs found for "${agentEsc(query)}" right now.</div>`;
+        return;
+      }
+      inner.innerHTML = data.jobs.slice(0,8).map(j => `
+        <div style="padding:14px 16px;background:white;border:1.5px solid var(--border);
+              border-radius:12px;margin-bottom:10px;display:flex;justify-content:space-between;
+              align-items:flex-start;gap:12px">
+          <div>
+            <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:3px">${agentEsc(j.title||'')}</div>
+            <div style="font-size:12px;color:var(--muted)">${agentEsc(j.company||'')} · ${agentEsc(j.location||'India')}</div>
+            ${j.salary?`<div style="font-size:11px;color:var(--subtle);margin-top:3px">${agentEsc(j.salary)}</div>`:''}
+          </div>
+          <a href="${agentEsc(j.url||'#')}" target="_blank" rel="noopener"
+            class="btn btn-out" style="font-size:11px;padding:6px 12px;white-space:nowrap;flex-shrink:0">Apply →</a>
+        </div>`).join('');
+    })
+    .catch(() => {
+      const inner = document.getElementById('pgJobsInner');
+      if (inner) inner.innerHTML = `<div class="pg-empty">Could not load jobs right now.</div>`;
+    });
+}
+
+/* ── Chat: Append helpers ── */
+function appendAgentAIMsg(text, actionHTML) {
+  const msgs = document.getElementById('chatMsgs');
+  if (!msgs) return;
+  const div = document.createElement('div');
+  div.className = 'cmsg ai';
+  div.innerHTML = `
+    <div class="cmsg-av">AI</div>
+    <div>
+      <div class="cmsg-bubble">${text}</div>
+      ${actionHTML ? `<div class="cmsg-action">${actionHTML}</div>` : ''}
+    </div>`;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function appendAgentUserMsg(text) {
+  const msgs = document.getElementById('chatMsgs');
+  if (!msgs) return;
+  const div = document.createElement('div');
+  div.className = 'cmsg user';
+  div.innerHTML = `<div class="cmsg-av">U</div><div class="cmsg-bubble">${agentEsc(text)}</div>`;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function appendAgentTyping() {
+  const msgs = document.getElementById('chatMsgs');
+  if (!msgs) return;
+  const div = document.createElement('div');
+  div.className = 'cmsg ai';
+  div.id = 'agentTypingBubble';
+  div.innerHTML = `<div class="cmsg-av">AI</div>
+    <div class="cmsg-bubble typing">
+      <span class="t-dot"></span><span class="t-dot"></span><span class="t-dot"></span>
+    </div>`;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function removeAgentTyping() {
+  const t = document.getElementById('agentTypingBubble');
+  if (t) t.remove();
+}
+
+/* ── Chat: Send ── */
+async function sendAgentChat(prefill) {
+  const input = document.getElementById('chatIn');
+  const text  = (prefill || input?.value || '').trim();
+  if (!text) return;
+  if (input) { input.value = ''; agentAutoGrow(input); }
+
+  const sendBtn = document.getElementById('chatSend');
+  if (sendBtn) sendBtn.disabled = true;
+
+  // Hide suggestions after first real send
+  const sugs = document.getElementById('chatSugs');
+  if (sugs) sugs.style.display = 'none';
+
+  appendAgentUserMsg(text);
+  appendAgentTyping();
+
+  agentHistory.push({ role: 'user', content: text });
+
+  const context = {
+    currentPage:  (document.querySelector('.sb-item.on')?.id || 'sbDash').replace('sb','').toLowerCase(),
+    resumeCount:  agentGetResumes().length,
+    hasBuiltResume: (document.getElementById('atsScore')?.textContent !== '--'),
+    userName:     window._nlUser?.full_name || window._nlUser?.name || ''
+  };
+
+  try {
+    const res  = await fetch(`${BASE}/agent`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ message: text, history: agentHistory.slice(-8), context })
+    });
+    const data = await res.json();
+    removeAgentTyping();
+
+    const reply  = data.message || "I'm not sure how to help with that.";
+    const action = data.action  || 'none';
+    const params = data.params  || {};
+
+    agentHistory.push({ role: 'assistant', content: reply });
+    handleAgentAction(action, params, reply);
+
+  } catch(err) {
+    removeAgentTyping();
+    appendAgentAIMsg("Sorry, I'm having trouble connecting. Please try again.");
+  }
+
+  if (sendBtn) sendBtn.disabled = false;
+}
+
+/* ── Agent Action Dispatcher ── */
+function handleAgentAction(action, params, replyText) {
+  switch (action) {
+    case 'show_dashboard':
+      goPage('dash');
+      appendAgentAIMsg(agentEsc(replyText));
+      break;
+    case 'show_resumes':
+      goPage('resumes');
+      appendAgentAIMsg(agentEsc(replyText));
+      break;
+    case 'show_profile':
+      goPage('profile');
+      appendAgentAIMsg(agentEsc(replyText));
+      break;
+    case 'find_jobs':
+      goPage('jobs');
+      appendAgentAIMsg(agentEsc(replyText));
+      break;
+    case 'open_upload':
+    case 'build_resume':
+      goPage('builder');
+      goTo('sUpload');
+      appendAgentAIMsg(agentEsc(replyText));
+      break;
+    case 'open_form':
+      goPage('builder');
+      goTo('sForm');
+      if (typeof setFormSec === 'function') setFormSec('personal');
+      appendAgentAIMsg(agentEsc(replyText));
+      break;
+    default:
+      appendAgentAIMsg(agentEsc(replyText));
+  }
+}
+
+/* ── Keyboard & auto-grow ── */
+function agentChatKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendAgentChat();
+  }
+}
+function agentAutoGrow(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 90) + 'px';
+}
+
+/* ── HTML escape ── */
+function agentEsc(s) {
+  return String(s || '')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ── Auto-restore session on page load ── */
+(function agentRestoreSession() {
+  updateSidebarResumeCount();
+  try {
+    const token = localStorage.getItem('nl_token');
+    const u     = JSON.parse(localStorage.getItem('nl_user') || 'null');
+    if (token && u) {
+      window._nlUser = u;
+      enterAppMode();
+    }
+  } catch(e) {}
+})();
 </script>
 </body>
 </html>
