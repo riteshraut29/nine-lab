@@ -869,7 +869,7 @@
 <body>
 
 <!-- ══════════════ STEP: LANDING ══════════════ -->
-<div id="sLand" class="step on">
+<div id="sLand" class="step">
   <nav class="nav">
     <span class="logo">Nine<em>Lab</em></span>
     <div class="nav-progress">
@@ -1027,6 +1027,9 @@
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         New Resume
       </button>
+      <button id="sbSignInBtn" onclick="goTo('sAuth')" style="display:none;width:100%;margin-top:8px;padding:8px 14px;background:rgba(37,99,235,0.15);color:#60A5FA;border:1.5px solid rgba(37,99,235,0.3);border-radius:8px;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.15s">
+        Sign In / Register
+      </button>
     </div>
   </aside>
 
@@ -1051,8 +1054,16 @@
 
       <!-- ─── DASHBOARD PAGE ─── -->
       <div id="pgDash" class="pg on">
+        <!-- Guest banner — hidden when logged in -->
+        <div id="guestBanner" style="margin:16px 28px 0;padding:14px 18px;background:linear-gradient(135deg,#EFF6FF,#DBEAFE);border:1.5px solid #BFDBFE;border-radius:14px;display:flex;align-items:center;justify-content:space-between;gap:12px">
+          <div>
+            <div style="font-size:13px;font-weight:700;color:#1E40AF;margin-bottom:2px">You're browsing as a guest</div>
+            <div style="font-size:12px;color:#3B82F6">Sign in to save resumes &amp; access them anywhere</div>
+          </div>
+          <button onclick="goTo('sAuth')" class="btn btn-dark btn-sm" style="font-size:12px;white-space:nowrap;flex-shrink:0">Sign In Free</button>
+        </div>
         <div class="pg-greeting">
-          <h2 id="dashGreeting">Good morning! 👋</h2>
+          <h2 id="dashGreeting">Welcome to Nine Lab! 👋</h2>
           <p>What would you like to do today?</p>
         </div>
         <div class="pg-section">
@@ -1145,6 +1156,18 @@
 
       <!-- ─── BUILDER PAGE  (wraps existing step screens) ─── -->
       <div id="pgBuilder" class="pg">
+        <!-- Builder mode switcher — shown on upload screen only -->
+        <div id="builderModeBanner" style="padding:10px 20px;background:#F8FAFC;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-shrink:0">
+          <span style="font-size:12px;color:var(--muted);font-weight:500">Start with:</span>
+          <button onclick="goTo('sUpload')" id="modeBtnUpload" class="btn btn-dark btn-sm" style="font-size:12px;gap:5px;display:inline-flex;align-items:center">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Upload PDF
+          </button>
+          <button onclick="goTo('sForm'); if(typeof setFormSec==='function') setFormSec('personal');" id="modeBtnForm" class="btn btn-out btn-sm" style="font-size:12px;gap:5px;display:inline-flex;align-items:center">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="17" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="17" y1="18" x2="3" y2="18"/></svg>
+            Fill Manually
+          </button>
+        </div>
 
 <!-- ══════════════ STEP: UPLOAD ══════════════ -->
 <div id="sUpload" class="step">
@@ -1650,10 +1673,10 @@
     </div>
     <div id="chatMsgs"></div>
     <div class="chat-sugs" id="chatSugs">
-      <button class="chat-sug" onclick="sendAgentChat('Build me a resume')">Build resume</button>
-      <button class="chat-sug" onclick="sendAgentChat('Show my saved resumes')">My resumes</button>
-      <button class="chat-sug" onclick="sendAgentChat('Find jobs for me')">Find jobs</button>
-      <button class="chat-sug" onclick="sendAgentChat('Show my profile')">My profile</button>
+      <button class="chat-sug" onclick="sendAgentChat('Build my resume from PDF')">📄 Upload PDF</button>
+      <button class="chat-sug" onclick="sendAgentChat('I want to fill my resume manually')">✏️ Fill manually</button>
+      <button class="chat-sug" onclick="sendAgentChat('Find jobs for me')">💼 Find jobs</button>
+      <button class="chat-sug" onclick="sendAgentChat('Show my saved resumes')">📁 My resumes</button>
     </div>
     <div id="chatInputWrap">
       <div class="chat-row">
@@ -2897,7 +2920,16 @@ async function submitAuth() {
     okEl.textContent = authMode === 'register' ? '✓ Account created! Redirecting…' : '✓ Signed in!';
     okEl.classList.add('on');
     window._nlUser = data.user || {};
-    setTimeout(() => enterAppMode(), 900);
+    setTimeout(() => {
+      // Close auth modal, refresh app state
+      document.getElementById('sAuth').classList.remove('on');
+      agentRefreshSidebarUser();
+      agentRefreshDashboard();
+      updateSidebarResumeCount();
+      goPage('dash');
+      // Add welcome message
+      appendAgentAIMsg(`Welcome${data.user?.full_name ? ', ' + data.user.full_name.split(' ')[0] : ''}! 🎉 You're signed in. What would you like to do?`);
+    }, 900);
   } catch(e) {
     errEl.textContent = 'Network error — please try again.';
     errEl.classList.add('on');
@@ -3117,26 +3149,37 @@ function enterAppMode() {
   document.body.classList.add('app-mode');
   const shell = document.getElementById('appShell');
   if (shell) shell.style.display = 'flex';
-  // Hide landing/auth steps
+  // Hide all step screens (they live inside pgBuilder)
   document.querySelectorAll('.step').forEach(s => s.classList.remove('on'));
   agentRefreshSidebarUser();
   agentRefreshDashboard();
   updateSidebarResumeCount();
-  // Welcome message (once)
+  // Show dashboard by default
+  goPage('dash');
+  // Welcome message (once per session)
   if (agentHistory.length === 0) {
     const u = window._nlUser;
     const name = u?.full_name?.split(' ')[0] || u?.name?.split(' ')[0] || '';
     appendAgentAIMsg(
-      `Hey${name ? ' ' + name : ''}! 👋 I'm your AI assistant. Tell me what you need — I can build resumes, find jobs, or navigate anywhere in the app.`
+      `Hey${name ? ' ' + name : ''}! 👋 I'm your AI assistant. I can build your resume, find jobs, or navigate the app. Try the quick buttons below!`
     );
   }
 }
 
 function exitAppMode() {
-  document.body.classList.remove('app-mode');
-  const shell = document.getElementById('appShell');
-  if (shell) shell.style.display = 'none';
-  goTo('sLand');
+  // On sign-out: stay in app shell but reset to guest state
+  window._nlUser = null;
+  agentRefreshSidebarUser();
+  agentRefreshDashboard();
+  updateSidebarResumeCount();
+  goPage('dash');
+  // Re-add welcome message for guest
+  const msgs = document.getElementById('chatMsgs');
+  if (msgs) msgs.innerHTML = '';
+  agentHistory = [];
+  const sugs = document.getElementById('chatSugs');
+  if (sugs) sugs.style.display = '';
+  appendAgentAIMsg(`Welcome to Nine Lab! 👋 Sign in to save your resumes, or start building right now — no account needed.`);
 }
 
 /* ── Page Routing ── */
@@ -3188,12 +3231,24 @@ function toggleChat() {
 
 /* ── Sidebar: update user info ── */
 function agentRefreshSidebarUser() {
-  const user = window._nlUser || {};
-  const av   = document.getElementById('sbAvatar');
-  const nm   = document.getElementById('sbName');
-  const initial = ((user.full_name || user.name || user.email || 'U')[0] || 'U').toUpperCase();
-  if (av) av.textContent = initial;
-  if (nm) nm.textContent = user.full_name || user.name || (user.email ? user.email.split('@')[0] : 'User');
+  const user    = window._nlUser || null;
+  const av      = document.getElementById('sbAvatar');
+  const nm      = document.getElementById('sbName');
+  const subEl   = document.querySelector('.sb-user-sub');
+  const signBtn = document.getElementById('sbSignInBtn');
+
+  if (user && (user.email || user.full_name)) {
+    const initial = ((user.full_name || user.name || user.email || 'U')[0] || 'U').toUpperCase();
+    if (av) { av.textContent = initial; av.style.background = '#2563EB'; }
+    if (nm) nm.textContent = user.full_name || user.name || user.email.split('@')[0];
+    if (subEl) subEl.textContent = 'Free plan';
+    if (signBtn) signBtn.style.display = 'none';
+  } else {
+    if (av) { av.textContent = '?'; av.style.background = '#334155'; }
+    if (nm) nm.textContent = 'Guest';
+    if (subEl) subEl.textContent = 'Sign in to save';
+    if (signBtn) signBtn.style.display = 'block';
+  }
 }
 
 /* ── Resume Vault (localStorage) ── */
@@ -3233,6 +3288,10 @@ function updateSidebarResumeCount() {
 
 /* ── Dashboard ── */
 function agentRefreshDashboard() {
+  // Show/hide guest banner
+  const banner = document.getElementById('guestBanner');
+  if (banner) banner.style.display = (window._nlUser && window._nlUser.email) ? 'none' : '';
+
   const resumes = agentGetResumes();
 
   // Stats
@@ -3249,10 +3308,12 @@ function agentRefreshDashboard() {
   // Greeting
   const hour  = new Date().getHours();
   const greet = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
-  const u     = window._nlUser || {};
-  const fname = (u.full_name || u.name || '').split(' ')[0];
+  const u     = window._nlUser || null;
+  const fname = u ? (u.full_name || u.name || '').split(' ')[0] : '';
   const greetEl = document.getElementById('dashGreeting');
-  if (greetEl) greetEl.textContent = `${greet}${fname ? ', ' + fname : ''}! 👋`;
+  if (greetEl) greetEl.textContent = u
+    ? `${greet}${fname ? ', ' + fname : ''}! 👋`
+    : `Welcome to Nine Lab! 👋`;
 
   // Recent resumes grid
   const recentEl = document.getElementById('dashRecentList');
@@ -3567,17 +3628,16 @@ function agentEsc(s) {
     .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-/* ── Auto-restore session on page load ── */
+/* ── Show app shell on every page load (guest or logged-in) ── */
 (function agentRestoreSession() {
-  updateSidebarResumeCount();
+  // Restore session if token exists
   try {
     const token = localStorage.getItem('nl_token');
     const u     = JSON.parse(localStorage.getItem('nl_user') || 'null');
-    if (token && u) {
-      window._nlUser = u;
-      enterAppMode();
-    }
+    if (token && u) window._nlUser = u;
   } catch(e) {}
+  // Always enter app mode — AI is available from first load
+  enterAppMode();
 })();
 </script>
 </body>
