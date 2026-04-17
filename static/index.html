@@ -807,9 +807,126 @@
     #sAuth.on { display: flex !important; }
     #sAuth .auth-body { max-width: 680px; width: 92vw; border-radius: 20px; overflow: hidden; box-shadow: 0 24px 80px rgba(0,0,0,0.3); max-height: 90vh; overflow-y: auto; }
 
-    /* Mobile */
-    @media(max-width:1024px) { #chatPanel { display: none; } }
-    @media(max-width:768px)  { #appSidebar { display: none; } }
+    /* ══ MOBILE APP SHELL ══════════════════════════════════════ */
+
+    /* ── Mobile bottom nav ── */
+    #mobileNav {
+      display: none;
+      position: fixed; bottom: 0; left: 0; right: 0;
+      height: 58px;
+      background: #0F172A;
+      border-top: 1px solid rgba(255,255,255,0.07);
+      z-index: 450;
+      flex-direction: row; align-items: stretch;
+      padding: 0 2px;
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+    .mnav-item {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 3px;
+      padding: 6px 2px; background: none; border: none;
+      color: #4B5563; font-size: 9.5px; font-weight: 700;
+      font-family: inherit; cursor: pointer; transition: color 0.12s;
+      letter-spacing: 0.3px; text-transform: uppercase; line-height: 1;
+    }
+    .mnav-item.on { color: #60A5FA; }
+    .mnav-item svg { flex-shrink: 0; }
+
+    /* ── Chat FAB (floating action button) ── */
+    #chatFAB {
+      display: none;
+      position: fixed; bottom: 72px; right: 16px;
+      width: 50px; height: 50px; border-radius: 50%;
+      background: #2563EB; color: white; border: none;
+      box-shadow: 0 4px 20px rgba(37,99,235,0.5);
+      cursor: pointer; z-index: 440;
+      align-items: center; justify-content: center;
+      transition: transform 0.18s, background 0.15s;
+    }
+    #chatFAB:active { transform: scale(0.9); }
+
+    /* ── Chat overlay backdrop (mobile) ── */
+    #chatOverlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.45); z-index: 590;
+    }
+    #chatOverlay.on { display: block; }
+
+    /* ── 1024px: chat becomes a bottom sheet, FAB appears ── */
+    @media(max-width:1024px) {
+      #chatFAB { display: flex; }
+      #chatPanel {
+        position: fixed !important;
+        bottom: 0 !important; left: 0 !important; right: 0 !important;
+        width: 100% !important; height: 76vh;
+        border-left: none !important;
+        border-top: 1.5px solid var(--border);
+        border-radius: 22px 22px 0 0;
+        z-index: 600;
+        box-shadow: 0 -8px 40px rgba(0,0,0,0.18);
+        transform: translateY(110%);
+        transition: transform 0.3s cubic-bezier(0.16,1,0.3,1);
+        display: flex !important; /* always in DOM, just offscreen */
+      }
+      #chatPanel.open { transform: translateY(0); }
+      #chatPanelHd { border-radius: 22px 22px 0 0; }
+    }
+
+    /* ── 768px: mobile layout ── */
+    @media(max-width:768px) {
+      #appSidebar { display: none !important; }
+      #mobileNav  { display: flex; }
+      #appMain    { height: 100%; }
+      #appHeader  { padding: 0 14px; }
+
+      /* Workspace content padding */
+      .pg-greeting { padding: 14px 16px 10px; }
+      .pg-greeting h2 { font-size: 18px; }
+      .pg-greeting p  { font-size: 13px; }
+      .pg-section     { padding: 0 16px 14px; }
+      #guestBanner    { margin: 12px 16px 0; flex-direction: column; align-items: flex-start; gap: 8px; }
+
+      /* Dashboard cards — 2 cols */
+      .dash-actions { grid-template-columns: 1fr 1fr; gap: 8px; }
+      .dash-ac      { padding: 13px 11px; }
+      .dash-ac-ico  { width: 30px; height: 30px; margin-bottom: 8px; }
+      .dash-ac-t    { font-size: 12px; }
+      .dash-ac-d    { display: none; }
+
+      /* Stats row */
+      .dash-stats-row { grid-template-columns: repeat(3,1fr); gap: 8px; }
+      .dash-stat   { padding: 11px 8px; }
+      .dash-stat-n { font-size: 18px; }
+      .dash-stat-l { font-size: 9px; }
+
+      /* Recent resumes */
+      .dash-resume-grid { grid-template-columns: 1fr; }
+
+      /* Pages */
+      .page-hd { padding: 14px 16px 0; margin-bottom: 12px; }
+      .page-hd h2 { font-size: 17px; }
+      .page-bd { padding: 0 16px 100px; }
+      .res-grid { grid-template-columns: 1fr; }
+
+      /* Builder */
+      #builderModeBanner { padding: 8px 14px; gap: 8px; }
+
+      /* FAB sits above bottom nav */
+      #chatFAB { bottom: 68px; }
+
+      /* Chat panel height on small screens */
+      #chatPanel { height: 82vh !important; }
+
+      /* Scroll area clears the bottom nav */
+      .pg { padding-bottom: 66px; }
+    }
+
+    /* ── 480px: single col cards ── */
+    @media(max-width:480px) {
+      .dash-actions   { grid-template-columns: 1fr 1fr; }
+      .dash-stats-row { grid-template-columns: 1fr 1fr; }
+      .dash-stat      { padding: 10px 8px; }
+    }
 
     /* Print */
     @page { size: A4; margin: 12mm; }
@@ -1689,8 +1806,39 @@
     </div>
   </div>
 
+  <!-- ── MOBILE BOTTOM NAV ── -->
+  <nav id="mobileNav" aria-label="Main navigation">
+    <button class="mnav-item on" id="mnavDash" onclick="goPage('dash')">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      Home
+    </button>
+    <button class="mnav-item" id="mnavBuilder" onclick="goPage('builder')">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      Build
+    </button>
+    <button class="mnav-item" id="mnavResumes" onclick="goPage('resumes')">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+      Resumes
+    </button>
+    <button class="mnav-item" id="mnavJobs" onclick="goPage('jobs')">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+      Jobs
+    </button>
+    <button class="mnav-item" id="mnavProfile" onclick="goPage('profile')">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      Profile
+    </button>
+  </nav>
+
+  <!-- ── CHAT FAB (mobile) ── -->
+  <button id="chatFAB" onclick="toggleChat()" aria-label="Open AI Assistant">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+  </button>
+
 </div><!-- /appShell -->
 
+<!-- ── Chat overlay backdrop ── -->
+<div id="chatOverlay" onclick="toggleChat()"></div>
 
 <!-- ══════════════ STEP: AUTH ══════════════ -->
 <div id="sAuth" class="step">
@@ -3184,11 +3332,17 @@ function exitAppMode() {
 
 /* ── Page Routing ── */
 function goPage(page) {
-  // Sidebar active state
+  // Sidebar active state (desktop)
   document.querySelectorAll('.sb-item').forEach(el => el.classList.remove('on'));
   const sbMap = { dash:'sbDash', builder:'sbBuilder', resumes:'sbResumes', jobs:'sbJobs', profile:'sbProfile' };
   const sbEl = document.getElementById(sbMap[page] || '');
   if (sbEl) sbEl.classList.add('on');
+
+  // Mobile bottom nav active state
+  document.querySelectorAll('.mnav-item').forEach(el => el.classList.remove('on'));
+  const mnavMap = { dash:'mnavDash', builder:'mnavBuilder', resumes:'mnavResumes', jobs:'mnavJobs', profile:'mnavProfile' };
+  const mnavEl = document.getElementById(mnavMap[page] || '');
+  if (mnavEl) mnavEl.classList.add('on');
 
   // Hide all pages
   ['pgDash','pgResumes','pgProfile','pgJobs','pgBuilder'].forEach(id => {
@@ -3219,14 +3373,40 @@ function goPage(page) {
   if (page === 'resumes') agentRenderResumeList();
   if (page === 'profile') agentRenderProfile();
   if (page === 'jobs')    agentRenderJobs();
+
+  // Close chat on mobile when navigating
+  if (window.innerWidth <= 1024) closeMobileChat();
 }
 
 /* ── Toggle Chat Panel ── */
 function toggleChat() {
-  const panel = document.getElementById('chatPanel');
+  const panel   = document.getElementById('chatPanel');
+  const overlay = document.getElementById('chatOverlay');
   if (!panel) return;
-  const hidden = (panel.style.display === 'none');
-  panel.style.display = hidden ? 'flex' : 'none';
+  const isMobile = window.innerWidth <= 1024;
+  if (isMobile) {
+    const isOpen = panel.classList.contains('open');
+    if (isOpen) {
+      panel.classList.remove('open');
+      if (overlay) overlay.classList.remove('on');
+    } else {
+      panel.classList.add('open');
+      if (overlay) overlay.classList.add('on');
+      // Focus input
+      setTimeout(() => document.getElementById('chatIn')?.focus(), 350);
+    }
+  } else {
+    // Desktop toggle
+    const hidden = (panel.style.display === 'none' || panel.style.display === '');
+    panel.style.display = hidden ? 'flex' : 'none';
+  }
+}
+
+function closeMobileChat() {
+  const panel   = document.getElementById('chatPanel');
+  const overlay = document.getElementById('chatOverlay');
+  if (panel) panel.classList.remove('open');
+  if (overlay) overlay.classList.remove('on');
 }
 
 /* ── Sidebar: update user info ── */
