@@ -2586,6 +2586,7 @@ async def generate(req: GenerateRequest, request: Request,
     token = authorization[7:] if authorization and authorization.startswith("Bearer ") else None
     auth_user_data = get_user_from_token(token) if token else None
     is_authenticated = bool(auth_user_data)
+    user_id = auth_user_data.get("id") if auth_user_data else None
 
     job_id = str(uuid.uuid4())[:8]
     jobs[job_id] = {
@@ -2609,7 +2610,7 @@ async def generate(req: GenerateRequest, request: Request,
     })
     _save_leads(pitch_leads)
 
-    if is_authenticated:
+    if is_authenticated and user_id:
         today = date.today().isoformat()
         rec = user_daily_usage.get(user_id, {})
         if rec.get("date") == today:
