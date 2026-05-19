@@ -2678,7 +2678,7 @@ function renderOutput() {
   }, 350);
   // Auto-save resume to localStorage for the agent dashboard
   setTimeout(() => {
-    agentSaveResume({ personal: rd.personal, jd, resume: rd, ats: after });
+    agentSaveResume({ personal: rd.personal, jd, resume: rd, ats: after, files: generatedFiles, texts: generatedTexts });
     agentRefreshDashboard();
   }, 2000);
 
@@ -2849,7 +2849,10 @@ function downloadResumePdf() {
     a.remove();
     return;
   }
-  showPdfModal('resume');
+  const cards = document.getElementById('pdfCards');
+  if (cards) {
+    cards.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
 }
 
 // ── Opportunities ─────────────────────────────────────────────────────────────
@@ -3560,7 +3563,11 @@ function agentLoadResume(idx) {
   const resumes = agentGetResumes();
   if (!resumes[idx]) return;
   const r = resumes[idx];
+  generatedFiles = {};
+  generatedTexts = {};
   if (r.data) {
+    generatedFiles = r.data.files || {};
+    generatedTexts = r.data.texts || {};
     if (r.data.resume)  Object.assign(rd, r.data.resume);
     else                Object.assign(rd, r.data);
     if (r.data.jd)      Object.assign(jd, r.data.jd);
