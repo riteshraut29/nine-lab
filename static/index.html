@@ -1673,7 +1673,7 @@
     </div>
     <div class="out-acts">
       <button class="btn btn-out btn-sm" onclick="goTo('sLand')">← Start Over</button>
-      <button class="btn btn-dark btn-sm" onclick="printResume()">⬇ Download PDF</button>
+      <button class="btn btn-dark btn-sm" onclick="downloadResumePdf()">⬇ Download Resume PDF</button>
     </div>
   </div>
 
@@ -2838,8 +2838,18 @@ function closePdfModal() {
   document.getElementById('pdfModal').classList.remove('on');
   document.getElementById('pdfFrame').src = '';
 }
-function printResume() {
-  window.print();
+function downloadResumePdf() {
+  const resumeFile = generatedFiles.resume;
+  if (resumeFile) {
+    const a = document.createElement('a');
+    a.href = `${BASE}/pdf/${resumeFile}`;
+    a.download = resumeFile;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    return;
+  }
+  showPdfModal('resume');
 }
 
 // ── Opportunities ─────────────────────────────────────────────────────────────
