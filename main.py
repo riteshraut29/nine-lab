@@ -1816,8 +1816,11 @@ async def auth_register(req: AuthRequest):
         r = httpx.post(f"{SUPABASE_URL}/auth/v1/admin/users",
                         headers=admin_headers, json=payload, timeout=10)
         data = r.json()
-    except Exception as e:
-        raise HTTPException(500, detail=f"Registration failed: {str(e)[:100]}")
+    except Exception:
+        raise HTTPException(
+            503,
+            detail="Account service is temporarily unavailable. You can continue without an account and your resumes will still be saved in this browser.",
+        )
 
     if r.status_code == 200 and data.get("id"):
         # Now log the user in to get a token
