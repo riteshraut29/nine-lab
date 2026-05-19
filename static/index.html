@@ -3662,34 +3662,37 @@ function agentRenderJobs() {
   const el      = document.getElementById('pgJobsList');
   if (!el) return;
   const resumes = agentGetResumes();
-  if (!resumes.length) {
-    el.innerHTML = `<div class="pg-empty">Build a resume first, then we'll suggest matching jobs.</div>`;
-    return;
-  }
-  const query = resumes[0].jobTitle || resumes[0].title || 'software developer';
+  const query = (resumes[0]?.jobTitle || '').trim()
+    || (resumes[0]?.title || '').replace(/\s+Resume$/i, '').trim()
+    || 'software developer';
   el.innerHTML = `<p style="font-size:13px;color:var(--muted);margin-bottom:16px">
-    Jobs matching: <strong>${agentEsc(query)}</strong></p>
+    ${resumes.length ? 'Jobs matching' : 'Popular fresher jobs'}: <strong>${agentEsc(query)}</strong></p>
     <div id="pgJobsInner"><div class="opp-spinner"><div class="spinner"></div> Searching…</div></div>`;
   fetch(`${BASE}/real-jobs?title=${encodeURIComponent(query)}&location=India`)
     .then(r => r.json())
     .then(data => {
       const inner = document.getElementById('pgJobsInner');
       if (!inner) return;
-      if (!data.jobs || !data.jobs.length) {
-        inner.innerHTML = `<div class="pg-empty">No jobs found for "${agentEsc(query)}" right now.</div>`;
+      const listings = [...(data.jobs || []), ...(data.internships || [])].slice(0, 10);
+      if (!listings.length) {
+        inner.innerHTML = `<div class="pg-empty">No jobs found for "${agentEsc(query)}" right now. Try Software Developer, Data Analyst, or Frontend Engineer.</div>`;
         return;
       }
-      inner.innerHTML = data.jobs.slice(0,8).map(j => `
+      inner.innerHTML = listings.map(j => `
         <div style="padding:14px 16px;background:white;border:1.5px solid var(--border);
               border-radius:12px;margin-bottom:10px;display:flex;justify-content:space-between;
               align-items:flex-start;gap:12px">
-          <div>
-            <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:3px">${agentEsc(j.title||'')}</div>
-            <div style="font-size:12px;color:var(--muted)">${agentEsc(j.company||'')} · ${agentEsc(j.location||'India')}</div>
+          <div style="min-width:0">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;flex-wrap:wrap">
+              <div style="font-size:14px;font-weight:700;color:var(--text)">${agentEsc(j.title||'')}</div>
+              ${j.type === 'internship' ? '<span style="font-size:10px;padding:2px 6px;border-radius:4px;background:#ECFDF5;color:#047857;font-weight:700">Internship</span>' : ''}
+            </div>
+            <div style="font-size:12px;color:var(--muted)">${agentEsc(j.company||'')} ? ${agentEsc(j.location||'India')}</div>
             ${j.salary?`<div style="font-size:11px;color:var(--subtle);margin-top:3px">${agentEsc(j.salary)}</div>`:''}
+            ${j.source?`<div style="font-size:10px;color:var(--subtle);margin-top:4px">Source: ${agentEsc(j.source)}</div>`:''}
           </div>
           <a href="${agentEsc(j.url||'#')}" target="_blank" rel="noopener"
-            class="btn btn-out" style="font-size:11px;padding:6px 12px;white-space:nowrap;flex-shrink:0">Apply →</a>
+            class="btn btn-out" style="font-size:11px;padding:6px 12px;white-space:nowrap;flex-shrink:0">Apply ?</a>
         </div>`).join('');
     })
     .catch(() => {

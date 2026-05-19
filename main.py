@@ -5192,6 +5192,41 @@ async def real_jobs(title: str = "", skills: str = "", type: str = "both"):
         if len(bucket) < 8:
             bucket.append(r)
 
+    if not jobs and not internships:
+        fallback = _rank_opps(list(SEED_OPPS), {
+            "skills": " ".join(skill_list),
+            "degree": "",
+            "roles": [title] if title else [],
+            "is_fresher": True,
+        })
+        query = " ".join(skill_list + ([title] if title else [])).lower()
+        if query.strip():
+            filtered = [
+                o for o in fallback
+                if any(part in (o.get("match_fields", "") + " " + o.get("title", "") + " " + o.get("description", "")).lower()
+                       for part in query.split() if len(part) > 2)
+            ]
+            fallback = filtered or fallback
+        for opp in fallback:
+            item = {
+                "title": opp.get("title", ""),
+                "company": opp.get("company", ""),
+                "location": opp.get("location", "India"),
+                "salary": opp.get("salary_range", ""),
+                "url": opp.get("url", ""),
+                "source": "Nine Lab",
+                "snippet": opp.get("description", ""),
+                "type": opp.get("type", "job"),
+            }
+            if item["type"] == "internship":
+                if len(internships) < 8:
+                    internships.append(item)
+            elif item["type"] == "job":
+                if len(jobs) < 8:
+                    jobs.append(item)
+            if len(jobs) >= 8 and len(internships) >= 8:
+                break
+
     return JSONResponse({"jobs": jobs, "internships": internships})
 
 
