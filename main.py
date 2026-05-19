@@ -2471,11 +2471,71 @@ class AgentRequest(BaseModel):
     history: list = []
     context: dict = {}
 
+def _agent_rule_response(message: str, history: list, context: dict) -> Optional[dict]:
+    """Fast deterministic routing for common app-control commands."""
+    raw = (message or "").strip()
+    text = raw.lower()
+    if not text:
+        return None
+
+    def has_any(*terms: str) -> bool:
+        return any(t in text for t in terms)
+
+    def response(msg: str, action: str = "none", params: dict = None) -> dict:
+        return {"message": msg, "action": action, "params": params or {}}
+
+    # Greeting/help should not consume navigation unless user also asks for an action.
+    if text in {"hi", "hello", "hey", "hii", "help", "start"}:
+        return response("Tell me what you want to do: upload a PDF, fill details manually, see saved resumes, or find jobs.")
+
+    if has_any("manual", "fill manually", "fill form", "type details", "enter details", "no pdf", "without pdf", "form bhar", "details bhar"):
+        return response("Opening the manual resume form. Start with your personal details.", "open_form")
+
+    if has_any("upload", "pdf upload", "upload pdf", "resume pdf", "pdf se", "pdf dal", "pdf daal"):
+        return response("Opening PDF upload. Upload your resume and I will extract it.", "open_upload")
+
+    if has_any("my resume", "my resumes", "saved resume", "saved resumes", "resume list", "old resume", "purani resume", "download resume"):
+        return response("Opening your saved resumes.", "show_resumes")
+
+    if has_any("find job", "find jobs", "search job", "search jobs", "show jobs", "jobs dikha", "job dikha", "internship", "internships", "apply jobs"):
+        query = raw
+        query = re.sub(r'(?i)\b(find|search|show|browse|dikha|jobs?|internships?|for|me|mere|mujhe)\b', ' ', query).strip()
+        return response("Opening jobs matched to your profile.", "find_jobs", {"query": query})
+
+    if has_any("profile", "account", "my info", "settings", "meri profile"):
+        return response("Opening your profile.", "show_profile")
+
+    if has_any("dashboard", "home", "go back", "back home", "main page"):
+        return response("Taking you back to the dashboard.", "show_dashboard")
+
+    wants_resume = has_any("build resume", "create resume", "make resume", "generate resume", "resume bana", "resume banao", "resume banani", "resume create", "resume generate", "cv bana", "cv banao")
+    if wants_resume:
+        if has_any("manual", "form", "no pdf", "without pdf"):
+            return response("Opening the manual resume form.", "open_form")
+        return response("Let's build your resume. Upload your PDF first, or tell me to fill manually.", "build_resume")
+
+    # Follow-up commands after the assistant has asked the user to proceed.
+    if text in {"go", "proceed", "continue", "next", "ok", "okay", "yes", "haan", "ha", "chalo", "start karo", "kar"}:
+        recent = " ".join(str(h.get("content", "")).lower() for h in (history or [])[-4:])
+        if any(t in recent for t in ("manual", "form", "fill")):
+            return response("Opening the manual resume form.", "open_form")
+        if any(t in recent for t in ("upload", "pdf", "resume")):
+            return response("Opening PDF upload.", "open_upload")
+        if context.get("resumeCount"):
+            return response("Opening your saved resumes.", "show_resumes")
+        return response("Opening the resume builder.", "build_resume")
+
+    return None
+
 @app.post("/ninelab/agent")
 async def ninelab_agent(req: AgentRequest):
     message = req.message.strip()[:1200]
     history = req.history[-8:]
     context = req.context or {}
+
+    rule = _agent_rule_response(message, history, context)
+    if rule:
+        return JSONResponse(rule)
 
     history_text = ""
     for h in history:

@@ -3743,6 +3743,49 @@ function removeAgentTyping() {
   if (t) t.remove();
 }
 
+function localAgentIntent(text, context = {}) {
+  const raw = String(text || '').trim();
+  const t = raw.toLowerCase();
+  const has = (...terms) => terms.some(term => t.includes(term));
+  const out = (message, action = 'none', params = {}) => ({ message, action, params });
+
+  if (!t) return null;
+  if (['hi','hello','hey','hii','help','start'].includes(t)) {
+    return out('Tell me what you want to do: upload a PDF, fill details manually, see saved resumes, or find jobs.');
+  }
+  if (has('manual','fill manually','fill form','type details','enter details','no pdf','without pdf','form bhar','details bhar')) {
+    return out('Opening the manual resume form. Start with your personal details.', 'open_form');
+  }
+  if (has('upload','pdf upload','upload pdf','resume pdf','pdf se','pdf dal','pdf daal')) {
+    return out('Opening PDF upload. Upload your resume and I will extract it.', 'open_upload');
+  }
+  if (has('my resume','my resumes','saved resume','saved resumes','resume list','old resume','purani resume','download resume')) {
+    return out('Opening your saved resumes.', 'show_resumes');
+  }
+  if (has('find job','find jobs','search job','search jobs','show jobs','jobs dikha','job dikha','internship','internships','apply jobs')) {
+    const query = raw.replace(/\b(find|search|show|browse|dikha|jobs?|internships?|for|me|mere|mujhe)\b/gi, ' ').trim();
+    return out('Opening jobs matched to your profile.', 'find_jobs', { query });
+  }
+  if (has('profile','account','my info','settings','meri profile')) {
+    return out('Opening your profile.', 'show_profile');
+  }
+  if (has('dashboard','home','go back','back home','main page')) {
+    return out('Taking you back to the dashboard.', 'show_dashboard');
+  }
+  if (has('build resume','create resume','make resume','generate resume','resume bana','resume banao','resume banani','resume create','resume generate','cv bana','cv banao')) {
+    if (has('manual','form','no pdf','without pdf')) return out('Opening the manual resume form.', 'open_form');
+    return out("Let's build your resume. Upload your PDF first, or tell me to fill manually.", 'build_resume');
+  }
+  if (['go','proceed','continue','next','ok','okay','yes','haan','ha','chalo','start karo','kar'].includes(t)) {
+    const recent = agentHistory.slice(-4).map(h => String(h.content || '').toLowerCase()).join(' ');
+    if (recent.includes('manual') || recent.includes('form') || recent.includes('fill')) return out('Opening the manual resume form.', 'open_form');
+    if (recent.includes('upload') || recent.includes('pdf') || recent.includes('resume')) return out('Opening PDF upload.', 'open_upload');
+    if (context.resumeCount) return out('Opening your saved resumes.', 'show_resumes');
+    return out('Opening the resume builder.', 'build_resume');
+  }
+  return null;
+}
+
 /* ── Chat: Send ── */
 async function sendAgentChat(prefill) {
   const input = document.getElementById('chatIn');
@@ -3770,6 +3813,15 @@ async function sendAgentChat(prefill) {
   };
 
   try {
+    const local = localAgentIntent(text, context);
+    if (local) {
+      removeAgentTyping();
+      agentHistory.push({ role: 'assistant', content: local.message });
+      handleAgentAction(local.action, local.params, local.message);
+      if (sendBtn) sendBtn.disabled = false;
+      return;
+    }
+
     const res  = await fetch(`${BASE}/agent`, {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -3787,7 +3839,13 @@ async function sendAgentChat(prefill) {
 
   } catch(err) {
     removeAgentTyping();
-    appendAgentAIMsg("Sorry, I'm having trouble connecting. Please try again.");
+    const local = localAgentIntent(text, context);
+    if (local) {
+      agentHistory.push({ role: 'assistant', content: local.message });
+      handleAgentAction(local.action, local.params, local.message);
+    } else {
+      appendAgentAIMsg("I'm having trouble connecting, but I can still help with commands like upload PDF, fill manually, saved resumes, or find jobs.");
+    }
   }
 
   if (sendBtn) sendBtn.disabled = false;
